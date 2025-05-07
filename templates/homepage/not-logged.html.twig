@@ -10,7 +10,7 @@
 {% block content %}
 
 {% if env.aurora.homepage.sections.banner.enabled == "true" %}
-    <div style="height: 500px; background: url('{{ env.aurora.homepage.sections.banner.image }}'); background-repeat: no-repeat; background-size: cover;">
+    <div style="height: 700px; background: url('{{ env.aurora.homepage.sections.banner.image }}'); background-repeat: no-repeat; background-size: cover;">
         <div class="container">
             <div class="row align-items-center justify-content-center p-3">
 
@@ -50,13 +50,13 @@
                     <p class="lead mt-3">{{ 'view.homepage.registration_info'|trans }}</p>
                     {% for option in env.aurora.homepage.sections.register.options ?? [] %}
                         <div>
-                            <a href="{{ path(option.route) }}" class="col-sm-4 mx-auto btn btn-light btn-lg text-secondary icon-link justify-content-between mt-5">
+                            <a href="{{ path(option.route) }}" class="col-sm-6 mx-auto btn btn-light btn-lg text-secondary icon-link justify-content-between mt-5">
                                 <h4 class="fw-bold mt-2 text-uppercase">{{ option.title|trans }}</h4>
                                 <span class="material-icons fs-2">arrow_forward</span>
                             </a>
                         </div>
                     {% else %}
-                        <a href="{{ path('web_auth_register') }}" class="col-sm-3 mx-auto btn btn-light btn-lg text-secondary icon-link justify-content-between mt-5">
+                        <a href="{{ path('web_auth_register') }}" class="col-sm-6 mx-auto btn btn-light btn-lg text-secondary icon-link justify-content-between mt-5">
                             <h4 class="fw-bold mt-2 text-uppercase">{{ 'register'|trans }}</h4>
                             <span class="material-icons fs-2">arrow_forward</span>
                         </a>

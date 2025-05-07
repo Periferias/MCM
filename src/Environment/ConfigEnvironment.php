@@ -17,6 +17,10 @@ class ConfigEnvironment
             $filename = "{$dirname}/aurora.regmel.yaml";
         }
 
+        if (true === file_exists("{$dirname}/aurora.ppv.yaml")) {
+            $filename = "{$dirname}/aurora.ppv.yaml";
+        }
+
         if (true === file_exists("{$dirname}/aurora.local.yaml")) {
             $filename = "{$dirname}/aurora.local.yaml";
         }
