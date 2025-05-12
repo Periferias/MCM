@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\Organization;
 use App\Enum\OrganizationTypeEnum;
 use App\Repository\Interface\OrganizationRepositoryInterface;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 class OrganizationRepository extends AbstractRepository implements OrganizationRepositoryInterface
@@ -54,10 +55,10 @@ class OrganizationRepository extends AbstractRepository implements OrganizationR
         $connection = $this->getEntityManager()->getConnection();
 
         $sql = <<<SQL
-            SELECT COUNT(*) AS total
-            FROM organization
-            WHERE name = :name
-              AND extra_fields->>'cityId' = :cityId
+                SELECT COUNT(*) AS total
+                FROM organization
+                WHERE name = :name
+                AND extra_fields->>'cityId' = :cityId
             SQL;
 
         $statement = $connection->prepare($sql);
@@ -70,6 +71,23 @@ class OrganizationRepository extends AbstractRepository implements OrganizationR
         $count = (int) $result->fetchOne();
 
         return $count > 0;
+    }
+
+    public function findOrganizationByCityId(string $cityId): mixed
+    {
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addRootEntityFromClassMetadata(Organization::class, 'o');
+
+        $sql = <<<SQL
+                SELECT *
+                FROM organization o
+                WHERE o.extra_fields->>'cityId' = :cityId
+            SQL;
+
+        $query = $this->getEntityManager()->createNativeQuery($sql, $rsm);
+        $query->setParameter('cityId', $cityId);
+
+        return $query->getOneOrNullResult();
     }
 
     public function findCompaniesByAgents(iterable $agents): array
@@ -86,5 +104,47 @@ class OrganizationRepository extends AbstractRepository implements OrganizationR
             ->setParameter('type', OrganizationTypeEnum::EMPRESA->value)
             ->getQuery()
             ->getResult();
+    }
+
+    public function findOrganizationByRegionAndState(string $region, ?string $state): array
+    {
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addRootEntityFromClassMetadata(Organization::class, 'o');
+
+        $sql = <<<SQL
+                SELECT *
+                FROM organization o
+                WHERE o.extra_fields->>'region' = :region
+            SQL;
+
+        if (null !== $state) {
+            $sql .= " AND o.extra_fields->>'state' = :state";
+        }
+
+        $query = $this->getEntityManager()->createNativeQuery($sql, $rsm);
+        $query->setParameter('region', $region);
+
+        if (null !== $state) {
+            $query->setParameter('state', $state);
+        }
+
+        return $query->getResult();
+    }
+
+    public function findOrganizationByCompanyFilters(string $tipo): array
+    {
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addRootEntityFromClassMetadata(Organization::class, 'o');
+
+        $sql = <<<SQL
+                SELECT *
+                FROM organization o
+                WHERE o.extra_fields->>'tipo' = :tipo
+            SQL;
+
+        $query = $this->getEntityManager()->createNativeQuery($sql, $rsm);
+        $query->setParameter('tipo', $tipo);
+
+        return $query->getResult();
     }
 }

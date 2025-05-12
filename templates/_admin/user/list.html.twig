@@ -30,43 +30,69 @@
                                 <th>{{ 'image'|trans }}</th>
                                 <th>{{ 'status' |trans }}</th>
                                 <th>{{ 'created_at'|trans }}</th>
+                                <th>{{ 'roles' |trans }}</th>
                                 <th>{{ 'actions'|trans }}</th>
                             </tr>
                             </thead>
                             <tbody>
+
+                            {% set role_color_map = {
+                                'ROLE_ADMIN': 'bg-danger',
+                                'ROLE_MANAGER': 'bg-primary',
+                                'ROLE_SUPPORT': 'bg-success',
+                                'ROLE_MUNICIPAL_ADMIN': 'bg-info'
+                            } %}
+
                             {% for item in users %}
                                 <tr>
                                     <td><a href="#">{{ item.name }}</a></td>
                                     <td>{{ item.email }}</td>
                                     <td>
                                         <a
-                                            data-src="{{ asset(item.image ?? 'img/user.png') }}"
-                                            data-alt="{{ item.name }} Photo"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modal-photo"
-                                            onclick="showPhoto(this)"
-                                            href="#"
+                                                data-src="{{ asset(item.image ?? 'img/user.png') }}"
+                                                data-alt="{{ item.name }} Photo"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-photo"
+                                                onclick="showPhoto(this)"
+                                                href="#"
                                         >
                                             <img src="{{ asset(item.image ?? 'img/user.png') }}" class="rounded-circle" width="50px" alt="{{ item.name }} Photo">
                                         </a>
                                     </td>
+
                                     {% set status_map = {
                                         'active': 'active',
                                         'blocked': 'blocked',
                                         'awaitingconfirmation': 'awaiting_confirmation'
                                     } %}
                                     {% set status_class_map = {
-                                        'active': 'bg-primary',
+                                        'active': 'bg-success',
                                         'blocked': 'bg-danger',
                                         'awaitingconfirmation': 'bg-secondary'
                                     } %}
+
                                     <td>
-                                    <span class="badge {{ status_class_map[item.status|lower] }}">
-                                        {{ status_map[item.status|lower]|trans }}
-                                    </span>
+                                        <span class="badge {{ status_class_map[item.status|lower] }}">
+                                            {{ status_map[item.status|lower]|trans }}
+                                        </span>
+
+                                        {% if 'awaitingconfirmation' == item.status|lower and is_granted('ROLE_ADMIN') %}
+                                            <button onclick="modalConfirmUser('{{item.id}}', '{{item.name}}', '{{item.email}}')" class="btn btn-outline-success btn-sm mt-2">{{ 'confirm_user'|trans }}</button>
+                                        {% endif %}
                                     </td>
 
                                     <td>{{ item.createdAt.format('d/m/Y H:i:s') }}</td>
+
+                                    <td>
+                                        {% for role in item.roles %}
+                                            {% if role != 'ROLE_USER' %}
+                                                <span class="badge {{ role_color_map[role]|default('bg-secondary') }} me-1">
+                                                    {{ role|trans }}
+                                                </span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+
                                     <td>
                                         <a href="{{ path('admin_user_timeline', {id: item.id}) }}" class="btn btn-outline-info btn-sm">{{ 'Timeline'|trans }}</a>
                                         <a href="#" class="btn btn-outline-warning btn-sm">{{ 'edit'|trans }}</a>
@@ -80,10 +106,13 @@
             </div>
         </div>
     </section>
+
+    {% include '_components/modal-confirm-user.html.twig' %}
 {% endblock %}
 
 {% block extra_javascripts %}
     {{ parent() }}
     <script src="{{ asset('js/modal-photo.js') }}"></script>
-    <script src="{{ asset('js/grid-init.js') }}"></script>
+    <script src="{{ asset('js/modal-confirm-user.js') }}"></script>
+    <script type="module" src="{{ asset('js/grid-init.js') }}"></script>
 {% endblock %}

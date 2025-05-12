@@ -62,7 +62,12 @@ class RegisterService implements RegisterServiceInterface
     public function saveOrganization(array $data, ?UploadedFile $uploadedFile = null): Organization
     {
         if (null !== $uploadedFile) {
-            $data['organization']['extraFields']['form'] = $this->uploadFile($uploadedFile);
+            $fileName = $this->getTermFileName(
+                $data['organization']['name'] ?? '',
+                $data['organization']['extraFields']['state'] ?? '',
+                $data['organization']['extraFields']['term_version'] ?? 0
+            );
+            $data['organization']['extraFields']['form'] = $this->uploadFile($uploadedFile, $fileName);
         }
 
         $organization = $this->organizationService->validateInput($data['organization'], OrganizationDto::class, OrganizationDto::CREATE);
@@ -100,6 +105,31 @@ class RegisterService implements RegisterServiceInterface
         );
 
         return $organizationObj;
+    }
+
+    public function resendTerm(string $organizationId, ?UploadedFile $uploadedFile): void
+    {
+        $organization = $this->organizationService->get(Uuid::fromString($organizationId));
+
+        if (null !== $uploadedFile) {
+            $extraFields = $organization->getExtraFields();
+
+            $termoVersion = $extraFields['term_version'] + 1;
+
+            $fileName = $this->getTermFileName(
+                $organization->getName(),
+                $extraFields['state'],
+                $termoVersion
+            );
+
+            $extraFields = array_merge($extraFields, ['term_version' => $termoVersion, 'term_status' => 'awaiting', 'form' => $this->uploadFile($uploadedFile, $fileName)]);
+
+            $organization->setExtraFields($extraFields);
+
+            $this->organizationRepository->save($organization);
+
+            $this->accountEventService->notifyManagerOfNewMunicipalityDocument($organization->getName());
+        }
     }
 
     public function findOpportunitiesBy(OrganizationTypeEnum $enum): array
@@ -142,9 +172,9 @@ class RegisterService implements RegisterServiceInterface
         $this->entityManager->flush();
     }
 
-    private function uploadFile(UploadedFile $uploadedFile): string
+    private function uploadFile(UploadedFile $uploadedFile, ?string $fileName = null): string
     {
-        $pdf = $this->fileService->uploadPDF($uploadedFile, extraPath: '/regmel/municipality/documents');
+        $pdf = $this->fileService->uploadPDF($uploadedFile, $fileName, extraPath: '/regmel/municipality/documents');
 
         return $pdf->getFilename();
     }
@@ -163,5 +193,13 @@ class RegisterService implements RegisterServiceInterface
     public function isDuplicateOrganization(string $name, string $cityId): bool
     {
         return $this->organizationRepository->isOrganizationDuplicate($name, $cityId);
+    }
+
+    private function getTermFileName(string $municipality, string $state, int $version): string
+    {
+        $municipality = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $municipality);
+        $municipality = str_replace(' ', '', ucwords($municipality));
+
+        return sprintf('Termo-%s-%s-%d', $municipality, $state, $version);
     }
 }

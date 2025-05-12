@@ -11,9 +11,11 @@ use App\Enum\UserRolesEnum;
 use App\Exception\ValidatorException;
 use App\Regmel\Service\Interface\RegisterServiceInterface;
 use App\Service\Interface\CityServiceInterface;
+use App\Service\Interface\PhaseServiceInterface;
 use App\Service\Interface\StateServiceInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -33,13 +35,21 @@ class RegisterController extends AbstractWebController
         private readonly StateServiceInterface $stateService,
         private readonly CityServiceInterface $cityService,
         private readonly TranslatorInterface $translator,
+        private readonly ParameterBagInterface $parameterBag,
+        private readonly PhaseServiceInterface $phaseService,
     ) {
     }
 
     #[Route('/cadastro/municipio', name: 'regmel_register_city', methods: ['GET', 'POST'])]
     public function registerCity(Request $request): Response
     {
+        $snpEmail = $this->parameterBag->get('app.email.address');
+
         $states = $this->stateService->list();
+
+        if (false === $this->phaseService->isCurrentPhaseActive()) {
+            return $this->render('regmel/register/phase-not-active.html.twig');
+        }
 
         if (Request::METHOD_POST !== $request->getMethod()) {
             return $this->render(self::VIEW_CITY, [
@@ -68,9 +78,15 @@ class RegisterController extends AbstractWebController
         } catch (UniqueConstraintViolationException $exception) {
             $errors[] = ['message' => $this->translator->trans('view.authentication.error.email_in_use')];
         } catch (Exception $exception) {
-            $errors[] = [
-                'message' => $exception->getMessage(),
-            ];
+            if (str_contains($exception->getMessage(), 'Duplicate entry') || str_contains($exception->getMessage(), 'already registered')) {
+                $errors[] = [
+                    'message' => $this->translator->trans('organization_duplicate', ['%s' => $snpEmail]),
+                ];
+            } else {
+                $errors[] = [
+                    'message' => $exception->getMessage(),
+                ];
+            }
         }
 
         if (false === empty($errors)) {
@@ -79,6 +95,7 @@ class RegisterController extends AbstractWebController
                 'form_id' => self::FORM_CITY,
                 'states' => $states,
                 'opportunities' => $this->registerService->findOpportunitiesBy(OrganizationTypeEnum::MUNICIPIO),
+                'snp_email' => $snpEmail,
             ]);
         }
 
@@ -177,11 +194,14 @@ class RegisterController extends AbstractWebController
                 'type' => OrganizationTypeEnum::MUNICIPIO->value,
                 'extraFields' => [
                     'cityId' => $city?->getId(),
+                    'cityCode' => $city?->getCityCode(),
                     'region' => $city?->getState()->getRegion(),
                     'state' => $city?->getState()->getAcronym(),
                     'email' => $request->get('email'),
                     'telefone' => $request->get('phone'),
                     'site' => $request->get('site'),
+                    'term_version' => 1,
+                    'term_status' => 'awaiting',
                 ],
             ],
             'user' => [

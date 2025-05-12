@@ -11,9 +11,11 @@ interface FileServiceInterface
 {
     public function uploadFile(string $filename, string $content): void;
 
+    public function uploadMixedFile(UploadedFile $uploadedFile, string $extraPath = '', ?string $optionalName = null): File;
+
     public function uploadImage(string $path, UploadedFile $uploadedFile): File;
 
-    public function uploadPDF(UploadedFile $uploadedFile, string $extraPath = ''): File;
+    public function uploadPDF(UploadedFile $uploadedFile, ?string $fileName = null, string $extraPath = ''): File;
 
     public function readFile(string $filename): string;
 

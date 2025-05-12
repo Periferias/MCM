@@ -118,6 +118,7 @@ body {
     display: flex;
 }
 
+
 .lock-icon {
     position: absolute;
     top: -4px;
@@ -954,6 +955,31 @@ img.card-images__entity-details {
     min-height: 77vh;
 }
 
+.btn-primary {
+    border-color: var(--bs-primary);
+    background-color: var(--bs-primary);
+    --bs-btn-active-bg: var(--bs-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--bs-primary-hover);
+}
+
+.btn-outline-primary {
+    border-color: var(--bs-primary);
+    color: var(--bs-primary);
+}
+
+.btn-outline-primary:hover {
+    border-color:  var(--bs-primary);
+    background-color: var(--bs-primary);
+}
+
+#confirmDocDecision .modal-dialog {
+    position: relative;
+    z-index: 1060;
+}
+
 @media (min-width: 1400px) {
     .name__entity-details {
         max-width: 755px;
@@ -1165,4 +1191,38 @@ img.card-images__entity-details {
         font-size: 22px;
         line-height: 25px;
     }
+}
+
+button.gridjs-sort {
+    filter: invert(1);
+}
+
+.ts-control {
+    background-image: none !important;
+    font-size: 3rem;
+}
+
+.ts-wrapper.focus {
+    border-color: #86b7fe !important;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+#confirmDocDecision .modal-dialog {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0 auto;
+}
+
+#confirmDocDecision .modal-content {
+    margin: auto;
+}
+
+.modal img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
 }

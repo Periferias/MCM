@@ -1,6 +1,18 @@
 name: Minha Casa Melhor
 author: Secretaria Nacional de Periferias
-email: snp.gab@cidades.gov.br
+
+email:
+  address: snp.gab@cidades.gov.br
+  logo: /img/regmel/regmel-logo.svg
+  rodape: /img/regmel/minha-casa-melhor-rodape.png
+  footer: >
+    Secretaria Nacional de Periferias - Ministério das Cidades
+    <br>
+    Este é um email automático, por favor, não responda.
+
+variables:
+  price_per_household: 35000
+
 visit_repository: false
 logo:
   horizontal:
@@ -11,6 +23,12 @@ logo:
     width: 200px
 register:
   any: false
+proposals:
+  area_characteristics:
+    option_1: Núcleo urbano regularizado ou em processo de regularização fundiária, desde que predominantemente de baixa renda, assim declarado pelo Município ou Distrito Federal;
+    option_2: Núcleo urbano informal classificados como área de Regularização Fundiária Urbana de Interesse Social - Reurb-S;
+    option_3: Zona especial de interesse social, conforme o art. 4º, inciso V, alínea "f", da Lei nº 10.257, de 10 de julho de 2001.
+    option_4: 'Se enquadra na excepcionalidade: casos de execução de melhorias destinadas a garantir segurança ou salubridade para preservação de vidas, logo, não há necessidade de que se tenha dado início ao processo de regularização fundiária nem que se caracterize como zona especial de interesse social. Aprovação da proposta condicionada ao ateste do Município ou Distrito Federal de que os potenciais beneficiários são de baixa renda.'
 terms:
   lgpd:
     title: Termo de Consentimento para Tratamento de Dados Pessoais (LGPD)
@@ -234,6 +252,11 @@ sidebar:
         acl: ['ROLE_ADMIN', 'ROLE_MANAGER']
         icon: description
         text: Documentos
+
+      admin_regmel_proposal_list:
+        acl: ['ROLE_ADMIN', 'ROLE_MANAGER']
+        icon: cases
+        text: Propostas
 
       admin_user_list:
         acl: ['ROLE_ADMIN']

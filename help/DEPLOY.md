@@ -55,6 +55,12 @@ cp .env.example .env
 
 ### `setup`
 
+O primeiro a se fazer em um ambiente de deploy é garantir algumas permissões, para isso basta executar:
+
+```shell
+make permissions
+```
+
 Precisamos agora criar os bancos de dados, tabelas, dados, instalar dependências e tudo o mais, para isso basta executar:
 
 ```shell
@@ -78,7 +84,8 @@ make demo-regmel
 Após a instalação precisamos configurar o arquivo `.env`:
 
 - **linha 18:** Alterar para `APP_ENV=prod`
-- **linha 55:** Configurar de acordo com o serviço de email
+- **linha 55:** Configurar conforme o serviço de email
+- **linha 59:** Configurar o endereço de email
 
 </details>
 

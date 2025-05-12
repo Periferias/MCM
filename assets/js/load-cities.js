@@ -1,50 +1,53 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const state = document.getElementById("state");
-    const city = document.getElementById("city");
-    const error = document.getElementById("error-message");
+import TomSelect from 'tom-select';
+import 'tom-select/dist/css/tom-select.default.min.css';
+
+document.addEventListener('DOMContentLoaded', () => {
+    const stateElement  = document.getElementById('state');
+    const cityElement   = document.getElementById('city');
+
+    stateElement.classList.remove('form-select');
+    cityElement .classList.remove('form-select');
+
+    const stateSelect = new TomSelect(stateElement, {
+        create: false,
+        sortField: { field: 'text', direction: 'asc' },
+        placeholder: stateElement.dataset.placeholder || 'Selecione',
+        allowEmptyOption: false,
+    });
+
+    const citySelect = new TomSelect(cityElement, {
+        create: false,
+        sortField: { field: 'text', direction: 'asc' },
+        placeholder: cityElement.dataset.placeholder || 'Selecione',
+        allowEmptyOption: false,
+    });
+
+    const fetchData = url =>
+        fetch(url)
+            .then(res => res.ok ? res.json() : [])
+            .catch(() => []);
 
     const clearCities = () => {
-        city.innerHTML = `<option value="">${city.dataset.placeholder || "Selecione"}</option>`;
+        citySelect.clearOptions();
+        citySelect.clear(true);
     };
 
-    const showError = (msg) => {
-        if (error) {
-            error.textContent = msg;
-            error.classList.remove("d-none");
-        }
-    };
-
-    const hideError = () => {
-        if (error) {
-            error.textContent = "";
-            error.classList.add("d-none");
-        }
-    };
-
-    const fetchData = (url) =>
-        fetch(url).then(res => res.ok ? res.json() : []).catch(() => []);
-
-    state.addEventListener("change", async () => {
+    stateSelect.on('change', async value => {
         clearCities();
-        if (!state.value) return;
-        const cities = await fetchData(`/api/states/${state.value}/cities`);
-        cities.forEach(c => city.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+        if (!value) return;
+
+        const cities = await fetchData(
+            `/api/states/${encodeURIComponent(value)}/cities`
+        );
+
+        cities.forEach(c => {
+            citySelect.addOption({ value: c.id, text: c.name });
+        });
+        citySelect.refreshOptions(false);
     });
 
-    city.addEventListener("change", async () => {
-        if (!error) {
-            return;
-        }
-
-        hideError();
-        const id = city.value;
-        const name = city.options[city.selectedIndex]?.text?.trim();
-        if (!id || !name) return;
-
-        const { exists } = await fetchData(`/organizations/check-duplicate?name=${encodeURIComponent(name)}&cityId=${encodeURIComponent(id)}`);
-        if (exists) {
-            showError("Este município já foi credenciado.");
-            state.dispatchEvent(new Event("change"));
-        }
-    });
+    const initialState = stateSelect.getValue();
+    if (initialState) {
+        stateSelect.fire('change', initialState);
+    }
 });

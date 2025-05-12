@@ -59,13 +59,11 @@ compile_frontend:
 
 # Executa as fixtures de dados e os testes de front-end
 tests_front: guard-not-prod
-	make load_fixtures
-	mv config/environment/aurora.regmel.yaml config/environment/aurora.regmel_test.yaml
+	make demo-regmel
 	sed -i 's/default_locale: regmel/default_locale: pt-br/' config/packages/translation.yaml
 	sed -i 's/municipios/organizacoes/' config/routes/web.yaml
 	sed -i 's/municipios/organizacoes/' config/routes/admin.yaml
 	docker compose up cypress
-	mv config/environment/aurora.regmel_test.yaml config/environment/aurora.regmel.yaml
 	sed -i 's/default_locale: pt-br/default_locale: regmel/' config/packages/translation.yaml
 	sed -i 's/organizacoes/municipios/' config/routes/web.yaml
 	sed -i 's/organizacoes/municipios/' config/routes/admin.yaml
@@ -136,6 +134,12 @@ generate_keys:
 copy_dist:
 	cp phpcs.xml.dist phpcs.xml
 	cp phpunit.xml.dist phpunit.xml
+
+permissions:
+	mkdir -p var/
+	mkdir -p vendor/
+	mkdir -p config/jwt
+	chmod -R 775 assets/ config/jwt var/ vendor/ public/
 
 # Comando para rodar todos os passos juntos
 setup: guard-not-prod up install_dependencies copy_dist reset-deep generate_proxies migrate_database load_fixtures install_frontend compile_frontend generate_keys

@@ -152,6 +152,11 @@ class Organization extends AbstractEntity
         $this->agents->add($agent);
     }
 
+    public function removeAgent(Agent $agent): void
+    {
+        $this->agents->removeElement($agent);
+    }
+
     public function getOwner(): Agent
     {
         return $this->owner;
@@ -255,6 +260,7 @@ class Organization extends AbstractEntity
             'agents' => $this->agents->map(fn ($agent) => $agent->getId()->toRfc4122()),
             'owner' => $this->owner->toArray(),
             'createdBy' => $this->createdBy->toArray(),
+            'extraFields' => $this->extraFields,
             'socialNetworks' => $this->socialNetworks,
             'createdAt' => $this->createdAt->format(DateFormatHelper::DEFAULT_FORMAT),
             'updatedAt' => $this->updatedAt?->format(DateFormatHelper::DEFAULT_FORMAT),

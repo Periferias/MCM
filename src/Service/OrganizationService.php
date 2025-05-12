@@ -6,16 +6,20 @@ namespace App\Service;
 
 use App\DTO\OrganizationDto;
 use App\Entity\Organization;
+use App\Enum\OrganizationTypeEnum;
 use App\Exception\Organization\OrganizationResourceNotFoundException;
 use App\Exception\ValidatorException;
 use App\Repository\Interface\OrganizationRepositoryInterface;
+use App\Service\Interface\AgentServiceInterface;
 use App\Service\Interface\FileServiceInterface;
 use App\Service\Interface\OrganizationServiceInterface;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -32,6 +36,8 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
         private SerializerInterface $serializer,
         private ValidatorInterface $validator,
         private EntityManagerInterface $entityManager,
+        private AgentServiceInterface $agentService,
+        private UrlGeneratorInterface $urlGenerator,
     ) {
         parent::__construct(
             $this->security,
@@ -174,5 +180,99 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
     public function getCompaniesByAgents(iterable $agents): array
     {
         return $this->repository->findCompaniesByAgents($agents);
+    }
+
+    public function removeAgent(Uuid $agentId, Uuid $organizationId): void
+    {
+        $organization = $this->get($organizationId);
+        $agent = $this->agentService->get($agentId);
+
+        $organization->removeAgent($agent);
+        $this->repository->save($organization);
+    }
+
+    public function findByMunicipalityFilters(string $region, ?string $state): array
+    {
+        return $this->repository->findOrganizationByRegionAndState($region, $state);
+    }
+
+    public function findByCompanyFilters(string $tipo): array
+    {
+        return $this->repository->findOrganizationByCompanyFilters($tipo);
+    }
+
+    public function getCsvHeaders(?string $type): array
+    {
+        if ($type === OrganizationTypeEnum::MUNICIPIO->value) {
+            return [
+                'ID',
+                'Nome',
+                'Descrição',
+                'Região',
+                'Estado',
+                'Status do Documento',
+                'Documento',
+                'Email',
+                'Site',
+                'Criado Por',
+                'Criado Em',
+            ];
+        }
+
+        return [
+            'ID',
+            'Nome da Organização',
+            'Tipo',
+            'CNPJ',
+            'E-mail',
+            'Telefone',
+            'Responsável',
+            'Criado em',
+            'Criado por',
+        ];
+    }
+
+    public function getCsvRow(object $entity, ?string $type): array
+    {
+        if (!$entity instanceof Organization) {
+            throw new InvalidArgumentException('Expected Organization entity.');
+        }
+
+        if ($type === OrganizationTypeEnum::MUNICIPIO->value) {
+            $formExists = isset($entity->getExtraFields()['form']);
+            $documentLink = $formExists
+                ? $this->urlGenerator->generate(
+                    'regmel_municipality_document_file',
+                    ['id' => $entity->getId()],
+                    UrlGeneratorInterface::ABSOLUTE_URL
+                )
+                : '';
+
+            return [
+                $entity->getId(),
+                $entity->getName(),
+                $entity->getDescription(),
+                $entity->getExtraFields()['region'] ?? '',
+                $entity->getExtraFields()['state'] ?? '',
+                $entity->getExtraFields()['documentStatus'] ?? '',
+                $documentLink,
+                $entity->getExtraFields()['email'] ?? '',
+                $entity->getExtraFields()['site'] ?? '',
+                $entity->getCreatedBy() ? $entity->getCreatedBy()->getName() : '-',
+                $entity->getCreatedAt()->format('d/m/Y H:i:s'),
+            ];
+        }
+
+        return [
+            $entity->getId(),
+            $entity->getName(),
+            $entity->getExtraFields()['tipo'] ?? '',
+            $entity->getExtraFields()['cnpj'] ?? '',
+            $entity->getExtraFields()['email'] ?? '',
+            $entity->getExtraFields()['telefone'] ?? '',
+            $entity->getOwner()->getName() ?? '',
+            $entity->getCreatedAt()->format('d/m/Y H:i:s'),
+            $entity->getCreatedBy() ? $entity->getCreatedBy()->getName() : '-',
+        ];
     }
 }

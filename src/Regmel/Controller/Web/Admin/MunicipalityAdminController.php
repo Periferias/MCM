@@ -9,6 +9,7 @@ use App\DocumentService\OrganizationTimelineDocumentService;
 use App\Enum\OrganizationTypeEnum;
 use App\Enum\RegionEnum;
 use App\Enum\UserRolesEnum;
+use App\Regmel\Service\Interface\RegisterServiceInterface;
 use App\Service\Interface\OrganizationServiceInterface;
 use App\Service\Interface\StateServiceInterface;
 use Exception;
@@ -32,6 +33,7 @@ class MunicipalityAdminController extends AbstractAdminController
         private readonly Security $security,
         private readonly TranslatorInterface $translator,
         private readonly StateServiceInterface $stateService,
+        private readonly RegisterServiceInterface $registerService,
     ) {
     }
 
@@ -98,6 +100,11 @@ class MunicipalityAdminController extends AbstractAdminController
         ], parentPath: '');
     }
 
+    #[IsGranted(new Expression('
+        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'")
+    '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/municipios/{id}', name: 'admin_regmel_municipality_details', methods: ['GET'])]
     public function details(Uuid $id): Response
     {
@@ -106,7 +113,7 @@ class MunicipalityAdminController extends AbstractAdminController
             'type' => OrganizationTypeEnum::MUNICIPIO->value,
         ]);
 
-        $this->denyAccessUnlessGranted('get', $municipality);
+        // $this->denyAccessUnlessGranted('get', $municipality);
 
         $createdById = $municipality->getCreatedBy()->getId()->toRfc4122();
 
@@ -114,7 +121,7 @@ class MunicipalityAdminController extends AbstractAdminController
             throw $this->createNotFoundException($this->translator->trans('municipality_found'));
         }
 
-        $timeline = $this->documentService->getEventsByEntityId($id);
+        $timeline = $this->documentService->getAllEventsByOrganizationId($id);
 
         return $this->render('regmel/admin/municipality/details.html.twig', [
             'municipality' => $municipality,
@@ -165,9 +172,61 @@ class MunicipalityAdminController extends AbstractAdminController
         } catch (TypeError|Exception $exception) {
             $this->addFlashError($exception->getMessage());
 
-            return $this->list();
+            return $this->list($request);
         }
 
         return $this->redirectToRoute('admin_regmel_municipality_list');
+    }
+
+    #[Route('/painel/admin/municipios/{id}/upload-term', name: 'admin_regmel_municipality_upload_term', methods: ['GET', 'POST'])]
+    public function uploadTerm(Uuid $id, Request $request): Response
+    {
+        $uploadedFile = $request->files->get('joinForm');
+
+        if ($uploadedFile) {
+            try {
+                $this->registerService->resendTerm($id->toRfc4122(), $uploadedFile);
+                $this->addFlash('success', 'Termo enviado com sucesso!');
+            } catch (Exception $e) {
+                $this->addFlash('error', 'Erro ao enviar o termo');
+            }
+        } else {
+            $this->addFlash('error', 'Erro ao enviar o termo');
+        }
+
+        return $this->redirectToRoute('admin_regmel_municipality_list');
+    }
+
+    #[IsGranted(new Expression('
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'")
+    '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/municipios/{municipalityId}/remove/{agentId}', name: 'admin_regmel_municipality_remove', methods: ['GET'])]
+    public function remove(Uuid $agentId, Uuid $municipalityId): Response
+    {
+        $this->organizationService->removeAgent($agentId, $municipalityId);
+
+        $this->addFlash('success', $this->translator->trans('view.organization.message.deleted_member'));
+
+        return $this->redirectToRoute('admin_regmel_municipality_details', ['id' => $municipalityId]);
+    }
+
+    #[IsGranted(new Expression('
+        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+    '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/municipios/list/download', name: 'admin_regmel_municipality_list_download', methods: ['GET'])]
+    public function exportMunicipalitiesCsv(Request $request): Response
+    {
+        $region = $request->query->get('region');
+        $state = $request->query->get('state') ?: null;
+
+        $type = OrganizationTypeEnum::MUNICIPIO->value;
+
+        $municipalities = $region
+            ? $this->organizationService->findByMunicipalityFilters($region, $state)
+            : $this->organizationService->findBy(['type' => $type]);
+
+        return $this->organizationService->generateCsv($municipalities, 'municipios.csv', $type);
     }
 }

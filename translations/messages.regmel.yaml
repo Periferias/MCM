@@ -19,6 +19,7 @@ access_main_agent: Acesse agente principal
 access_ramp: Rampas de acesso
 accountability: Prestações de Conta
 accompany: Acompanhar
+accepted: Aceito
 action: Ação
 actions: Ações
 activity: Atividade
@@ -47,8 +48,10 @@ ages_rating:
     eighteen: 18 anos
 agent_information: Informações do Agente
 all: Tudo
+all_cities: Todas as cidades
 all_regions: Todas as regiões
 all_states: Todos os estados
+all_types: Todos os tipos
 allow_free_linking: Permitir livre vinculação com
 allowed: Com permissão
 admin_options: Opções do Administrador
@@ -58,8 +61,12 @@ architectural: Arquitetônica
 architectural_accessibility_offers: Oferece acessibilidade física
 archives: Arquivos
 archived: Arquivados
+archive_project: Arquivo do Projeto
 areas_of_expertise: Áreas de Atuação
 areas_of_interest: Áreas de interesse
+areas_information: Informações da Área
+areas_intervention: Áreas de intervenção
+areas_polygon: Área estimada da poligonal
 analysis: Período de Análise
 auditory: Auditiva
 auth: Autenticação
@@ -72,6 +79,7 @@ apply_filter: Aplicar Filtros
 attachments_and_links: Anexos e links
 attitudinal_accessibility: Acessibilidade atitudinal
 audio_description: Áudio descrição
+awaiting: Aguardando
 awaiting_confirmation: Aguardando Confirmar Conta
 
 back: Voltar
@@ -87,6 +95,8 @@ change_details: Detalhes das Mudanças
 changed_password: A sua senha foi alterada
 cep: CEP
 city: Cidade
+city_id: ID da cidade
+city_code: Código da cidade
 cisgender: Cisgênero
 check: Conferir
 claim-ownership: Reivindicar Propriedade
@@ -98,6 +108,7 @@ click_here: Clique aqui
 connections: Conexões
 confirm: Confirmar
 confirm_password: Confirmar senha
+confirm_user: Confirmar Usuário
 continue: Continuar
 contribute: Contribua
 control_panel: Painel de Controle
@@ -129,6 +140,7 @@ company_name: Razão Social
 company_data: Dados da Empresa/OSC
 company_register: Cadastrar uma Empresa/OSC
 company_created: Empresa/OSC criada com sucesso. Veja no seu email o link para confirmar sua conta.
+cost_household: Custo médio por domicílio
 cultural_language: Linguagem cultural
 cultural_languages: Linguagens culturais
 
@@ -148,7 +160,10 @@ discover: Descubra
 document: Documento
 documents: Documentos
 does_not_expire: não expira
+download_all_terms: Baixar todos os termos
 downloadable-files: Arquivos para download
+download_archive: Baixar arquivo KML/KMZ/SHP
+organization_duplicate: Este município já foi credenciado. Entre em contato com %s para mais informações.
 
 edit: Editar
 edit_event: Editar Evento
@@ -182,7 +197,12 @@ evidences: Evidências
 elderly_person: Pessoa idosa
 execution_period: Período de execução
 explore_repository: Conheça o repositório
+export_csv: Exportar CSV
+extra_fields: Campos extras
+export_project_file: Baixar Arquivos Geográficos
+export_map_file: Baixar Áreas Poligonais
 elevator: Elevador
+estimated_polygon: Área estimada da poligonal
 
 faq: FaQ
 file: Anexar arquivo
@@ -197,6 +217,7 @@ fundamental: Fundamental
 future_registration: Inscrições futuras
 full_name: Nome completo
 free: Grátis
+form: Formulário
 from: De
 from_to: Para
 from_to_date: Até
@@ -207,6 +228,7 @@ general_data: Dados gerais
 general_information: Informações gerais
 general_objective: Objetivo Geral
 general_objective_description: Descrição do Objetivo Geral
+global_proposal: Valor Global da Proposta
 
 happening_now: Acontecendo agora
 help: Ajuda
@@ -240,6 +262,9 @@ is_itinerant: É agente itinerante?
 is-accessible: O espaço é acessível?
 invalid_credentials: E-mail ou senha incorretos
 invite_created: Cadastro realizado com sucesso. Veja no seu email o link para confirmar sua conta.
+Invite was accepted: Convite foi aceito
+Invite was sent: Convite foi enviado
+information_location: Informações de localização
 
 join_terms: Termos de Adesão
 
@@ -262,6 +287,7 @@ logo: Logo
 logout: Sair
 long_description: Descrição longa
 lgpd_modal: Política de Privacidade e Proteção de Dados (LGPD)
+legal_information: Informações legais
 
 map: Mapa
 management: Gerenciamento de Entidades
@@ -306,6 +332,7 @@ name_organization: Nome do Município
 name_initiative: Nome da iniciativa
 name_phases: Nome da fase
 neighborhood: Bairro
+next: Próximo
 new_phase: Nova Fase
 notifications: Notificações
 no: Não
@@ -323,12 +350,15 @@ no_areas: Nenhuma área cadastrada
 no_accessibility: Nenhuma acessibilidade registrada
 no_seals: Nenhum selo registrado
 none_area_specified: Nenhuma área especificada
+no_data_found: Nenhum dado encontrado
 not_informed: Não informado
 not_sent: Não enviadas
 notice: EDITAL
 no_records_found: Nenhum registro encontrado
 number_address: Número
+number_households: Número de domicílios
 
+of: de
 offers_architectural_accessibility: Oferece acessibilidade física
 official_events: Eventos Oficiais
 official_spaces: Espaços Oficiais
@@ -351,6 +381,7 @@ other_files: Outros arquivos
 other_information: Outras informações
 organization_with_profit: Organização com fins lucrativos
 organization_without_profit: Organização sem fins lucrativos
+owner: Proprietário
 
 pardo: Pardo
 paid: Pago
@@ -359,6 +390,7 @@ people_capacity: Capacidade de pessoas
 period: Período
 permissions: Permissões
 portfolio: Portfólio
+previous: Anterior
 privacy: Privacidade
 profile: Perfil
 provided_violates: Os dados fornecidos violam uma ou mais restrições.
@@ -393,6 +425,7 @@ project_value: Valor do projeto
 project_information: Informações do Projeto
 promotion: Divulgação
 promotion_strategy: Estratégia de divulgação
+proponent_information: Informações do proponente
 public: Público
 public_data_notice: Os dados inseridos abaixo serão exibidos para todos os usuários da plataforma.
 public_email: Email público
@@ -420,12 +453,27 @@ reset: Redefinir
 reset_password: Redefinir Senha
 read_notifications: Notificações Lidas
 new_registration_notification: Uma nova organização foi credenciada
+resend_term_notification: Um novo termo de adesão foi enviado
+results: Resultados
+roles: Perfis
+ROLE_USER: Usuário Padrão
+ROLE_COMPANY: Administrador de Empresa
+ROLE_MUNICIPALITY: Administrador de Município
+ROLE_MANAGER: Gestor
+ROLE_ADMIN: Administrador Geral
+ROLE_SNP: Administrador SNP
+rejected: Rejeitado
 
 selection: Seleção
 
 tags: Tags
 term: Termo
 terms: Termos
+term_form: Termo de Adesão
+term_version: Versão dos Termos
+term_status: Status dos Termos
+term_approved: Termo de adesão aprovado
+term_rejected: Termo de adesão reprovado
 title: Titulo
 transsexual: Transexual
 transvestite: Travesti
@@ -456,7 +504,7 @@ user_information: Informações do Usuário
 user_edit_data: Edição de dados do usuário
 unread_notifications: Notificações Não Lidas
 user_associated: Usuário sem agente associado
-
+updated_at: Atualizado em
 
 view_all: Ver todas
 view_file: ver arquivo
@@ -492,6 +540,7 @@ see_how: Visualizar como
 see_more: Ver mais
 see_phase: Ver fase
 short_description: Descrição curta
+showing: Exibindo
 site: Site
 social_media: Redes sociais
 sort_by: Ordenar por
@@ -576,6 +625,11 @@ footer:
   send_email: Envie um email para
   visit_repository: visite o repositório
 
+table:
+  type_a_keyword: Digite uma palavra-chave...
+  no_records_found: Nenhum registro encontrado
+  error: Ocorreu um erro ao buscar os dados
+
 #pages
 view:
   user:
@@ -583,6 +637,9 @@ view:
     message:
       created: O usuário foi criado com sucesso
       updated: O usuário foi atualizado
+      confirmed: O usuário foi confirmado
+      not_confirmed: Não foi possível confirmar o usuário
+      confirm_question: Deseja confirmar este usuário?
 
   faq:
     description: Perguntas Frequentes
@@ -882,6 +939,7 @@ view:
       updated: O Município foi atualizado
       deleted: O Município foi excluído
       created: O município foi criado com sucesso
+      deleted_member: O membro foi excluído
     quantity:
       total: Municípios Encontrados
       culture: Municípios Ativos
@@ -1031,3 +1089,31 @@ view:
     error-homepage: Voltar para a página inicial
     error-image: Imagem de dúvida
 
+  phase:
+    out_of_period: "Fora do prazo de inscrição"
+    text_out_of_period: "Infelizmente, o período de inscrição não está disponível no momento. Por favor, aguarde o próximo oficio."
+
+proposal:
+  status:
+    sent: Enviada
+    no_municipality: Sem Adesão do Município
+
+csv:
+  header:
+    region: Região
+    state: Estado
+    city: Município
+    company_name: Nome da Empresa
+    company_cnpj: CNPJ da Empresa
+    map_file: Arquivo da Área Poligonal
+    project_file: Arquivo do Projeto
+    houses_quantity: Quantidade de Domicílios
+    total_area: Área Total
+    total_value: Valor Global da Proposta
+    proposal_status: Status da Proposta
+    intervention_area_name: Nome da Área de Intervenção
+    proposal_type: Tipo de Proposta
+    proposal_date: Data da Proposta
+
+error:
+  invalid_entity: Entidade inválida. Esperado uma instância de Initiative.

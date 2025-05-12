@@ -19,6 +19,7 @@ access_main_agent: Acesse agente principal
 access_ramp: Rampas de acesso
 accountability: Prestações de Conta
 accompany: Acompanhar
+accepted: Aceito
 action: Ação
 actions: Ações
 activity: Atividade
@@ -68,6 +69,7 @@ asian: Amarelo
 apply_filter: Aplicar Filtros
 attachments_and_links: Anexos e links
 attitudinal_accessibility: Acessibilidade atitudinal
+awaiting: Aguardando
 audio_description: Áudio descrição
 
 back: Voltar
@@ -81,6 +83,8 @@ category: Categoria
 change_details: Detalhes das Mudanças
 cep: CEP
 city: Cidade
+city_id: ID da cidade
+city_code: Código da cidade
 cisgender: Cisgênero
 check: Conferir
 claim-ownership: Reivindicar Propriedade
@@ -163,6 +167,7 @@ evidences: Evidências
 elderly_person: Pessoa idosa
 execution_period: Período de execução
 explore_repository: Conheça o repositório
+extra_fields: Campos extras
 elevator: Elevador
 
 faq: FaQ
@@ -178,6 +183,7 @@ fundamental: Fundamental
 future_registration: Inscrições futuras
 full_name: Nome completo
 free: Grátis
+form: Formulário
 from: De
 from_to: Para
 from_to_date: Até
@@ -212,6 +218,8 @@ introduction: Apresentação
 inactive: Inativo
 is_itinerant: É agente itinerante?
 is-accessible: O espaço é acessível?
+Invite was accepted: Convite foi aceito
+Invite was sent: Convite foi enviado
 
 language: Idioma
 lastname: Sobrenome
@@ -268,6 +276,7 @@ name_organization: Nome da organização
 name_initiative: Nome da iniciativa
 name_phases: Nome da fase
 neighborhood: Bairro
+next: Próximo
 new_phase: Nova Fase
 notifications: Notificações
 no: Não
@@ -291,6 +300,7 @@ notice: EDITAL
 no_records_found: Nenhum registro encontrado
 number_address: Número
 
+of: de
 offers_architectural_accessibility: Oferece acessibilidade física
 official_events: Eventos Oficiais
 official_spaces: Espaços Oficiais
@@ -310,6 +320,7 @@ organization_register: Criar uma Organização
 orientation: Selecione a Orientação Sexual
 other_files: Outros arquivos
 other_information: Outras informações
+owner: Proprietário
 
 pardo: Pardo
 paid: Pago
@@ -318,6 +329,7 @@ people_capacity: Capacidade de pessoas
 period: Período
 permissions: Permissões
 portfolio: Portfólio
+previous: Anterior
 privacy: Privacidade
 profile: Perfil
 password: Senha
@@ -367,14 +379,20 @@ reference_point: Complemento ou ponto de referência
 register: Cadastro
 registration_date: Data de inscrição
 registration_info: Informações sobre a inscrição
+region: Região
 related-agents: Agentes Relacionados
 required_field: Este campo é obrigatório.
 report: Denúncia
 responsible_agent: Agente Responsável
+results: Resultados
+rejected: Rejeitados
 
 tags: Tags
 term: Termo
 terms: Termos
+term_form: Termo de Uso
+term_version: Versão dos Termos
+term_status: Status dos Termos
 title: Titulo
 transsexual: Transexual
 transvestite: Travesti
@@ -395,6 +413,7 @@ total_value: Valor total
 user: Usuário
 user_name: Nome do Usuário
 users: Usuários
+updated_at: Atualizado em
 
 view_all: Ver todas
 view_file: ver arquivo
@@ -428,6 +447,7 @@ see_how: Visualizar como
 see_more: Ver mais
 see_phase: Ver fase
 short_description: Descrição curta
+showing: Exibindo
 site: Site
 social_media: Redes sociais
 sort_by: Ordenar por
@@ -508,6 +528,11 @@ footer:
   privacy_policy: Termos de uso e Política de privacidade
   send_email: Ou envie um email para
   visit_repository: visite o repositório
+
+table:
+  type_a_keyword: Digite uma palavra-chave...
+  no_records_found: Nenhum registro encontrado
+  error: Ocorreu um erro ao buscar os dados
 
 #pages
 view:

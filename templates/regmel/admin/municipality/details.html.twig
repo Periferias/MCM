@@ -7,6 +7,7 @@
 
     <section class="d-flex">
         {% include "_components/side-bar.html.twig" %}
+        {% include '_components/modal-confirm-remove.html.twig' %}
 
         <div class="management-content w-100 p-4">
             <div class="row">
@@ -17,12 +18,26 @@
                         </div>
 
                         <hr>
-
-                        <div class="alert alert-warning">
-                            <strong>Status do Termo de Adesão:</strong>
-                            AGUARDANDO
-                        </div>
-
+                        {% if municipality.extraFields['term_status'] == 'rejected' %}
+                            <div class="alert alert-danger">
+                                <strong>Status do Termo de Adesão:</strong>
+                                RECUSADO
+                                <hr>
+                                <em>Motivo: {{ municipality.extraFields.term_reason }}</em>
+                            </div>
+                        {% elseif municipality.extraFields['term_status'] == 'approved' %}
+                            <div class="alert alert-success">
+                                <strong>Status do Termo de Adesão:</strong>
+                                ACEITO
+                                <hr>
+                                <em>Motivo: {{ municipality.extraFields.term_reason }}</em>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <strong>Status do Termo de Adesão:</strong>
+                                AGUARDANDO
+                            </div>
+                        {% endif %}
                         <hr>
 
                         <ul class="nav nav-tabs" id="pills-tab" role="tablist">
@@ -203,11 +218,9 @@
                                     <thead class="table-dark">
                                     <tr>
                                         <th>Nome</th>
-                                        <th>
                                         {% if app.user.agents.first.id == createdById %}
-                                            Ações
+                                        <th> Ações </th>
                                         {% endif %}
-                                        </th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -232,7 +245,22 @@
                                             </td>
                                             <td>
                                                 {% if app.user.agents.first.id == createdById and agent.id != createdById %}
-                                                    <button type="submit" class="btn btn-danger btn-sm">Remover</button>
+                                                    <button
+                                                            data-cy="remove-{{ loop.index }}"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#modalRemoveConfirm"
+                                                            onclick="confirmRemove(this)"
+                                                            data-href="{{ path(
+                                                                'admin_regmel_municipality_remove',
+                                                                {
+                                                                    municipalityId: municipality.id,
+                                                                    agentId: agent.id
+                                                                }
+                                                            ) }}"
+                                                            class="btn btn-outline-danger btn-sm"
+                                                    >
+                                                        {{ 'delete'|trans }}
+                                                    </button>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -241,6 +269,34 @@
                                 </table>
                             </div>
                             <div class="tab-pane fade pt-3" id="pills-files" role="tabpanel" aria-labelledby="pills-files-tab" tabindex="0">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="modal fade" id="modalResendTerm" tabindex="-1" aria-labelledby="" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h1 class="modal-title fs-5" id="exampleModalLabel">Enviar termo de adesão do municipio</h1>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form action="{{ path('admin_regmel_municipality_upload_term', {id: municipality.id}) }}" method="post" enctype="multipart/form-data">
+                                                    <div class="modal-body">
+                                                        <input class="form-control" type="file" id="joinForm" name="joinForm" accept="application/pdf" required>
+                                                        <div class="form-text">
+                                                            {{ 'view.organization.pdf_advice' | trans}}
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                                        <button type="submit" class="btn btn-primary">Enviar</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if app.user.agents.first.id == createdById and municipality.extraFields['term_status'] != 'approved' %}
+                                        <a href="" data-bs-toggle="modal" data-bs-target="#modalResendTerm" class="btn btn-outline-success btn-sm">Reenviar</a>
+                                    {% endif %}
+                                </div>
+
                                 <a href="{{ path('regmel_municipality_document_file', {id: municipality.id}) }}" target="_blank">
                                     {{ municipality.extraFields.form }}
                                 </a>
@@ -277,5 +333,6 @@
     {{ parent() }}
     <script type="module" src="{{ asset('js/modal-timeline.js') }}"></script>
     <script type="module" src="{{ asset('js/regmel/modal-member-details.js') }}"></script>
-    <script src="{{ asset('js/grid-init.js') }}"></script>
+    <script src="{{ asset('js/modal-confirm-remove.js') }}"></script>
+    <script type="module" src="{{ asset('js/grid-init.js') }}"></script>
 {% endblock %}
