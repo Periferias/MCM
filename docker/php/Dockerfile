@@ -20,12 +20,15 @@ RUN rm -rf /var/www/html && apt-get update && apt-get install -y \
     libpq-dev \
     libssl-dev \
     pkg-config \
+    make \
     && docker-php-ext-install pdo_pgsql zip mbstring exif \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
@@ -41,6 +44,10 @@ RUN pecl install xdebug \
     && echo "zend_extension=xdebug.so" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.mode=coverage" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.start_with_request=no" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+RUN make permissions
+RUN make setup
+RUN make demo-regmel
 
 USER user
 
