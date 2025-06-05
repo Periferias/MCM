@@ -45,9 +45,9 @@ RUN pecl install xdebug \
     && echo "xdebug.mode=coverage" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.start_with_request=no" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
-RUN make permissions
-RUN make setup
-RUN make demo-regmel
+# RUN make permissions
+# RUN make setup
+# RUN make demo-regmel
 
 USER user
 
