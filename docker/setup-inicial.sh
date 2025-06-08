@@ -33,6 +33,7 @@
 #           linha 55: Configurar conforme o serviço de email
 #           linha 59: Configurar o endereço de email
 
+cd ../
 
 
 cp .env.example .env
