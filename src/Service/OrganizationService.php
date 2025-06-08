@@ -69,7 +69,7 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
         return $this->repository->save($organizationObj);
     }
 
-    public function findBy(array $params = [], int $limit = 50): array
+    public function findBy(array $params = [], int $limit = 4000): array
     {
         return $this->repository->findBy(
             [...$params, ...$this->getUserParams()],
@@ -229,7 +229,7 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
         return [
             'Nome da Organização',
             'Tipo',
-            'Equadramento',
+            'Enquadramento',
             'CNPJ',
             'E-mail',
             'Site',

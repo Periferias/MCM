@@ -64,7 +64,9 @@ class MunicipalityAdminController extends AbstractAdminController
         $filterState = $request->query->get('state');
 
         $regions = RegionEnum::cases();
-        $states = $this->stateService->findBy(['region' => $filterRegion]);
+        $states = $filterRegion
+            ? $this->stateService->findBy(['region' => $filterRegion])
+            : $this->stateService->list();
 
         if (true === in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles())) {
             $criteria = ['type' => OrganizationTypeEnum::MUNICIPIO->value];
@@ -113,6 +115,8 @@ class MunicipalityAdminController extends AbstractAdminController
     #[Route('/painel/admin/municipios/{id}', name: 'admin_regmel_municipality_details', methods: ['GET'])]
     public function details(Uuid $id): Response
     {
+        $user = $this->security->getUser();
+
         $municipality = $this->organizationService->findOneBy([
             'id' => $id,
             'type' => OrganizationTypeEnum::MUNICIPIO->value,
@@ -135,6 +139,7 @@ class MunicipalityAdminController extends AbstractAdminController
             'timeline' => $timeline,
             'proposals' => $proposals,
             'createdById' => $createdById,
+            'token' => $this->jwtManager->create($user),
         ], parentPath: '');
     }
 
@@ -183,6 +188,11 @@ class MunicipalityAdminController extends AbstractAdminController
             $this->addFlashError($exception->getMessage());
 
             return $this->list($request);
+        }
+
+        $referer = $request->headers->get('referer');
+        if ($referer) {
+            return $this->redirect($referer);
         }
 
         return $this->redirectToRoute('admin_regmel_municipality_list');
@@ -237,7 +247,7 @@ class MunicipalityAdminController extends AbstractAdminController
             ? $this->organizationService->findByMunicipalityFilters($region, $state)
             : $this->organizationService->findBy(['type' => $type]);
 
-        return $this->organizationService->generateCsv($municipalities, 'municipios.csv', $type);
+        return $this->organizationService->generateSpreadSheet($municipalities, 'municipios', $type);
     }
 
     #[Route('/painel/admin/municipios/{municipalityId}/propostas/{id}/status', name: 'admin_regmel_municipality_proposal_update_status', methods: ['POST'])]

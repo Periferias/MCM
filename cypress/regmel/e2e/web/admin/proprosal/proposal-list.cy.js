@@ -9,7 +9,7 @@ describe('Listagem de propostas', () => {
     });
 
     it('Verifica a visualização da proposta e seus detalhes', () => {
-        const today = new Date().toLocaleDateString('pt-BR');
+        const today = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
         cy.get('h2').contains('Empresas - Propostas');
 
@@ -20,20 +20,23 @@ describe('Listagem de propostas', () => {
             'Qtd. Domicílios',
             'Área Total',
             'Valor Global da Proposta',
+            'Antecipação do Recurso',
             'Ações',
         ];
         headers.forEach(text =>
             cy.contains('.gridjs-th-content', text)
         );
 
+        cy.get('.gridjs-input').type('Empresa Teste LTDA');
         cy.get(':nth-child(2) > [data-column-id="empresa"] > span').should('contain.text', 'Empresa Teste LTDA');
         cy.get(':nth-child(2) > [data-column-id="município"] > span').should('contain.text','Russas-CE');
         cy.get(':nth-child(2) > [data-column-id="status"] > :nth-child(1)').should('contain.text','Sem Adesão do Município');
         cy.get(':nth-child(2) > [data-column-id="qtd.Domicílios"] > span').should('contain.text','100');
         cy.get(':nth-child(2) > [data-column-id="áreaTotal"] > span').should('contain.text','1000');
-        cy.get(':nth-child(2) > [data-column-id="valorGlobalDaProposta"] > span').should('contain.text','R$ 4.500.000,00');
+        cy.get(':nth-child(2) > [data-column-id="valorGlobalDaProposta"] > span').should('contain.text','R$ 3.500.000,00');
         cy.get(':nth-child(2) > [data-column-id="ações"] > span > div > button').click();
         cy.get(':nth-child(2) > [data-column-id="ações"] > span > .dropdown > .dropdown-menu > :nth-child(1) > .dropdown-item').click();
+
 
         cy.get('#proposalDetailsLabel').should('contain.text','Proposta - Área Teste');
 
@@ -69,8 +72,8 @@ describe('Listagem de propostas', () => {
         cy.get('.align-items-end > .mt-4 > strong').should('contain.text','Valor Global da Proposta');
         cy.get(':nth-child(11) > :nth-child(1) > p').should('contain.text','1000  m²');
         cy.get('#quantity-houses').should('contain.text','100');
-        cy.get('#price-per-household').contains('R$ 45.000,00').should('exist');
-        cy.get('#total-price').contains('R$ 4.500.000,00').should('exist');
+        cy.get('#price-per-household').contains('R$ 35.000,00').should('exist');
+        cy.get('#total-price').contains('R$ 3.500.000,00').should('exist');
 
         cy.get('.modal-body > :nth-child(13)').should('contain.text','Baixar arquivo KML/KMZ/SHP');
         cy.get(':nth-child(14) > .col > .mt-4 > strong').should('contain.text','Arquivo do Projeto');

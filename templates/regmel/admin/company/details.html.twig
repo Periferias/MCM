@@ -4,6 +4,7 @@
 
 {% block content %}
     {% include '_components/modal-confirm-remove.html.twig' %}
+    {% include 'regmel/admin/company/_partials/modal-edit.html.twig' %}
     {% include 'regmel/admin/company/_partials/modal-add-proposal-not-active.html.twig' %}
 
     <section class="d-flex">
@@ -13,6 +14,17 @@
             <div class="card card-body shadow">
                 <div class="d-flex justify-content-between">
                     <h2>{{ 'company'|trans }} - {{ company.name }}</h2>
+
+                    <div class="col text-end">
+                        <a href="#"
+                           class="btn btn-secondary edit-company"
+                           data-bs-toggle="modal"
+                           data-bs-target="#modalEditCompany"
+                           data-id="{{ company.id }}"
+                           data-token="{{ token }}">
+                            {{ 'edit'|trans }}
+                        </a>
+                    </div>
                 </div>
 
                 <hr>
@@ -117,15 +129,16 @@
                                 <td>{{ proposal.extraFields.quantity_houses }}</td>
                                 <td>R$ {{ (proposal.extraFields.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
                                 <td>
-                                    {% set status = proposal.extraFields.status ?? 'Enviada'  %}
+                                    {% set status = proposal.extraFields.status ?? ''  %}
+                                    {% set statusEnum = enum('App\\Enum\\StatusProposalEnum') %}
                                     {% set badgeClass = ({
-                                        'Sem Adesão do Município': 'bg-dark text-white',
-                                        'Enviada':                 'bg-warning',
-                                        'Recebida':                'bg-info',
-                                        'Anuída':                  'bg-success',
-                                        'Não Anuída':              'bg-danger text-white',
-                                        'Selecionada':             'bg-success',
-                                        'Não Selecionada':         'bg-danger text-white',
+                                        (statusEnum.SEM_ADESAO.value): 'bg-dark text-white',
+                                        (statusEnum.ENVIADA.value): 'bg-warning',
+                                        (statusEnum.RECEBIDA.value): 'bg-info',
+                                        (statusEnum.ANUIDA.value): 'bg-success text-white',
+                                        (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
+                                        (statusEnum.SELECIONADA.value): 'bg-success text-white',
+                                        (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
                                     }[status] ?? 'bg-dark') %}
                                     <span class="badge {{ badgeClass }} text-dark">
                                         {{ status }}
@@ -268,6 +281,7 @@
     {{ parent() }}
     <script type="module" src="{{ asset('js/modal-timeline.js') }}"></script>
     <script type="module" src="{{ asset('js/regmel/modal-member-details.js') }}"></script>
+    <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
     <script type="module" src="{{ asset('js/grid-init.js') }}"></script>
     <script src="{{ asset('js/modal-proposal-details.js') }}"></script>
 {% endblock %}

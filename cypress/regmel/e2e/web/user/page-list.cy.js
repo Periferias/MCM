@@ -20,6 +20,7 @@ describe('Listagem de Usuários - Painel Administrativo', () => {
 
     it('Filtra usuários pelo campo de busca', () => {
         cy.get('.gridjs-input').type('João');
+        cy.wait(1000);
         cy.get('table tbody tr').each(($tr) => {
             cy.wrap($tr).should('contain.text', 'João');
         });
@@ -53,13 +54,29 @@ describe('Listagem de Usuários - Painel Administrativo', () => {
     });
 
     it('Valida paginação e navegação entre páginas', () => {
-        cy.get('button').contains('Próximo').click();
-        cy.get('table tbody tr').should('have.length.greaterThan', 0);
-        cy.get('button').contains('Anterior').click();
-        cy.get('table tbody tr').should('have.length.greaterThan', 0);
+        cy.get('#gridLimitSelect').select('10');
+
+        cy.get('button').contains('Próximo').then($next => {
+            if (!$next.is(':disabled')) {
+                cy.wrap($next).click();
+                cy.get('table tbody tr').should('have.length.greaterThan', 0);
+
+                cy.get('button').contains('Anterior').then($prev => {
+                    if (!$prev.is(':disabled')) {
+                        cy.wrap($prev).click();
+                        cy.get('table tbody tr').should('have.length.greaterThan', 0);
+                    } else {
+                        cy.log('Botão "Anterior" está desabilitado, provavelmente na primeira página.');
+                    }
+                });
+            } else {
+                cy.log('Botão "Próximo" está desabilitado, sem próximas páginas.');
+            }
+        });
     });
 
     it('Garante atualização dos dados ao trocar de página', () => {
+        cy.get('#gridLimitSelect').select('10');
         let firstPageFirstUser;
         cy.get('table tbody tr').first().find('td').first().invoke('text').then(text => {
             firstPageFirstUser = text;

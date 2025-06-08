@@ -9,7 +9,7 @@
     <section class="d-flex">
         {% include "_components/side-bar.html.twig" %}
 
-        <div class="management-content w-100 p-4">
+        <div class="my-3 container-fluid">
             <div class="row">
                 <div class="col-12">
                     <div class="card card-body shadow" style="overflow-x: visible;">
@@ -120,6 +120,7 @@
 {% block extra_javascripts %}
     {{ parent() }}
     <script type="module" src="{{ asset('js/grid-init.js') }}"></script>
+    <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
     <script src="{{ asset('js/form-utils.js') }}"></script>
     <script type="module" src="{{ asset('js/load-filters.js') }}"></script>
 {% endblock %}

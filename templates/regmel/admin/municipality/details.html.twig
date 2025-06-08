@@ -4,6 +4,7 @@
 
 {% block content %}
     {% include '_components/modal-confirm-remove.html.twig' %}
+    {% include 'regmel/admin/municipality/_partials/modal-edit.html.twig' %}
 
     <section class="d-flex">
         {% include "_components/side-bar.html.twig" %}
@@ -15,6 +16,18 @@
                     <div class="card card-body shadow">
                         <div class="d-flex justify-content-between">
                             <h2>{{ 'municipality'|trans }} - {{ municipality.name }}-{{ municipality.extraFields.state }}</h2>
+
+                            <div class="col text-end">
+                                <a href="#"
+                                class="btn btn-secondary edit-organization"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalEditOrganization"
+                                data-id="{{ municipality.id }}"
+                                data-token="{{ token }}"
+                                >
+                                    {{ 'edit'|trans }}
+                                </a>
+                            </div>
                         </div>
 
                         <hr>
@@ -101,15 +114,13 @@
 
                                     <p>
                                         <strong>Possui experiência habitacional: </strong>
-                                        {% if 'hasHousingExperience' in municipality.extraFields %}
-                                            {{ municipality.extraFields.hasHousingExperience ? 'Sim' : 'Não' }}
-                                        {% endif %}
+                                        {% set hasHousingExperience = 'true' == municipality.extraFields.hasHousingExperience ?? '' %}
+                                        {{ hasHousingExperience ? 'Sim' : 'Não' }}
                                     </p>
                                     <p>
                                         <strong>Possui PLHIS: </strong>
-                                        {% if 'hasPlhis' in municipality.extraFields %}
-                                            {{ municipality.extraFields.hasPlhis ? 'Sim' : 'Não' }}
-                                        {% endif %}
+                                        {% set hasPlhis = 'true' == municipality.extraFields.hasPlhis ?? '' %}
+                                        {{ hasPlhis ? 'Sim' : 'Não' }}
                                     </p>
                                 </div>
                             </div>
@@ -142,9 +153,26 @@
                                                         <div class="form-text">Selecione uma opção obrigatória</div>
                                                     </div>
 
-                                                    <div class="mb-3">
-                                                        <label for="reasonText" class="form-label fw-bold">Motivo *</label>
-                                                        <textarea name="reason" id="reasonText" class="form-control" rows="4"
+                                                    <input type="hidden" name="reason" id="hiddenReason">
+
+                                                    <div class="mb-3 d-none" id="agreementFields">
+                                                        <div class="form-check mb-3">
+                                                            <input class="form-check-input" type="checkbox" id="confirmAgreement" required>
+                                                            <label class="form-check-label" for="confirmAgreement">
+                                                                Declaro, para os devidos fins;<br>
+                                                                I – Que anuo expressamente com a proposta apresentada;<br>
+                                                                II – Que o a área urbana objeto de referida proposta se enquadra em uma ou mais critérios de elegibilidade indicados a seguir:<br>
+                                                                a. é um núcleo urbano regularizado ou em processo de regularização fundiária, desde que predominantemente de baixa renda;<br>
+                                                                b. é um núcleo urbano informal classificados como área de Regularização Fundiária Urbana de Interesse Social - Reurb-S;<br>
+                                                                c. é uma zona especial de interesse social, conforme o art. 4º, inciso V, alínea "f", da Lei nº 10.257, de 10 de julho de 2001;<br>
+                                                                d. é um caso excepcional em que o núcleo urbano ainda não tenha dado início ao processo de regularização fundiária nem se caracterize como zona especial de interesse social, mas que possui potenciais beneficiários de baixa renda que poderão receber obras de melhorias destinadas a garantir segurança ou salubridade para preservação de vidas.<br>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3 d-none" id="notAgreementFields">
+                                                        <label for="declineReasonText" class="form-label fw-bold">Motivo *</label>
+                                                        <textarea name="declineReason" id="declineReasonText" class="form-control" rows="4"
                                                                   placeholder="Descreva o motivo da sua decisão..." required></textarea>
                                                         <div class="form-text">Mínimo de 20 caracteres</div>
                                                     </div>
@@ -185,6 +213,20 @@
                                     </div>
                                 </div>
 
+                                <div class="col gap-1 text-end mt-4">
+                                    <a href="{{ path('admin_regmel_proposal_map_file_download') }}" class="btn btn-sm btn-success">
+                                        {{ 'export_map_file'|trans }}
+                                    </a>
+
+                                    <a href="{{ path('admin_regmel_proposal_project_file_download') }}" class="btn btn-sm btn-info">
+                                        {{ 'export_project_file'|trans }}
+                                    </a>
+
+                                    <a href="{{ path('admin_regmel_proposal_list_download', app.request.query.all) }}" class="btn btn-sm btn-secondary">
+                                        {{ 'export_csv'|trans }}
+                                    </a>
+                                </div>
+
                                 <table class="js-grid table table-hover table-striped mt-3">
                                     <thead class="table-dark">
                                         <tr>
@@ -203,15 +245,16 @@
                                             <td>{{ proposal.name }}</td>
                                             <td>{{ proposal.organizationFrom.name }}</td>
                                             <td>
-                                                {% set status = proposal.extraFields.status ?? 'Enviada'  %}
+                                                {% set status = proposal.extraFields.status ?? ''  %}
+                                                {% set statusEnum = enum('App\\Enum\\StatusProposalEnum') %}
                                                 {% set badgeClass = ({
-                                                    'Sem Adesão do Município': 'bg-dark text-white',
-                                                    'Enviada':                 'bg-warning',
-                                                    'Recebida':                'bg-info',
-                                                    'Anuída':                  'bg-success',
-                                                    'Não Anuída':              'bg-danger text-white',
-                                                    'Selecionada':             'bg-success',
-                                                    'Não Selecionada':         'bg-danger text-white',
+                                                    (statusEnum.SEM_ADESAO.value): 'bg-dark text-white',
+                                                    (statusEnum.ENVIADA.value): 'bg-warning',
+                                                    (statusEnum.RECEBIDA.value): 'bg-info',
+                                                    (statusEnum.ANUIDA.value): 'bg-success text-white',
+                                                    (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
+                                                    (statusEnum.SELECIONADA.value): 'bg-success text-white',
+                                                    (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
                                                 }[status] ?? 'bg-dark') %}
                                                 <span class="badge {{ badgeClass }} text-dark">
                                                     {{ status }}
@@ -420,6 +463,7 @@
     <script type="module" src="{{ asset('js/regmel/modal-member-details.js') }}"></script>
     <script src="{{ asset('js/modal-confirm-remove.js') }}"></script>
     <script src="{{ asset('js/modal-proposal-details.js') }}"></script>
+    <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
     <script type="module" src="{{ asset('js/grid-init.js') }}"></script>
 
     <script>
@@ -427,5 +471,51 @@
             const form = document.getElementById('proposalStatusForm');
             form.action = `/painel/admin/municipios/${municipalityId}/propostas/${proposalId}/status`;
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusAgreement = document.getElementById('statusAgreement');
+            const statusNotAgreement = document.getElementById('statusNotAgreement');
+            const hiddenReason = document.getElementById('hiddenReason');
+            const agreementFields = document.getElementById('agreementFields');
+            const notAgreementFields = document.getElementById('notAgreementFields');
+            const reasonText = document.getElementById('reasonText');
+            const confirmAgreement = document.getElementById('confirmAgreement');
+            const declineReasonText = document.getElementById('declineReasonText');
+
+
+            function toggleFields() {
+                if (statusAgreement.checked) {
+                    agreementFields.classList.remove('d-none');
+                    notAgreementFields.classList.add('d-none');
+
+                    confirmAgreement.setAttribute('required', '');
+                    declineReasonText.removeAttribute('required');
+
+                    const declarationLabel = document.querySelector('#agreementFields .form-check-label');
+                    hiddenReason.value = declarationLabel.textContent.trim();
+                }
+
+                if (statusNotAgreement.checked) {
+                    agreementFields.classList.add('d-none');
+                    notAgreementFields.classList.remove('d-none');
+
+                    confirmAgreement.removeAttribute('required');
+                    declineReasonText.setAttribute('required', '');
+
+                    hiddenReason.value = declineReasonText.textContent.trim();
+                }
+            }
+
+            statusAgreement.addEventListener('change', toggleFields);
+            statusNotAgreement.addEventListener('change', toggleFields);
+
+            declineReasonText.addEventListener('input', function() {
+                if (statusNotAgreement.checked) {
+                    hiddenReason.value = this.value;
+                }
+            });
+
+            toggleFields();
+        });
     </script>
 {% endblock %}

@@ -20,17 +20,6 @@
                     </div>
                     <div class="row">
                         <div class="col-md-3">
-                            <label for="region" class="form-label">{{ 'region'|trans }}</label>
-                            <select id="region" required name="region" class="form-select">
-                                <option value="" selected>{{ 'select'|trans }}</option>
-                                {% for region in regions %}
-                                    <option value="{{ region.value }}">
-                                        {{ region.value }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
                             <label for="state" class="form-label">{{ 'state'|trans }}</label>
                             <select id="state" required name="state" class="form-select">
                                 <option value="">{{ 'select'|trans }}</option>
@@ -113,8 +102,8 @@
                                 </div>
 
                                 <div class="col">
-                                    <label for="quantity_houses" class="form-label">Número de Domicílios (<span>min 20 / max 120</span>)</label>
-                                    <input oninput="atualizarValor()" placeholder="0" max="120" type="number" min="20" id="quantity_houses" name="quantity_houses" class="form-control"/>
+                                    <label for="quantity_houses" class="form-label">Número de Domicílios (<span>min {{ env.aurora.variables.min_houses }} / max {{ env.aurora.variables.max_houses }}</span>)</label>
+                                    <input oninput="atualizarValor()" placeholder="0" max="{{ env.aurora.variables.max_houses }}" type="number" min="{{ env.aurora.variables.min_houses }}" id="quantity_houses" name="quantity_houses" class="form-control"/>
                                 </div>
                             </div>
                             <div class="row mt-3">
@@ -152,15 +141,15 @@
                                             <a href="/files/exemplo-anexo-iv-c.docx" download>{{ 'proposal.download_model'|trans }}</a>
                                             <span class="text-danger">*</span>
                                         </label>
-                                        <input type="file" name="annex_iv_c_file" data-allowed="pdf" accept="application/pdf" id="Anexo IV-C" class="form-control" required>
+                                        <input type="file" name="annex_iv_c_file" data-allowed="pdf" data-label='Anexo IV-C' accept="application/pdf" class="form-control" required>
                                     </div>
                                     <div class="mt-3">
                                         <label class="form-label fw-bold">{{ 'proposal.responsible_field'|trans }} <span class="text-danger">*</span></label>
-                                        <input type="file" name="technical-manager_file" data-allowed="pdf" id="Responsável técnico" accept="application/pdf" class="form-control" required>
+                                        <input type="file" name="technical-manager_file" data-allowed="pdf" data-label='Responsável técnico' accept="application/pdf" class="form-control" required>
                                     </div>
                                     <div class="mt-3">
                                         <label class="form-label fw-bold">{{ 'proposal.rrt_art_field'|trans }} <span class="text-danger">*</span></label>
-                                        <input type="file" name="rrt_art_file" data-allowed="pdf" accept="application/pdf" id="RRT ART" class="form-control" required>
+                                        <input type="file" name="rrt_art_file" data-allowed="pdf" data-label='RRT ART' accept="application/pdf" class="form-control" required>
                                     </div>
                                 </div>
                             {% endif %}
