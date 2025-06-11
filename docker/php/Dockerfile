@@ -34,7 +34,12 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 RUN groupadd -g 1000 developer && useradd -u 1000 -ms /bin/bash -g developer user
 
-COPY --chown=user:developer . /var/www
+#COPY --chown=user:developer . /var/www
+COPY . /var/www
+
+RUN chmod +x /var/www/docker/setup-inicial.sh && chmod +x /var/www/docker/update.sh
+
+COPY ./docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
 
 RUN mkdir -p /var/www/assets/uploads && chown -R www-data /var/www/assets/uploads
 RUN mkdir -p /var/www/storage && chown -R www-data /var/www/storage
@@ -49,6 +54,6 @@ RUN pecl install xdebug \
 # RUN make setup
 # RUN make demo-regmel
 
-USER user
+#USER user
 
 EXPOSE 9000

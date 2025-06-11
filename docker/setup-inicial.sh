@@ -107,3 +107,7 @@ php bin/console asset-map:compile
 #make demo-regmel
 php bin/console app:create-admin-user
 php bin/console app:demo-regmel
+
+
+mkdir -p /var/www/assets/uploads && chown -R www-data /var/www/assets/uploads
+mkdir -p /var/www/storage && chown -R www-data /var/www/storage

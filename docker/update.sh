@@ -11,7 +11,7 @@
 # 3 - Entre em docker 
 # 4 - ./update.sh
 
-
+cd ../
 
 #migrate_database
 php bin/console doctrine:migrations:migrate -n
