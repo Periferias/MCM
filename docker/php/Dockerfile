@@ -34,7 +34,6 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 RUN groupadd -g 1000 developer && useradd -u 1000 -ms /bin/bash -g developer user
 
-#COPY --chown=user:developer . /var/www
 COPY . /var/www
 
 RUN chmod +x /var/www/docker/setup-inicial.sh && chmod +x /var/www/docker/update.sh
@@ -49,11 +48,5 @@ RUN pecl install xdebug \
     && echo "zend_extension=xdebug.so" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.mode=coverage" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.start_with_request=no" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-
-# RUN make permissions
-# RUN make setup
-# RUN make demo-regmel
-
-#USER user
 
 EXPOSE 9000

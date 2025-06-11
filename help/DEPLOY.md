@@ -130,3 +130,30 @@ Compilar o CSS/Javascript
 make compile_frontend
 ```
 </details>
+
+<summary>Implantação no ambiente da SNP - Coolify</summary>
+
+### `up`
+
+Após apontar o repositório para a branch main utilizando o docker compose como start da aplicação deve-se entrar no terminal do container php e executar os seguintes comandos
+```shell
+cd docker
+./setup-inicial.sh
+```
+Ao final deste processos deve ser possível logar na plataforma com o seguinte usuário:
+
+<table>
+  <tr>
+    <th>Email</th>
+    <th>Senha</th>
+  </tr>
+  <tbody>
+    <tr>
+      <td>admin@regmel.com</td>
+      <td>Aurora@2024</td>
+    </tr>
+  </tbody>
+</table>
+
+
+</details>
