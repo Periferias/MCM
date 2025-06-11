@@ -131,6 +131,7 @@ make compile_frontend
 ```
 </details>
 
+</details>
 <summary>Implantação no ambiente da SNP - Coolify</summary>
 
 ### `up`
@@ -154,6 +155,4 @@ Ao final deste processos deve ser possível logar na plataforma com o seguinte u
     </tr>
   </tbody>
 </table>
-
-
 </details>
