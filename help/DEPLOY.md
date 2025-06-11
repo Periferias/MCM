@@ -131,7 +131,7 @@ make compile_frontend
 ```
 </details>
 
-</details>
+<details>
 <summary>Implantação no ambiente da SNP - Coolify</summary>
 
 ### `up`
