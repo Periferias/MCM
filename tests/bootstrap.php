@@ -11,9 +11,9 @@ require dirname(__DIR__).'/vendor/autoload.php';
 
 require dirname(__DIR__).'/vendor/squizlabs/php_codesniffer/tests/bootstrap.php';
 
-// if (method_exists(Dotenv::class, 'bootEnv')) {
-//     (new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
-// }
+if (method_exists(Dotenv::class, 'bootEnv')) {
+    (new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+}
 
 if ($_SERVER['APP_DEBUG']) {
     umask(0o000);

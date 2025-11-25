@@ -13,6 +13,7 @@
         <ini name="error_reporting" value="-1" />
         <ini name="memory_limit" value="512M"/>
         <server name="APP_ENV" value="test" force="true" />
+        <server name="APP_DEBUG" value="1" />
         <server name="KERNEL_CLASS" value="App\Kernel"/>
         <server name="SHELL_VERBOSITY" value="-1" />
         <server name="SYMFONY_PHPUNIT_REMOVE" value="" />
@@ -27,6 +28,10 @@
     </testsuites>
 
     <extensions>
+        <bootstrap class="Symfony\Bridge\PhpUnit\SymfonyExtension">
+            <parameter name="clock-mock-namespaces" value="App" />
+            <parameter name="dns-mock-namespaces" value="App" />
+        </bootstrap>
         <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
     </extensions>
 
@@ -42,7 +47,7 @@
         </exclude>
     </source>
 
-    <coverage pathCoverage="true">
+    <coverage>
         <report>
             <html outputDirectory="coverage-html"/>
             <clover outputFile="coverage.xml"/>

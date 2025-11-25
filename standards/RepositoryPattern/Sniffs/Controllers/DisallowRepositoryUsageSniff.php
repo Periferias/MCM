@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Standards\RepositoryPattern\Sniffs\Controllers;
+namespace RepositoryPattern\Sniffs\Controllers;
 
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;

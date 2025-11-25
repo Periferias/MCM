@@ -1,6 +1,8 @@
 {
     "type": "project",
     "license": "MIT",
+    "name": "pvr/pvr",
+    "description": "Periferia Viva Reformas",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
@@ -20,7 +22,7 @@
         "lexik/jwt-authentication-bundle": "^3.1",
         "nelmio/cors-bundle": "^2.5",
         "phpoffice/phpspreadsheet": "^4.3",
-        "runtime/frankenphp-symfony": "*",
+        "runtime/frankenphp-symfony": "^0.2.0",
         "symfony/asset": "7.2.*",
         "symfony/asset-mapper": "7.2.*",
         "symfony/console": "7.2.*",
@@ -67,7 +69,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "App\\Tests\\": "tests/"
+            "App\\Tests\\": "tests/",
+            "RepositoryPattern\\": "standards/RepositoryPattern/"
         }
     },
     "replace": {

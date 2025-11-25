@@ -1,0 +1,149 @@
+name: PHP Tests and Linting
+
+on:
+  push:
+    branches: [ main, feat/*, fix/* ]
+  # pull_request:
+  #   branches: [ main ]
+
+jobs:
+  lint:
+    name: Code Style & Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, fileinfo, gd, iconv, mongodb, sodium, pdo_pgsql, intl, opcache, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Run PHP-CS-Fixer
+        run: php bin/console app:code-style
+        continue-on-error: false
+
+      - name: Run PHP_CodeSniffer
+        run: php vendor/bin/phpcs
+        continue-on-error: false
+
+  test:
+    name: PHPUnit Tests (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.4']
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: api_test
+          POSTGRES_USER: example
+          POSTGRES_PASSWORD: '!ChangeMe!'
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      mongodb:
+        image: mongo:7
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: '!ChangeMe!'
+          MONGO_INITDB_DATABASE: api_test
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: ctype, fileinfo, gd, iconv, mongodb, sodium, pdo_pgsql, intl, opcache, zip
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Create .env.test.local file
+        run: |
+          cat > .env.test.local << EOF
+          DATABASE_URL="postgresql://example:!ChangeMe!@127.0.0.1:5432/api_test?serverVersion=16&charset=utf8"
+          MONGODB_URI="mongodb://root:!ChangeMe!@127.0.0.1:27017"
+          MONGODB_DB=api_test
+          EOF
+
+      - name: Setup database schema
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists
+          php bin/console doctrine:migrations:migrate --env=test --no-interaction
+          php bin/console doctrine:fixtures:load --env=test --no-interaction --purge-exclusions=city --purge-exclusions=state
+
+      - name: Generate MongoDB proxies
+        run: php bin/console doctrine:mongodb:generate:proxies --env=test
+
+      - name: Run MongoDB migrations
+        run: php bin/console app:mongo:migrations:execute --env=test
+        continue-on-error: true
+
+      - name: Generate JWT keypair
+        run: php bin/console lexik:jwt:generate-keypair --env=test --overwrite
+
+      - name: Run PHPUnit tests
+        run: php vendor/bin/phpunit --testdox
+
+      - name: Run PHPUnit tests with coverage
+        if: matrix.php-version == '8.4'
+        run: php vendor/bin/phpunit --coverage-clover coverage.xml
+
+      - name: Upload coverage to Codecov
+        if: matrix.php-version == '8.4'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
