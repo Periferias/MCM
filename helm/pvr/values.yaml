@@ -127,6 +127,9 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+app:
+  defaultUri: "http://localhost:8080"
+
 # If you use Mercure, you need the managed or the On Premise version to deploy more than one pod: https://mercure.rocks/docs/hub/cluster
 replicaCount: 1
 

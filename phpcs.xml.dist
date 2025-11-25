@@ -28,6 +28,6 @@
     <file>src/</file>
     <file>tests/</file>
 
-    <rule ref="RepositoryPattern"/>
+    <rule ref="standards/RepositoryPattern/ruleset.xml"/>
 
 </ruleset>

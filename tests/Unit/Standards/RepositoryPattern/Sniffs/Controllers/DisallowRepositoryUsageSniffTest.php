@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Standards\RepositoryPattern\Sniffs\Controllers;
 
-use App\Standards\RepositoryPattern\Sniffs\Controllers\DisallowRepositoryUsageSniff;
 use PHP_CodeSniffer\Files\File;
 use PHPUnit\Framework\TestCase;
+use RepositoryPattern\Sniffs\Controllers\DisallowRepositoryUsageSniff;
 
 class DisallowRepositoryUsageSniffTest extends TestCase
 {
