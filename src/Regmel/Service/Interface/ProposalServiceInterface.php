@@ -12,7 +12,15 @@ use Symfony\Component\Uid\Uuid;
 
 interface ProposalServiceInterface
 {
-    public function saveProposal(Organization $company, array $data, ?UploadedFile $map = null, ?UploadedFile $project): Initiative;
+    public function saveProposal(
+        Organization $company,
+        array $data,
+        ?UploadedFile $map = null,
+        ?UploadedFile $project = null,
+        ?UploadedFile $annexIvC = null,
+        ?UploadedFile $technicalManager = null,
+        ?UploadedFile $rrtArt = null
+    ): Initiative;
 
     public function updateStatusProposal(Uuid $id, StatusProposalEnum $status, string $reason): void;
 

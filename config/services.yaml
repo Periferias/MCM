@@ -11,6 +11,8 @@ parameters:
     app.url.storage.images: '%env(resolve:STORAGE_IMAGES_BASE_URL)%'
     app.email.address: '%env(EMAIL_ADDRESS)%'
     max_file_size: '%env(MAX_FILE_SIZE_MB)%'
+    env(MONGODB_URI): ''
+    env(MONGODB_DB): ''
 
 imports:
     - { resource: directories.yaml }
@@ -42,6 +44,7 @@ services:
 
     App\Repository\Interface\OrganizationRepositoryInterface: '@App\Repository\OrganizationRepository'
     App\Repository\Interface\MunicipalityRepositoryInterface: '@App\Regmel\Repository\MunicipalityRepository'
+    League\Flysystem\FilesystemOperator: '@default.storage'
 
     App\Service\FileService:
         arguments:
