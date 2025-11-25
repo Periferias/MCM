@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Standards\RepositoryPattern\Sniffs\Enum;
 
-use App\Standards\RepositoryPattern\Sniffs\Enum\StructOfEnumSniff;
 use PHP_CodeSniffer\Files\File;
 use PHPUnit\Framework\TestCase;
+use RepositoryPattern\Sniffs\Enum\StructOfEnumSniff;
 
 class StructOfEnumSniffTest extends TestCase
 {
