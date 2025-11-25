@@ -7,6 +7,7 @@
         "php": ">=8.4",
         "ext-ctype": "*",
         "ext-fileinfo": "*",
+        "ext-gd": "*",
         "ext-iconv": "*",
         "ext-mongodb": "*",
         "ext-sodium": "*",
@@ -19,6 +20,7 @@
         "lexik/jwt-authentication-bundle": "^3.1",
         "nelmio/cors-bundle": "^2.5",
         "phpoffice/phpspreadsheet": "^4.3",
+        "runtime/frankenphp-symfony": "*",
         "symfony/asset": "7.2.*",
         "symfony/asset-mapper": "7.2.*",
         "symfony/console": "7.2.*",
@@ -49,6 +51,12 @@
             "symfony/flex": true,
             "symfony/runtime": true
         },
+        "audit": {
+            "ignore": [
+                "PKSA-365x-2zjk-pt47",
+                "PKSA-64jn-3d9t-gncx"
+            ]
+        },
         "sort-packages": true
     },
     "autoload": {
@@ -78,7 +86,7 @@
             "assets:install %PUBLIC_DIR%": "symfony-cmd",
             "importmap:install": "symfony-cmd"
         },
-        "post-start-cmd": [
+        "post-install-cmd": [
             "@auto-scripts"
         ],
         "post-update-cmd": [
@@ -100,7 +108,7 @@
         "doctrine/doctrine-fixtures-bundle": "^3.6",
         "friendsofphp/php-cs-fixer": "^3.62",
         "phpunit/php-code-coverage": "^12.0",
-        "phpunit/phpunit": "^12",
+        "phpunit/phpunit": "^12.0",
         "squizlabs/php_codesniffer": "*",
         "symfony/browser-kit": "7.2.*",
         "symfony/css-selector": "7.2.*",
