@@ -1,0 +1,18 @@
+monolog:
+    handlers:
+        debug_log:
+            type: stream
+            path: "%kernel.logs_dir%/tests/debug.log"
+            level: debug
+        info_log:
+            type: stream
+            path: "%kernel.logs_dir%/tests/info.log"
+            level: info
+        errors_4xx:
+            type: stream
+            path: "%kernel.logs_dir%/tests/errors_4xx.log"
+            level: error
+        errors_5xx:
+            type: stream
+            path: "%kernel.logs_dir%/tests/errors_5xx.log"
+            level: critical

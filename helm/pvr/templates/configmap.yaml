@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "pvr.fullname" . }}
+  labels:
+    {{- include "pvr.labels" . | nindent 4 }}
+data:
+  php-app-env: {{ .Values.php.appEnv | quote }}
+  php-app-debug: {{ .Values.php.appDebug | quote }}
+  php-cors-allow-origin: {{ .Values.php.corsAllowOrigin | quote }}
+  php-trusted-hosts: {{ .Values.php.trustedHosts | quote }}
+  php-trusted-proxies: "{{ join "," .Values.php.trustedProxies }}"
+  caddy-global-options: {{ .Values.php.caddyGlobalOptions | quote }}
+  {{- if or .Values.mongodb.enabled .Values.mongodb.url }}
+  mongodb-db: {{ .Values.mongodb.userDatabase.name | quote }}
+  {{- end }}

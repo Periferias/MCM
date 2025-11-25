@@ -108,7 +108,7 @@
 
 .contribute-maps {
     background-size: cover !important;
-    background: linear-gradient(rgba(0, 43, 71, 0.85), rgba(0, 43, 71, 0.85)), url('../img/home-contribua.png') center;
+    background: linear-gradient(rgba(0, 43, 71, 0.85), rgba(0, 43, 71, 0.85)), url('../../img/home-contribua.png') center;
     display: flex;
 }
 
