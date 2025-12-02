@@ -1,0 +1,112 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - main
+      - feat/*
+
+
+# Required for IRSA (IAM Roles for Service Accounts)
+# The default runner running on EKS needs to have the service account
+# with proper IAM role annotations for ECR access
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: melhorias-habitacionais
+  AWS_ACCOUNT_ID: 298680963177
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: 
+      group: Default
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Configure AWS credentials using IRSA
+      # This assumes the GitHub Actions runner is running on EKS with a service account
+      # that has an IAM role attached via IRSA with ECR permissions
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+      #     aws-region: ${{ env.AWS_REGION }}
+      #     # Use web identity token from the EKS service account
+      #     role-session-name: github-actions-ecr-push
+      #     # Duration in seconds (default: 3600)
+      #     role-duration-seconds: 3600
+
+      # Login to Amazon ECR
+      # The runner already has AWS credentials via IRSA (service account with IAM role)
+      # so we just need to get the ECR login token
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      #   with:
+      #     region: ${{ env.AWS_REGION }}
+
+      # Generate sortable image tags following FluxCD best practices
+      # See: https://fluxcd.io/flux/guides/sortable-image-tags/
+      # Format: <branch>-<short-sha>-<timestamp>
+      # This ensures tags are lexicographically sortable for FluxCD ImageUpdateAutomation
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+          # Generate sortable tags for FluxCD
+          tags: |
+            # Branch name + short SHA + Unix timestamp (sortable)
+            type=raw,value=${{ github.ref_name }}-{{sha}}-{{date 'X'}},enable={{is_default_branch}}
+            # Latest tag for main branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Git SHA (short format)
+            type=sha,format=short,prefix={{branch}}-
+          labels: |
+            org.opencontainers.image.title=Aurora/MCM PHP Application
+            org.opencontainers.image.description=FrankenPHP-based Symfony application
+            org.opencontainers.image.vendor=Periferias
+
+      # Build and push Docker image to ECR
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: frankenphp_prod
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      # Output the image URI for reference
+      - name: Output image details
+        run: |
+          echo "### Docker Image Published :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Registry:** ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ env.ECR_REPOSITORY }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Full Image URI:**" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Digest:** \`${{ steps.meta.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
