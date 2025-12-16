@@ -1,35 +1,37 @@
 <form id="proposal-add-form" method="POST" class="entity-add-form" enctype="multipart/form-data">
     <input type="hidden" name="token" value="">
-
     <input type="hidden" name="company" value="{{ company.id }}">
 
     <div class="accordion accordion-flush accordion-cards mt-4" id="accordionPanelsStayOpenExample">
         <div class="accordion-item">
             <h2 class="accordion-header">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true">
                     Identificação da Proposta
                 </button>
             </h2>
+
             <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
                 <div class="accordion-body">
+
                     <span class="responsive-size">{{ 'public_data_notice' | trans }}</span>
                     <hr>
 
                     <div class="mt-4 mb-2 text-primary">
-                        <strong>Selecione o Municipio</strong>
+                        <strong>Selecione o Município</strong>
                     </div>
+
                     <div class="row">
                         <div class="col-md-3">
                             <label for="state" class="form-label">{{ 'state'|trans }}</label>
                             <select id="state" required name="state" class="form-select">
                                 <option value="">{{ 'select'|trans }}</option>
                                 {% for state in states %}
-                                    <option value="{{ state.id }}">
-                                        {{ state.name }}
-                                    </option>
+                                    <option value="{{ state.id }}">{{ state.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
+
                         <div class="col-md-3">
                             <label for="city" class="form-label">{{ 'city'|trans }}</label>
                             <select id="city" required name="city" class="form-select">
@@ -37,6 +39,7 @@
                             </select>
                         </div>
                     </div>
+
                     <hr>
 
                     <div class="mt-4 mb-2 text-primary fw-bold">
@@ -49,25 +52,16 @@
                     <div class="mt-4 mb-2 text-primary">
                         <strong>A área é caracterizada como:</strong>
                     </div>
-                    <div class="alert alert-info">
-                        <input type="radio" required value="option_1" name="area_characteristic" id="option_1">
-                        <label for="option_1">{{ env.aurora.proposals.area_characteristics.option_1 }}</label>
-                    </div>
 
-                    <div class="alert alert-info">
-                        <input type="radio" required value="option_2" name="area_characteristic" id="option_2">
-                        <label for="option_2">{{ env.aurora.proposals.area_characteristics.option_2 }}</label>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <input type="radio" required value="option_3" name="area_characteristic" id="option_3">
-                        <label for="option_3">{{ env.aurora.proposals.area_characteristics.option_3 }}</label>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <input type="radio" required value="option_4" name="area_characteristic" id="option_4">
-                        <label for="option_4">{{ env.aurora.proposals.area_characteristics.option_4 }}</label>
-                    </div>
+                    {% for i in 1..4 %}
+                        <div class="alert alert-info">
+                            <input type="radio" required value="option_{{ i }}"
+                                   name="area_characteristic" id="option_{{ i }}">
+                            <label for="option_{{ i }}">
+                                {{ attribute(env.aurora.proposals.area_characteristics, 'option_' ~ i) }}
+                            </label>
+                        </div>
+                    {% endfor %}
 
                     <hr>
 
@@ -77,14 +71,16 @@
 
                     <div class="row">
                         <div class="col">
-                            <label for="map" class="form-label">Poligonal Mapa (PDF/JPG)</label>
-                            <input type="file" data-label="Poligonal Mapa" name="map" data-allowed="pdf,jpg" class="form-control"/>
-                        </div>
-                        <div class="col">
-                            <label for="project" class="form-label">Poligonal Georreferenciada (KML/Shapefiles)</label>
-                            <input type="file" data-label="Poligonal Georreferenciada" name="project" data-allowed="kml,shp,shx,dbf" class="form-control"/>
+                            <label class="form-label">Poligonal Mapa (PDF/JPG)</label>
+                            <input type="file" name="map" data-allowed="pdf,jpg"
+                                   data-label="Poligonal Mapa" class="form-control">
                         </div>
 
+                        <div class="col">
+                            <label class="form-label">Poligonal Georreferenciada (KML/Shapefiles)</label>
+                            <input type="file" name="project" data-allowed="kml,shp,shx,dbf"
+                                   data-label="Poligonal Georreferenciada" class="form-control">
+                        </div>
                     </div>
 
                     <hr>
@@ -95,79 +91,122 @@
 
                     <div class="row">
                         <div class="col-7">
+
                             <div class="row">
                                 <div class="col">
-                                    <label for="area_size" class="form-label">Área estimada da Poligonal (m2)</label>
-                                    <input type="text" min="0" id="area_size" placeholder="0" name="area_size" class="form-control"/>
+                                    <label class="form-label">Área estimada da Poligonal (m²)</label>
+                                    <input type="text" id="area_size" name="area_size"
+                                           placeholder="0" class="form-control">
                                 </div>
 
                                 <div class="col">
-                                    <label for="quantity_houses" class="form-label">Número de Domicílios (<span>min {{ env.aurora.variables.min_houses }} / max {{ env.aurora.variables.max_houses }}</span>)</label>
-                                    <input oninput="atualizarValor()" placeholder="0" max="{{ env.aurora.variables.max_houses }}" type="number" min="{{ env.aurora.variables.min_houses }}" id="quantity_houses" name="quantity_houses" class="form-control"/>
+                                    <label class="form-label">
+                                        Número de Domicílios
+                                        (min {{ env.aurora.variables.min_houses }}
+                                        / max {{ env.aurora.variables.max_houses }})
+                                    </label>
+                                    <input type="number" id="quantity_houses"
+                                           name="quantity_houses"
+                                           min="{{ env.aurora.variables.min_houses }}"
+                                           max="{{ env.aurora.variables.max_houses }}"
+                                           placeholder="0"
+                                           class="form-control"
+                                           oninput="atualizarValor()">
                                 </div>
                             </div>
+
                             <div class="row mt-3">
                                 <div class="col">
                                     <div class="alert alert-success">
-                                        <strong>Valor Global da Proposta: </strong>R$ <span id="x">0</span>
+                                        <strong>Valor Global da Proposta:</strong>
+                                        R$ <span id="x">0</span>
                                         <hr>
-                                        <small><strong>Número de Domicilios</strong> * <strong>R$ {{ env.aurora.variables.price_per_household|number_format(2, ',', '.') }}</strong> (custo médio por domicílio)</small>
+                                        <small>
+                                            Número de Domicílios *
+                                            R$ {{ env.aurora.variables.price_per_household|number_format(2, ',', '.') }}
+                                        </small>
                                     </div>
                                 </div>
                             </div>
 
+                            {# ================= NOVO CAMPO ================= #}
+
+                            <hr>
+
+                            <div class="mt-4 mb-2 text-primary">
+                                <strong>
+                                    A proposta tem vinculação com algum programa ou ação da
+                                    Secretaria Nacional de Periferias?
+                                    <span class="text-danger">*</span>
+                                </strong>
+                            </div>
+
+                            <div>
+                                <input type="radio" id="vinculo_sim"
+                                       name="vinculo_periferias"
+                                       value="sim" required>
+                                <label for="vinculo_sim">Sim</label>
+
+                                <input type="radio" id="vinculo_nao"
+                                       name="vinculo_periferias"
+                                       value="nao" required class="ms-3">
+                                <label for="vinculo_nao">Não</label>
+                            </div>
+
+                            <div id="campo-programa-periferias" class="mt-3" style="display:none;">
+                                <label class="form-label fw-bold">
+                                    Se sim, qual?
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input type="text"
+                                       id="programa_periferias"
+                                       name="programa_periferias"
+                                       class="form-control"
+                                       placeholder="Informe o programa ou ação">
+                            </div>
+
+                            {# ============================================== #}
+
                             {% if company.extraFields.tipo == 'Entidade' %}
+                                <hr>
+
                                 <div class="mt-4 mb-2 text-primary">
                                     <strong>{{ 'proposal.need_advance'|trans }}<span class="text-danger">*</span></strong>
                                 </div>
-                                <div>
-                                    <input type="radio" id="antecipacao_sim" name="anticipation" value="true" required>
-                                    <label for="antecipacao_sim">{{ 'yes'|trans }}</label>
-                                    <input class="ms-2" type="radio" id="antecipacao_nao" name="anticipation" value="false" required>
-                                    <label for="antecipacao_nao">{{ 'no'|trans }}</label>
-                                </div>
+
+                                <input type="radio" id="antecipacao_sim" name="anticipation"
+                                       value="true" required>
+                                <label for="antecipacao_sim">{{ 'yes'|trans }}</label>
+
+                                <input type="radio" id="antecipacao_nao" name="anticipation"
+                                       value="false" required class="ms-2">
+                                <label for="antecipacao_nao">{{ 'no'|trans }}</label>
 
                                 <div id="campos-antecipacao" style="display:none;">
-                                    <div class="alert alert-info border border-primary shadow-sm mt-3">
-                                        <i class="material-icons align-middle text-primary me-2">info</i>
-                                        <strong>{{ 'attention' | trans }}</strong> {{ 'all_documents' | trans }}
-                                        <hr class="my-2">
-                                            {{ 'several_documents' | trans }}
+                                    <div class="alert alert-info mt-3">
+                                        <strong>{{ 'attention'|trans }}</strong>
+                                        {{ 'all_documents'|trans }}
                                     </div>
 
-                                    <div class="mt-3">
-                                        <label class="form-label fw-bold">
-                                            {{ 'proposal.experience_field'|trans }}<br>
-                                            <a href="/files/exemplo-anexo-iv-c.docx" download>{{ 'proposal.download_model'|trans }}</a>
-                                            <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="file" name="annex_iv_c_file" data-allowed="pdf" data-label='Anexo IV-C' accept="application/pdf" class="form-control" required>
-                                    </div>
-                                    <div class="mt-3">
-                                        <label class="form-label fw-bold">{{ 'proposal.responsible_field'|trans }} <span class="text-danger">*</span></label>
-                                        <input type="file" name="technical-manager_file" data-allowed="pdf" data-label='Responsável técnico' accept="application/pdf" class="form-control" required>
-                                    </div>
-                                    <div class="mt-3">
-                                        <label class="form-label fw-bold">{{ 'proposal.rrt_art_field'|trans }} <span class="text-danger">*</span></label>
-                                        <input type="file" name="rrt_art_file" data-allowed="pdf" data-label='RRT ART' accept="application/pdf" class="form-control" required>
-                                    </div>
+                                    <input type="file" name="annex_iv_c_file" class="form-control mt-2" required>
+                                    <input type="file" name="technical-manager_file" class="form-control mt-2" required>
+                                    <input type="file" name="rrt_art_file" class="form-control mt-2" required>
                                 </div>
                             {% endif %}
                         </div>
 
                         <div class="col">
                             <span class="form-label d-block">Termos</span>
-
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="acceptTerms" name="acceptTerms" required>
+                                <input type="checkbox" class="form-check-input"
+                                       id="acceptTerms" name="acceptTerms" required>
                                 <label for="acceptTerms" class="form-check-label">
-                                    DECLARO QUE CONSULTEI O MUNICIPIO <br>
-                                    A formulação da proposta deverá ser precedida de consulta ao Município ou Distrito Federal, com vistas a pactuar a escolha e a estratégia de regularização fundiária a ser adotada.
+                                    DECLARO QUE CONSULTEI O MUNICÍPIO...
                                 </label>
                             </div>
                         </div>
-                    </div>
 
+                    </div>
                 </div>
             </div>
         </div>
@@ -176,22 +215,32 @@
 
 <script>
     function atualizarValor() {
-        let value = parseInt(document.getElementById('quantity_houses').value);
-
-        if (true !== isNaN(value)) {
-            document.getElementById('x').innerHTML = (
-                parseInt(document.getElementById('quantity_houses').value) * {{ env.aurora.variables.price_per_household }}
-            ).toLocaleString('pt-BR') + ',00';
-        } else {
-            document.getElementById('x').innerHTML = 0;
-        }
+        const value = parseInt(document.getElementById('quantity_houses').value);
+        document.getElementById('x').innerHTML = isNaN(value)
+            ? '0'
+            : (value * {{ env.aurora.variables.price_per_household }}).toLocaleString('pt-BR') + ',00';
     }
-    document.querySelectorAll('input[name="anticipation"]').forEach(function(el) {
-        el.addEventListener('change', function() {
-            document.getElementById('campos-antecipacao').style.display = this.value === 'true' ? 'block' : 'none';
-            document.querySelectorAll('#campos-antecipacao input').forEach(function(input) {
-                input.required = (el.value === 'true');
-            });
+
+    document.querySelectorAll('input[name="anticipation"]').forEach(el => {
+        el.addEventListener('change', () => {
+            document.getElementById('campos-antecipacao').style.display =
+                el.value === 'true' ? 'block' : 'none';
+        });
+    });
+
+    document.querySelectorAll('input[name="vinculo_periferias"]').forEach(el => {
+        el.addEventListener('change', () => {
+            const campo = document.getElementById('campo-programa-periferias');
+            const input = document.getElementById('programa_periferias');
+
+            if (el.value === 'sim') {
+                campo.style.display = 'block';
+                input.required = true;
+            } else {
+                campo.style.display = 'none';
+                input.required = false;
+                input.value = '';
+            }
         });
     });
 </script>
