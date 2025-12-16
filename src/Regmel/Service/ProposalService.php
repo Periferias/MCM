@@ -19,7 +19,7 @@ use App\Regmel\Repository\Interface\ProposalRepositoryInterface;
 use App\Regmel\Service\Interface\ProposalServiceInterface;
 use App\Repository\Interface\InitiativeRepositoryInterface;
 use App\Repository\OrganizationRepository;
-use App\Service\AbstractEntityService;
+use App\Service\AbstractEntityService; // Importação essencial
 use App\Service\InitiativeService;
 use App\Service\Interface\CityServiceInterface;
 use App\Service\Interface\EmailServiceInterface;
@@ -163,6 +163,9 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             'annex_iv_c_file' => $annexIvCFileName,
             'technical-manager_file' => $technicalManagerFileName,
             'rrt_art_file' => $rrtArtFileName,
+            // Estes são os campos que serão populados pelo formulário corrigido.
+            'snpr_affiliation' => $data['snpr_affiliation'] ?? 'Não',
+            'snpr_affiliation_details' => $data['snpr_affiliation_details'] ?? '',
         ]);
 
         $this->initiativeRepository->save($initiative);

@@ -56,7 +56,7 @@
                     {% for i in 1..4 %}
                         <div class="alert alert-info">
                             <input type="radio" required value="option_{{ i }}"
-                                   name="area_characteristic" id="option_{{ i }}">
+                                        name="area_characteristic" id="option_{{ i }}">
                             <label for="option_{{ i }}">
                                 {{ attribute(env.aurora.proposals.area_characteristics, 'option_' ~ i) }}
                             </label>
@@ -73,13 +73,13 @@
                         <div class="col">
                             <label class="form-label">Poligonal Mapa (PDF/JPG)</label>
                             <input type="file" name="map" data-allowed="pdf,jpg"
-                                   data-label="Poligonal Mapa" class="form-control">
+                                        data-label="Poligonal Mapa" class="form-control">
                         </div>
 
                         <div class="col">
                             <label class="form-label">Poligonal Georreferenciada (KML/Shapefiles)</label>
                             <input type="file" name="project" data-allowed="kml,shp,shx,dbf"
-                                   data-label="Poligonal Georreferenciada" class="form-control">
+                                        data-label="Poligonal Georreferenciada" class="form-control">
                         </div>
                     </div>
 
@@ -96,7 +96,7 @@
                                 <div class="col">
                                     <label class="form-label">Área estimada da Poligonal (m²)</label>
                                     <input type="text" id="area_size" name="area_size"
-                                           placeholder="0" class="form-control">
+                                                placeholder="0" class="form-control">
                                 </div>
 
                                 <div class="col">
@@ -106,12 +106,12 @@
                                         / max {{ env.aurora.variables.max_houses }})
                                     </label>
                                     <input type="number" id="quantity_houses"
-                                           name="quantity_houses"
-                                           min="{{ env.aurora.variables.min_houses }}"
-                                           max="{{ env.aurora.variables.max_houses }}"
-                                           placeholder="0"
-                                           class="form-control"
-                                           oninput="atualizarValor()">
+                                                name="quantity_houses"
+                                                min="{{ env.aurora.variables.min_houses }}"
+                                                max="{{ env.aurora.variables.max_houses }}"
+                                                placeholder="0"
+                                                class="form-control"
+                                                oninput="atualizarValor()">
                                 </div>
                             </div>
 
@@ -129,7 +129,7 @@
                                 </div>
                             </div>
 
-                            {# ================= NOVO CAMPO ================= #}
+                            {# ================= NOVO CAMPO SNPR CORRIGIDO ================= #}
 
                             <hr>
 
@@ -143,13 +143,13 @@
 
                             <div>
                                 <input type="radio" id="vinculo_sim"
-                                       name="vinculo_periferias"
-                                       value="sim" required>
+                                        name="snpr_affiliation"
+                                        value="Sim" required>
                                 <label for="vinculo_sim">Sim</label>
 
                                 <input type="radio" id="vinculo_nao"
-                                       name="vinculo_periferias"
-                                       value="nao" required class="ms-3">
+                                        name="snpr_affiliation"
+                                        value="Não" required class="ms-3">
                                 <label for="vinculo_nao">Não</label>
                             </div>
 
@@ -159,13 +159,13 @@
                                     <span class="text-danger">*</span>
                                 </label>
                                 <input type="text"
-                                       id="programa_periferias"
-                                       name="programa_periferias"
-                                       class="form-control"
-                                       placeholder="Informe o programa ou ação">
+                                        id="programa_periferias"
+                                        name="snpr_affiliation_details"
+                                        class="form-control"
+                                        placeholder="Informe o programa ou ação">
                             </div>
 
-                            {# ============================================== #}
+                            {# ============================================================= #}
 
                             {% if company.extraFields.tipo == 'Entidade' %}
                                 <hr>
@@ -175,11 +175,11 @@
                                 </div>
 
                                 <input type="radio" id="antecipacao_sim" name="anticipation"
-                                       value="true" required>
+                                            value="true" required>
                                 <label for="antecipacao_sim">{{ 'yes'|trans }}</label>
 
                                 <input type="radio" id="antecipacao_nao" name="anticipation"
-                                       value="false" required class="ms-2">
+                                            value="false" required class="ms-2">
                                 <label for="antecipacao_nao">{{ 'no'|trans }}</label>
 
                                 <div id="campos-antecipacao" style="display:none;">
@@ -199,7 +199,7 @@
                             <span class="form-label d-block">Termos</span>
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input"
-                                       id="acceptTerms" name="acceptTerms" required>
+                                            id="acceptTerms" name="acceptTerms" required>
                                 <label for="acceptTerms" class="form-check-label">
                                     DECLARO QUE CONSULTEI O MUNICÍPIO...
                                 </label>
@@ -228,12 +228,13 @@
         });
     });
 
-    document.querySelectorAll('input[name="vinculo_periferias"]').forEach(el => {
+    // CORREÇÃO NO SELETOR PARA USAR O NOVO NOME DO CAMPO: "snpr_affiliation"
+    document.querySelectorAll('input[name="snpr_affiliation"]').forEach(el => {
         el.addEventListener('change', () => {
             const campo = document.getElementById('campo-programa-periferias');
             const input = document.getElementById('programa_periferias');
 
-            if (el.value === 'sim') {
+            if (el.value === 'Sim') {
                 campo.style.display = 'block';
                 input.required = true;
             } else {
