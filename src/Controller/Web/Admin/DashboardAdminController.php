@@ -61,7 +61,12 @@ class DashboardAdminController extends AbstractAdminController
         }
 
         $recentRegistrations = $this->inscriptionService->findRecentByUser($user->getId());
-        $createdBy = $this->agentService->getAgentsFromLoggedUser()[0];
+        
+        // Admin e Manager veem todos os registros, outros usuários veem apenas os que criaram
+        $isAdminOrManager = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles()) 
+            || in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles());
+        
+        $createdBy = $isAdminOrManager ? null : $this->agentService->getAgentsFromLoggedUser()[0];
 
         $totalAgents = $this->agentService->count($user);
         $totalUsers = $this->agentService->count();

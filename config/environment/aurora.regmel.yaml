@@ -196,7 +196,7 @@ dashboard:
         route: admin_regmel_company_list
       total_key: totalCompanies
     users:
-      acl: ['ROLE_ADMIN', 'ROLE_MANAGER']
+      acl: ['ROLE_ADMIN']
       title: Usuários
       subtitle: Usuários
       icon: person
