@@ -45,14 +45,16 @@ abstract readonly class AbstractEntityService
 
     public function getUserParams(): array
     {
-        if (null !== $this->security->getUser() && $this->security->getUser()->isRole(UserRolesEnum::ROLE_ADMIN)) {
+        $user = $this->security->getUser();
+        
+        if (null !== $user && ($user->isRole(UserRolesEnum::ROLE_ADMIN) || $user->isRole(UserRolesEnum::ROLE_MANAGER))) {
             return [];
         }
 
         $params = self::DEFAULT_FILTERS;
 
-        if (null !== $this->security->getUser()) {
-            $agents = $this->security->getUser()->getAgents()->getValues();
+        if (null !== $user) {
+            $agents = $user->getAgents()->getValues();
 
             $params['createdBy'] = $agents;
         }
