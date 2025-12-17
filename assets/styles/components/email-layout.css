@@ -14,10 +14,10 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.email-header img {
+/*.email-header img {
     max-width: 150px;
     margin-bottom: 20px;
-}
+}*/
 .email-footer {
     margin-top: 20px;
     font-size: 12px;
