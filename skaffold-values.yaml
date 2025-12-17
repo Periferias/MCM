@@ -1,2 +1,14 @@
 service:
   type: NodePort
+
+# AWS S3 Storage configuration for development
+php:
+  storage:
+    region: "us-east-1"
+    bucket: "snp-pvr-uploads-dev"
+    prefix: ""
+    # Add your AWS credentials here for development
+    # WARNING: Do NOT commit real credentials to version control
+    # For production, use Kubernetes secrets or IRSA
+    accessKeyId: ""
+    secretAccessKey: ""

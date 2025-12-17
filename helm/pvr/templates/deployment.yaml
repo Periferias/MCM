@@ -112,6 +112,37 @@ spec:
                 configMapKeyRef:
                   name: {{ include "pvr.fullname" . }}
                   key: caddy-global-options
+            {{- if .Values.php.storage }}
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pvr.fullname" . }}
+                  key: aws-region
+            - name: AWS_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pvr.fullname" . }}
+                  key: aws-s3-bucket
+            - name: AWS_S3_PREFIX
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pvr.fullname" . }}
+                  key: aws-s3-prefix
+            {{- if .Values.php.storage.accessKeyId }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pvr.fullname" . }}
+                  key: aws-access-key-id
+            {{- end }}
+            {{- if .Values.php.storage.secretAccessKey }}
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pvr.fullname" . }}
+                  key: aws-secret-access-key
+            {{- end }}
+            {{- end }}
           ports:
             - name: http
               containerPort: 80

@@ -29,6 +29,17 @@ php:
     - "192.168.0.0/16"
   caddyGlobalOptions: ""
 
+  # AWS S3 Storage Configuration
+  storage:
+    region: "us-east-1"
+    bucket: "pvr-uploads-dev"
+    prefix: ""
+    # AWS credentials - provide these for direct S3 access
+    # For production, consider using IRSA (IAM Roles for Service Accounts)
+    # Set serviceAccount.annotations with eks.amazonaws.com/role-arn for IRSA
+    accessKeyId: ""
+    secretAccessKey: ""
+
 # pwa:
 #   image:
 #     repository: "chart-example.local/api-platform/pwa"

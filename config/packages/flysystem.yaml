@@ -1,8 +1,9 @@
-# Read the documentation at https://github.com/thephpleague/flysystem-bundle/blob/master/docs/1-getting-started.md
+# AWS S3 Storage Configuration
 flysystem:
     storages:
         default.storage:
-            adapter: 'local'
+            adapter: 'aws'
             options:
-                directory: '%env(resolve:STORAGE_IMAGES_DIR)%'
-            directory_visibility: public
+                client: 'aws.s3_client'
+                bucket: '%env(AWS_S3_BUCKET)%'
+                prefix: '%env(AWS_S3_PREFIX)%'
