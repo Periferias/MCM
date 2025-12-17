@@ -11,9 +11,9 @@
 </head>
 <body>
 <div class="email-container">
-    <div class="email-header">
+    {# <div class="email-header">
         <img src="{{ absolute_url(asset(env.aurora.email.logo)) }}" alt="Logo">
-    </div>
+    </div> #}
     <div class="email-body">
         {{ content | raw }}
     </div>
