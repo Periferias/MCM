@@ -22,6 +22,25 @@ function modalProposalDetails(event) {
     document.querySelector('#price-per-household').innerHTML = pricePerHouse.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     document.querySelector('#total-price').innerHTML = (quantityHouses * pricePerHouse).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+    // Lógica SNPr
+    const snprAffiliation = proposal.snpr_affiliation; // Lê o valor do JSON (Sim ou Não)
+    const snprAffiliationDetails = proposal.snpr_affiliation_details; 
+    
+    const snprDetailsContainer = document.querySelector('#snpr-affiliation-details-container');
+
+    // Preenche o campo de vinculação
+    document.querySelector('#proposal-snpr-affiliation').innerHTML = snprAffiliation || 'Não'; 
+    
+    // Preenche o campo de detalhes
+    document.querySelector('#snpr-affiliation-details').innerHTML = snprAffiliationDetails || '-';
+
+    // Lógica de exibição condicional:
+    if (snprAffiliation === 'Sim') {
+        snprDetailsContainer.style.display = 'block';
+    } else {
+        snprDetailsContainer.style.display = 'none';
+    }
+
     if ('pdf' === proposal.map_file.slice(-3)) {
         document.querySelector('#map-file').innerHTML = `
             <object style="min-height: 600px;" data="/painel/admin/propostas/`+proposal.id+`/mapa" type="application/pdf" width="100%">
