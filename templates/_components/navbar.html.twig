@@ -40,9 +40,11 @@
                         <button class="btn btn-light d-flex align-items-center position-relative gap-2" id="notificationDropdown">
                             <span class="fw-semibold text-dark small">{{ 'notifications' | trans }}</span>
                             <span class="d-flex align-items-center position-relative">
-                                    <span class="material-icons">notifications</span>
-                                    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle p-1" style="font-size: 0.7rem;">2</span>
-                                </span>
+                                <span class="material-icons">notifications</span>
+                                {% if navbarNotificationsCount is defined and navbarNotificationsCount > 0 %}
+                                    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle p-1" style="font-size: 0.7rem;">{{ navbarNotificationsCount }}</span>
+                                {% endif %}
+                            </span>
                         </button>
 
                         <ul class="dropdown-menu dropdown-menu-end shadow mt-2" aria-labelledby="notificationDropdown" style="min-width: 400px;">
@@ -50,30 +52,33 @@
                                 <div class="dropdown-header">
                                     <strong>{{ 'your_notifications' | trans }}</strong>
                                 </div>
-                                <div class="px-3 py-2">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span>Você <strong>aprovou</strong> o cadastro da empresa <strong>Empresa Teste AI</strong>.</span>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-1 mb-1" style="line-height: 1;">
-                                        <span class="material-icons" style="font-size: 1rem;">help_outline</span>
-                                        <a href="#" class="text-decoration-underline small">{{ 'what_mean' | trans }}</a>
-                                    </div>
-                                    <small class="text-muted">Aprovado em 20/08/2024 às 09h00</small>
-                                </div>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <div class="px-3 py-2">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span>O município <strong>Recife</strong> atualizou seus dados cadastrais.</span>
+                            {% if navbarNotifications is defined and navbarNotifications|length > 0 %}
+                                {% for notification in navbarNotifications %}
+                                    <li>
+                                        <div class="px-3 py-2">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>{{ notification.content }}</span>
+                                            </div>
+                                            {% if notification.context %}
+                                                <div class="mb-1">
+                                                    <small class="text-muted">{{ notification.context }}</small>
+                                                </div>
+                                            {% endif %}
+                                            <small class="text-muted">{{ notification.createdAt|date('d/m/Y H:i') }}</small>
+                                        </div>
+                                    </li>
+                                    {% if not loop.last %}
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <li>
+                                    <div class="px-3 py-2 text-center">
+                                        <small class="text-muted">{{ 'no_new_notifications' | trans }}</small>
                                     </div>
-                                    <div class="d-flex align-items-center gap-1 mb-1" style="line-height: 1;">
-                                        <span class="material-icons" style="font-size: 1rem;">help_outline</span>
-                                        <a href="#" class="text-decoration-underline small">{{ 'view_changes' | trans }}</a>
-                                    </div>
-                                    <small class="text-muted">Atualizado em 17/07/2024 às 15h12</small>
-                                </div>
-                            </li>
+                                </li>
+                            {% endif %}
                         </ul>
                     </div>
                 </div>
