@@ -77,13 +77,14 @@
                     <table class="js-grid table table-hover table-striped">
                         <thead class="table-dark">
                         <tr>
+                            {# A coluna Nome da Área agora é a primeira #}
+                            <th>Área de Intervenção</th>
                             <th>ID</th>
                             <th>Empresa</th>
                             <th>{{ 'municipality' | trans}}</th>
                             <th>{{ 'status' | trans }}</th>
                             <th>Qtd. Domicílios</th>
                             <th>Área Total</th>
-                            <th>Área de Intervenção</th>
                             <th>Valor Global da Proposta</th>
                             <th>{{ 'proposal.anticipation'|trans }}</th>
                             <th>{{ 'actions' | trans }}</th>
@@ -92,6 +93,8 @@
                         <tbody>
                         {% for proposal in proposals %}
                             <tr>
+                                {# Dado correspondente ao Nome da Área movido para o início #}
+                                <td>{{ proposal.name|default('N/A') }}</td>
                                 <td>{{ proposal.id }}</td>
                                 <td>{{ proposal.company }}</td>
                                 <td>{{ proposal.city_name }}</td>
@@ -113,7 +116,6 @@
                                 </td>
                                 <td>{{ proposal.quantity_houses }}</td>
                                 <td>{{ proposal.area_size }}</td>
-                                <td>{{ proposal.name|default('N/A') }}</td>
                                 <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
                                 <td>
                                     {% set anticipation = proposal.anticipation %}
