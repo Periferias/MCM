@@ -289,6 +289,7 @@ homepage:
     banner:
       enabled: true
       image: /img/regmel/banner-digital-reformas.png
+      image_mobile: /img/regmel/banner-mobile.png # <-- AQUI ESTÁ A IMAGEM PARA MOBILE
     register:
       enabled: true
       color: "#1c8230"

@@ -5,15 +5,40 @@
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="{{ asset('styles/pages/homepage.css') }}">
+    
+    {# 
+      Injeção do CSS dinâmico (com URLs Twig) no bloco de estilos. 
+      Isso garante que o Twig substitua as variáveis de URL no servidor.
+    #}
+    {% if env.aurora.homepage.sections.banner.enabled == "true" %}
+    <style>
+        .homepage-banner-section {
+            /* Padrão (Desktop) */
+            background: url('{{ env.aurora.homepage.sections.banner.image }}') no-repeat center center;
+            background-size: cover;
+            height: 500px;
+        }
+
+        /* Media Query (Mobile) */
+        @media (max-width: 480px) {
+            .homepage-banner-section {
+                height: 400px;
+                {% if env.aurora.homepage.sections.banner.image_mobile is defined %}
+                /* Sobrescreve a imagem com a versão mobile */
+                background-image: url('{{ env.aurora.homepage.sections.banner.image_mobile }}');
+                {% endif %}
+            }
+        }
+    </style>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
 
 {% if env.aurora.homepage.sections.banner.enabled == "true" %}
-    <div style="height: 500px; background: url('{{ env.aurora.homepage.sections.banner.image }}'); background-repeat: no-repeat; background-size: cover;">
+    <div class="homepage-banner-section">
         <div class="container">
             <div class="row align-items-center justify-content-center p-3">
-
             </div>
         </div>
     </div>
@@ -446,4 +471,3 @@
     </section>
 {% endif %}
 {% endblock %}
-
