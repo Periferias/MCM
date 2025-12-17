@@ -191,6 +191,9 @@
                                                     Ver Proposta
                                                 </a>
                                             </li>
+                                            
+                                            {# BLOCO ALTERADO: Somente admin vê este botão #}
+                                            {% if is_granted('ROLE_ADMIN') %}
                                             <li>
                                                 <a
                                                     href="#"
@@ -202,6 +205,8 @@
                                                     Atualizar Status
                                                 </a>
                                             </li>
+                                            {% endif %}
+
                                             {% if proposal.extraFields.anticipation == 'true' %}
                                                 <li>
                                                     <a
@@ -354,7 +359,6 @@
             form.action = `/painel/admin/propostas/${proposalId}/status`;
         }
 
-        // Envia via fetch e recarrega a mesma página ao concluir
         (function () {
             const form = document.getElementById('proposalStatusForm');
             if (!form) return;
@@ -378,7 +382,6 @@
                         return;
                     }
 
-                    // Fecha o modal e recarrega a mesma página
                     const modalEl = document.getElementById('modalProposalStatus');
                     if (modalEl && window.bootstrap) {
                         const instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
