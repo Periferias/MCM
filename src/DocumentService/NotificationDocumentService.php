@@ -52,10 +52,10 @@ final class NotificationDocumentService
      */
     public function countUnvisitedByTarget(string $targetUserId): int
     {
-        return $this->documentRepository->count([
+        return count($this->documentRepository->findBy([
             'target' => $targetUserId,
             'visited' => false,
-        ]);
+        ]));
     }
 
     /**
