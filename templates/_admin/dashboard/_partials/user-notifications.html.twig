@@ -7,31 +7,49 @@
                     aria-expanded="true"
                     aria-controls="unreadNotifications">
                 {{ 'unread_notifications' | trans }}
+                {% if unvisitedNotificationsCount is defined and unvisitedNotificationsCount > 0 %}
+                    <span class="badge bg-primary ms-2">{{ unvisitedNotificationsCount }}</span>
+                {% endif %}
             </button>
         </h2>
         <div id="unreadNotifications" class="accordion-collapse collapse show">
             <div class="accordion-body">
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>{{ 'message' | trans }}</th>
-                        <th>{{ 'date' | trans }}</th>
-                        <th>{{ 'action' | trans }}</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>Você foi avaliado no edital “Arte Viva”.</td>
-                        <td>10/04/2025</td>
-                        <td><button class="btn btn-sm btn-primary">Marcar como lida</button></td>
-                    </tr>
-                    <tr>
-                        <td>Sua inscrição foi confirmada.</td>
-                        <td>08/04/2025</td>
-                        <td><button class="btn btn-sm btn-primary">Marcar como lida</button></td>
-                    </tr>
-                    </tbody>
-                </table>
+                {% set unreadNotifications = notifications|default([])|filter(n => not n.visited) %}
+                {% if unreadNotifications|length > 0 %}
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{{ 'message' | trans }}</th>
+                            <th>{{ 'date' | trans }}</th>
+                            <th>{{ 'action' | trans }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for notification in unreadNotifications %}
+                            <tr>
+                                <td>
+                                    {{ notification.content }}
+                                    {% if notification.context %}
+                                        <br><small class="text-muted">{{ notification.context }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ notification.createdAt|date('d/m/Y H:i') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" 
+                                            onclick="markAsRead('{{ notification.id }}')">
+                                        Marcar como lida
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fa-solid fa-bell-slash fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">Você não tem notificações não lidas.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -48,24 +66,35 @@
         </h2>
         <div id="readNotifications" class="accordion-collapse collapse">
             <div class="accordion-body">
-                <table class="table table-hover">
-                    <thead>
-                    <tr>
-                        <th>{{ 'message' | trans }}</th>
-                        <th>{{ 'date' | trans }}</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>Proposta enviada com sucesso.</td>
-                        <td>01/04/2025</td>
-                    </tr>
-                    <tr>
-                        <td>Inscrição aprovada no edital “Cultura Jovem”.</td>
-                        <td>28/03/2025</td>
-                    </tr>
-                    </tbody>
-                </table>
+                {% set readNotifications = notifications|default([])|filter(n => n.visited) %}
+                {% if readNotifications|length > 0 %}
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>{{ 'message' | trans }}</th>
+                            <th>{{ 'date' | trans }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for notification in readNotifications %}
+                            <tr>
+                                <td>
+                                    {{ notification.content }}
+                                    {% if notification.context %}
+                                        <br><small class="text-muted">{{ notification.context }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ notification.createdAt|date('d/m/Y H:i') }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fa-solid fa-check-circle fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">Nenhuma notificação lida.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

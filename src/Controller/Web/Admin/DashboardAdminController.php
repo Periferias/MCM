@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Web\Admin;
 
+use App\DocumentService\NotificationDocumentService;
 use App\Enum\OrganizationTypeEnum;
 use App\Enum\UserRolesEnum;
 use App\Service\Interface\AgentServiceInterface;
@@ -25,6 +26,7 @@ class DashboardAdminController extends AbstractAdminController
         readonly private InitiativeServiceInterface $initiativeService,
         readonly private InscriptionOpportunityServiceInterface $inscriptionService,
         readonly private OrganizationServiceInterface $organizationService,
+        readonly private NotificationDocumentService $notificationService,
     ) {
     }
 
@@ -87,10 +89,16 @@ class DashboardAdminController extends AbstractAdminController
             'totalOrganizations' => $totalOrganizations,
         ];
 
+        // Busca notificações do usuário logado
+        $notifications = $this->notificationService->findByTarget($user->getId()->toRfc4122(), 10);
+        $unvisitedCount = $this->notificationService->countUnvisitedByTarget($user->getId()->toRfc4122());
+
         return $this->render('dashboard/index.html.twig', [
             'user' => $user,
             'recentRegistrations' => $recentRegistrations,
             'totals' => $totals,
+            'notifications' => $notifications,
+            'unvisitedNotificationsCount' => $unvisitedCount,
         ]);
     }
 }
