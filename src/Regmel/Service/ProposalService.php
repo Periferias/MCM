@@ -127,23 +127,26 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $technicalManagerFileName = null;
         $rrtArtFileName = null;
 
+        // Gera número de inscrição a partir do UUID (primeiros 8 caracteres)
+        $inscriptionNumber = substr($initiative->getId()->toRfc4122(), 0, 8);
+
         if (null !== $map) {
-            $mapFileName = $this->uploadFile($map, $company->getName(), $cityName, $cityCode, extraName: 'area-poligonal');
+            $mapFileName = $this->uploadFile($map, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), extraName: 'area-poligonal');
         }
 
         if (null !== $project) {
-            $projectFileName = $this->uploadFile($project, $company->getName(), $cityName, $cityCode, extraName: 'projeto');
+            $projectFileName = $this->uploadFile($project, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), extraName: 'projeto');
         }
 
         if (($data['anticipation'] ?? null) === 'true') {
             if ($annexIvC) {
-                $annexIvCFileName = $this->uploadFile($annexIvC, $company->getName(), $cityName, $cityCode, extraName: 'anexo-iv-c');
+                $annexIvCFileName = $this->uploadFile($annexIvC, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), extraName: 'anexo-iv-c');
             }
             if ($technicalManager) {
-                $technicalManagerFileName = $this->uploadFile($technicalManager, $company->getName(), $cityName, $cityCode, extraName: 'responsavel-tecnico');
+                $technicalManagerFileName = $this->uploadFile($technicalManager, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), extraName: 'responsavel-tecnico');
             }
             if ($rrtArt) {
-                $rrtArtFileName = $this->uploadFile($rrtArt, $company->getName(), $cityName, $cityCode, extraName: 'rrt-art');
+                $rrtArtFileName = $this->uploadFile($rrtArt, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), extraName: 'rrt-art');
             }
         }
 
@@ -215,16 +218,18 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
 
     private function uploadFile(
         UploadedFile $uploadedFile,
-        string $company,
-        string $municipality,
+        string $inscriptionNumber,
         string|int $cityCode,
+        string $state,
+        string $municipality,
+        string $company,
         string $version = '01',
         string $extraName = '',
     ): string {
         $pdf = $this->fileService->uploadMixedFile(
             $uploadedFile,
             extraPath: '/regmel/company/documents',
-            optionalName: "Proposta-{$company}-{$extraName}-{$municipality}-{$cityCode}-{$version}",
+            optionalName: "{$inscriptionNumber}-{$cityCode}-{$state}-{$municipality}-{$extraName}-{$company}-{$version}",
         );
 
         return $pdf->getFilename();
