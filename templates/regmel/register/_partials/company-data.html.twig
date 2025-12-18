@@ -18,6 +18,7 @@
         <label for="cnpj" class="form-label">{{ 'view.company.cnpj' | trans }}</label>
         <input type="text" maxlength="18" data-mask="cnpj" class="form-control" id="cnpj" name="cnpj" placeholder={{ 'view.company.cnpj' | trans}} required>
     </div>
+    {# Enquadramento excluído do formulário
     <div class="col-6 mb-3">
         <label for="framework" class="form-label">{{ 'view.company.framework' | trans }}</label>
         <select class="form-select" id="framework" name="framework">
@@ -26,6 +27,7 @@
             <option value="no_profit">{{ 'organization_without_profit' | trans }}</option>
         </select>
     </div>
+    #}
 </div>
 <div class="row">
     <div class="col mb-3">
@@ -41,7 +43,7 @@
 <div class="row">
     <div class="col-6 mb-3">
         <label for="site" class="form-label">{{ 'view.company.site' | trans }}</label>
-        <input type="text" class="form-control" id="site" name="site" placeholder={{ 'view.company.site' | trans}} required>
+        <input type="text" class="form-control" id="site" name="site" placeholder={{ 'view.company.site' | trans}} >
     </div>
     <div class="col-6 mb-3">
         <label for="phone" class="form-label">{{ 'view.company.phone' | trans }}</label>
