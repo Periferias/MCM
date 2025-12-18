@@ -1232,3 +1232,10 @@ button.gridjs-sort {
     display: block;
     margin: 0 auto;
 }
+
+/* Adiciona asterisco vermelho em labels de campos obrigatórios automaticamente */
+.mb-3:has(input:required) .form-label::after,
+.mb-3:has(select:required) .form-label::after {
+    content: " *";
+    color: #dc3545; /* Vermelho padrão do Bootstrap */
+}
