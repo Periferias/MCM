@@ -142,7 +142,7 @@ communicational_accessibility: Acessibilidade comunicacional
 contact: Contato
 contacts: Contatos
 companies: Empresas/OSC
-company: Empresa/OSC
+company: Empresa
 company_name: Razão Social
 company_data: Dados da Empresa/OSC
 company_register: Cadastrar uma Empresa/OSC
@@ -185,7 +185,7 @@ edit_company: Editar Empresa/OSC
 edit_roles: Editar Perfis
 email: Email
 entity_banner: Banner da Entidade
-entity: Entidade
+entity: Organização da Sociedade Civil - OSC
 enter_event: Digite o nome do evento
 enter_initiative: Digite o nome da iniciativa
 enter_opportunity: Digite o nome da oportunidade
