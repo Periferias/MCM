@@ -160,7 +160,12 @@ class RegisterController extends AbstractWebController
 
     private function createOrganizationDataForCompany(Request $request): array
     {
-        $framework = CompanyFrameworkEnum::fromName($request->get('framework'));
+        // Tratamento defensivo para evitar erro de Argument #1 ($name) must be of type string, null given
+        $frameworkParam = $request->get('framework');
+        $typeParam = $request->get('type');
+
+        $framework = !empty($frameworkParam) ? CompanyFrameworkEnum::fromName($frameworkParam) : null;
+        $type = !empty($typeParam) ? OrganizationTypeEnum::fromName($typeParam) : OrganizationTypeEnum::EMPRESA;
 
         return [
             'organization' => [
@@ -168,7 +173,7 @@ class RegisterController extends AbstractWebController
                 'name' => $request->get('name'),
                 'type' => OrganizationTypeEnum::EMPRESA->value,
                 'extraFields' => [
-                    'tipo' => OrganizationTypeEnum::fromName($request->get('type'))->value,
+                    'tipo' => $type->value,
                     'email' => $request->get('email'),
                     'telefone' => $request->get('phone'),
                     'cnpj' => $request->get('cnpj'),
@@ -195,7 +200,8 @@ class RegisterController extends AbstractWebController
 
     private function createOrganizationDataForMunicipality(Request $request): array
     {
-        $city = $this->cityService->get($request->get('city'));
+        $cityId = $request->get('city');
+        $city = !empty($cityId) ? $this->cityService->get($cityId) : null;
 
         return [
             'organization' => [
@@ -205,8 +211,8 @@ class RegisterController extends AbstractWebController
                 'extraFields' => [
                     'cityId' => $city?->getId(),
                     'cityCode' => $city?->getCityCode(),
-                    'region' => $city?->getState()->getRegion(),
-                    'state' => $city?->getState()->getAcronym(),
+                    'region' => $city?->getState()?->getRegion(),
+                    'state' => $city?->getState()?->getAcronym(),
                     'email' => $request->get('email'),
                     'telefone' => $request->get('phone'),
                     'site' => $request->get('site'),
