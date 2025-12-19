@@ -50,7 +50,7 @@
                         <div class="col-md-3">
                             <label for="zipcode" class="form-label required-label">CEP</label>
                             <input type="text" id="zipcode" name="zipcode" class="form-control" 
-                                placeholder="00000-000" required>
+                                placeholder="00000-000" maxlength="9" required>
                         </div>
                     </div>
 
@@ -260,5 +260,23 @@
                 input.value = '';
             }
         });
+    });
+
+    // MÁSCARA PARA O CEP
+    document.getElementById('zipcode').addEventListener('input', function (e) {
+        // Remove tudo o que não for número
+        let value = e.target.value.replace(/\D/g, '');
+    
+        // Limita a 8 dígitos numéricos
+        if (value.length > 8) {
+            value = value.slice(0, 8);
+        }
+
+        // Aplica a máscara 00000-000
+        if (value.length > 5) {
+            value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+        }
+    
+        e.target.value = value;
     });
 </script>
