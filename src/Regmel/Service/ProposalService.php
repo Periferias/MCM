@@ -169,6 +169,9 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             // Estes são os campos que serão populados pelo formulário corrigido.
             'snpr_affiliation' => $data['snpr_affiliation'] ?? 'Não',
             'snpr_affiliation_details' => $data['snpr_affiliation_details'] ?? '',
+            // Campos de Endereço e CEP
+            'zipcode' => $data['zipcode'] ?? '',
+            'address' => $data['address'] ?? '',
         ]);
 
         $this->initiativeRepository->save($initiative);

@@ -12,7 +12,7 @@ email:
 
 variables:
   price_per_household: 35000
-  min_houses: 20
+  min_houses: 10
   max_houses: 140
 
 visit_repository: false
@@ -28,9 +28,9 @@ register:
 proposals:
   area_characteristics:
     option_1: Núcleo urbano regularizado ou em processo de regularização fundiária, desde que predominantemente de baixa renda, assim declarado pelo Município ou Distrito Federal;
-    option_2: Núcleo urbano informal classificados como área de Regularização Fundiária Urbana de Interesse Social - Reurb-S;
+    option_2: Núcleo urbano informal classificado como área de Regularização Fundiária Urbana de Interesse Social - Reurb-S;
     option_3: Zona especial de interesse social, conforme o art. 4º, inciso V, alínea "f", da Lei nº 10.257, de 10 de julho de 2001.
-    option_4: 'Se enquadra na excepcionalidade: casos de execução de melhorias destinadas a garantir segurança ou salubridade para preservação de vidas, logo, não há necessidade de que se tenha dado início ao processo de regularização fundiária nem que se caracterize como zona especial de interesse social. Aprovação da proposta condicionada ao ateste do Município ou Distrito Federal de que os potenciais beneficiários são de baixa renda.'
+    option_4: 'Se enquadra na excepcionalidade: casos de execução de melhorias destinadas a garantir segurança ou salubridade para preservação de vidas, poderão ser aceitos núcleos urbanos que ainda não tenham dado início ao processo de regularização fundiária nem se caracterizem como zona especial de interesse social. Aprovação da proposta condicionada ao ateste do Município de que os potenciais beneficiários são de baixa renda.'
 terms:
   lgpd:
     title: Termos e Consentimento para Tratamento de Dados Pessoais (LGPD)

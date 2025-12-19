@@ -10,6 +10,12 @@ function modalProposalDetails(event) {
     document.querySelector('#region-name').innerHTML = proposal.region;
     document.querySelector('#state-name').innerHTML = proposal.state;
     document.querySelector('#city-name').innerHTML = proposal.city_name;
+    
+    // --- NOVAS LINHAS PARA CEP E ENDEREÇO ---
+    document.querySelector('#proposal-zipcode').innerHTML = proposal.zipcode || 'Não informado';
+    document.querySelector('#proposal-address').innerHTML = proposal.address || 'Não informado';
+    // ----------------------------------------
+
     document.querySelector('#proposal-name-title').innerHTML = proposal.name;
     document.querySelector('#proposal-name').innerHTML = proposal.name;
     document.querySelector('#project-file').innerHTML = '<a href="/painel/admin/propostas/'+proposal.id+'/projeto" download>Clique aqui para baixar o arquivo do projeto.</a>';
@@ -23,18 +29,14 @@ function modalProposalDetails(event) {
     document.querySelector('#total-price').innerHTML = (quantityHouses * pricePerHouse).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
     // Lógica SNPr
-    const snprAffiliation = proposal.snpr_affiliation; // Lê o valor do JSON (Sim ou Não)
+    const snprAffiliation = proposal.snpr_affiliation; 
     const snprAffiliationDetails = proposal.snpr_affiliation_details; 
     
     const snprDetailsContainer = document.querySelector('#snpr-affiliation-details-container');
 
-    // Preenche o campo de vinculação
     document.querySelector('#proposal-snpr-affiliation').innerHTML = snprAffiliation || 'Não'; 
-    
-    // Preenche o campo de detalhes
     document.querySelector('#snpr-affiliation-details').innerHTML = snprAffiliationDetails || '-';
 
-    // Lógica de exibição condicional:
     if (snprAffiliation === 'Sim') {
         snprDetailsContainer.style.display = 'block';
     } else {

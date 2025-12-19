@@ -23,7 +23,7 @@
 
                     <div class="row">
                         <div class="col-md-3">
-                            <label for="state" class="form-label">{{ 'state'|trans }}</label>
+                            <label for="state" class="form-label required-label">{{ 'state'|trans }}</label>
                             <select id="state" required name="state" class="form-select">
                                 <option value="">{{ 'select'|trans }}</option>
                                 {% for state in states %}
@@ -33,24 +33,38 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label for="city" class="form-label">{{ 'city'|trans }}</label>
+                            <label for="city" class="form-label required-label">{{ 'city'|trans }}</label>
                             <select id="city" required name="city" class="form-select">
                                 <option value="">{{ 'select'|trans }}</option>
                             </select>
                         </div>
                     </div>
 
+                    {# NOVOS CAMPOS AQUI #}
+                    <div class="row mt-3">
+                        <div class="col-md-9">
+                            <label for="address" class="form-label required-label">Endereço Completo</label>
+                            <input type="text" id="address" name="address" class="form-control" 
+                                placeholder="Rua, número, bairro..." required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="zipcode" class="form-label required-label">CEP</label>
+                            <input type="text" id="zipcode" name="zipcode" class="form-control" 
+                                placeholder="00000-000" maxlength="9" required>
+                        </div>
+                    </div>
+
                     <hr>
 
                     <div class="mt-4 mb-2 text-primary fw-bold">
-                        <label for="name">Nome da Área de Intervenção</label>
+                        <label for="name" class="required-label">Nome da Área de Intervenção</label>
                     </div>
-                    <input id="name" name="name" placeholder="Digite aqui" type="text" class="form-control">
+                    <input id="name" name="name" placeholder="Digite aqui" type="text" class="form-control" required>
 
                     <hr>
 
                     <div class="mt-4 mb-2 text-primary">
-                        <strong>A área é caracterizada como:</strong>
+                        <strong class="required-label">A área é caracterizada como:</strong>
                     </div>
 
                     {% for i in 1..4 %}
@@ -71,15 +85,17 @@
 
                     <div class="row">
                         <div class="col">
-                            <label class="form-label">Poligonal Mapa (PDF/JPG)</label>
+                            <label class="form-label required-label">Poligonal Mapa (PDF/JPG)</label>
                             <input type="file" name="map" data-allowed="pdf,jpg"
-                                        data-label="Poligonal Mapa" class="form-control">
+                                        data-label="Poligonal Mapa" class="form-control" data-max-size="40" required>
+                            <div class="form-text">O arquivo deve ter no máximo 40MB.</div>
                         </div>
 
                         <div class="col">
-                            <label class="form-label">Poligonal Georreferenciada (KML/Shapefiles)</label>
-                            <input type="file" name="project" data-allowed="kml,shp,shx,dbf"
-                                        data-label="Poligonal Georreferenciada" class="form-control">
+                            <label class="form-label required-label">Poligonal Georreferenciada (KML)</label>
+                            <input type="file" name="project" data-allowed="kml"
+                                        data-label="Poligonal Georreferenciada" class="form-control" data-max-size="40">
+                            <div class="form-text">O arquivo deve ter no máximo 40MB.</div>
                         </div>
                     </div>
 
@@ -94,13 +110,13 @@
 
                             <div class="row">
                                 <div class="col">
-                                    <label class="form-label">Área estimada da Poligonal (m²)</label>
+                                    <label class="form-label required-label">Área estimada da Poligonal (m²)</label>
                                     <input type="text" id="area_size" name="area_size"
                                                 placeholder="0" class="form-control">
                                 </div>
 
                                 <div class="col">
-                                    <label class="form-label">
+                                    <label class="form-label required-label">
                                         Número de Domicílios
                                         (min {{ env.aurora.variables.min_houses }}
                                         / max {{ env.aurora.variables.max_houses }})
@@ -129,7 +145,7 @@
                                 </div>
                             </div>
 
-                            {# ================= NOVO CAMPO SNPR CORRIGIDO ================= #}
+                            {# ================= NOVO CAMPO SNPR ================= #}
 
                             <hr>
 
@@ -195,7 +211,7 @@
                             {% endif %}
                         </div>
 
-                        <div class="col">
+                        {#<div class="col">
                             <span class="form-label d-block">Termos</span>
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input"
@@ -205,7 +221,7 @@
                                     A formulação da proposta deverá ser precedida de consulta ao Município ou Distrito Federal, com vistas a pactuar a escolha e a estratégia de regularização fundiária a ser adotada.
                                 </label>
                             </div>
-                        </div>
+                        </div>#}
 
                     </div>
                 </div>
@@ -244,5 +260,23 @@
                 input.value = '';
             }
         });
+    });
+
+    // MÁSCARA PARA O CEP
+    document.getElementById('zipcode').addEventListener('input', function (e) {
+        // Remove tudo o que não for número
+        let value = e.target.value.replace(/\D/g, '');
+    
+        // Limita a 8 dígitos numéricos
+        if (value.length > 8) {
+            value = value.slice(0, 8);
+        }
+
+        // Aplica a máscara 00000-000
+        if (value.length > 5) {
+            value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+        }
+    
+        e.target.value = value;
     });
 </script>

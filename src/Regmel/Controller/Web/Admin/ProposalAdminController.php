@@ -103,6 +103,12 @@ class ProposalAdminController extends AbstractAdminController
                 'map_file' => $extraFields['map_file'] ?? '',
                 'project_file' => $extraFields['project_file'] ?? '',
                 'anticipation' => $extraFields['anticipation'] ?? '',
+                // --- NOVOS CAMPOS ---
+                'snpr_affiliation' => $extraFields['snpr_affiliation'] ?? 'Não',
+                'snpr_affiliation_details' => $extraFields['snpr_affiliation_details'] ?? '',
+                'zipcode' => $extraFields['zipcode'] ?? 'Não Informado',
+                'address' => $extraFields['address'] ?? 'Não Informado',
+                // ----------------------------------
             ];
         }, $filtered);
 

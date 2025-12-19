@@ -286,6 +286,10 @@
                                                             company: proposal.organizationFrom.name,
                                                             area_option: env.aurora.proposals.area_characteristics[proposal.extraFields.area_characteristic] ?? '',
                                                             price_per_house: env.aurora.variables.price_per_household ?? 1,
+                                                            address: proposal.extraFields.address ?? 'Não informado',
+                                                            zipcode: proposal.extraFields.zipcode ?? 'Não informado',
+                                                            snpr_affiliation: proposal.extraFields.snpr_affiliation ?? 'Não',
+                                                            snpr_affiliation_details: proposal.extraFields.snpr_affiliation_details ?? '',
                                                             ...proposal.extraFields
                                                         }|json_encode|e('html_attr') }}'
                                                         onClick="modalProposalDetails(this)"
