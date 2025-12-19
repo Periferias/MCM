@@ -821,16 +821,16 @@ view:
       total: Eventos Encontrados
 
   homepage:
-    add_events: Coloque seus eventos, espaços, iniciativas e oportunidades como editais e concursos no radar cultural, para que as pessoas participem do que está acontecendo na região. Com o Plataforma Periferia Viva - Reformas você faz tudo isso de forma colaborativa e interativa, democratizando o acesso à cultura.
-    api_info: Você pode usar a API para acessar os dados públicos no nosso banco de dados e utilizá-los para desenvolver aplicações externas. Além disso, também é possível contribuir com o software livre Plataforma Periferia Viva - Reformas direto no GitHub.
+    add_events: Coloque seus eventos, espaços, iniciativas e oportunidades como editais e concursos no radar cultural, para que as pessoas participem do que está acontecendo na região. Com o Periferia Viva Reformas você faz tudo isso de forma colaborativa e interativa, democratizando o acesso à cultura.
+    api_info: Você pode usar a API para acessar os dados públicos no nosso banco de dados e utilizá-los para desenvolver aplicações externas. Além disso, também é possível contribuir com o software livre Periferia Viva Reformas direto no GitHub.
     check_opportunities: Confira as Oportunidades
     cultural_scene: Fique por dentro de tudo que está acontecendo no cenário cultural do Ceará!
-    contribute_Plataforma Periferia Viva - Reformas: Contribua com o Plataforma Periferia Viva - Reformas
+    contribute_Periferia Viva Reformas: Contribua com o Periferia Viva Reformas
     discover_places: Descubra os lugares em que as atividades culturais acontecem. E aproveite para cadastrar o seu espaço no radar artístico e cultural.
     entities: O que você encontra aqui no
     find_initiatives: Encontre leis de fomento, convocatórias, mostras e editais de seu interesse ou publique suas iniciativas para toda a comunidade.
     find_nearby: Encontre as atividades que estão próximas a você.
-    free_software_info: Sabia que a Plataforma Periferia Viva - Reformas é um software livre?
+    free_software_info: Sabia que o Periferia Viva Reformas é um software livre?
     register_access: Faça a sua inscrição e acesse os resultados de editais, oficinas, prêmios e concursos. Você também pode criar o seu próprio formulário e divulgar uma oportunidade.
     register_artists: Conheça ou cadastre artistas, pessoas gestoras e produtoras, grupos, coletivos, bandas, instituições e empresas da cena artística e cultural da região.
     registration_info: ''
@@ -838,7 +838,7 @@ view:
     search_calendar: Pesquise o calendário de atividades culturais que estão acontecendo na sua região. Ou crie e divulgue seus eventos gratuitamente na plataforma.
     subtitle: Um novo amanhecer para a gestão e para o fomento cultural.
     header_text: Encontre cultura em cada canto da cidade e promova a sua própria cultura. Participe da produção artística do seu território com uma plataforma livre, gratuita e colaborativa.
-    title: Boas vindas, você chegou na Plataforma Periferia Viva - Reformas!
+    title: Boas vindas, você chegou no Periferia Viva Reformas!
     discover_open_notice: Conheça editais, oficinas, prêmios e concursos mais recentes e com inscrições abertas no momento.
 
   initiative:
@@ -1117,7 +1117,7 @@ view:
     error-404: Error 404
     error-text_first: Ops, página não encontrada.
     error-text_second: Essa página não existe mais ou mudou de endereço.
-    error-text_third: Mas não se preocupe, existem muitas outras páginas para conhecer aqui na Plataforma Periferia Viva - Reformas.
+    error-text_third: Mas não se preocupe, existem muitas outras páginas para conhecer aqui no Periferia Viva Reformas.
     error-homepage: Voltar para a página inicial
     error-image: Imagem de dúvida
 
@@ -1126,7 +1126,7 @@ view:
     error-403: Erro 403
     error-title: Ops, acesso negado.
     error-text_first: Você não tem permissão para acessar esta página ou o conteúdo está restrito.
-    error-text_second: Mas não se preocupe, você pode explorar outras áreas da Plataforma Periferia Viva - Reformas.
+    error-text_second: Mas não se preocupe, você pode explorar outras áreas do Periferia Viva Reformas.
     error-dashboard: Voltar para o painel de controle
     error-image: Erro 403
 
@@ -1134,7 +1134,7 @@ view:
     title: Ocorreu um erro
     subtitle: Algo inesperado aconteceu.
     text_first: Não conseguimos processar sua solicitação agora.
-    text_second: Mas não se preocupe, você pode tentar novamente mais tarde ou navegar por outras páginas da Plataforma Periferia Viva - Reformas.
+    text_second: Mas não se preocupe, você pode tentar novamente mais tarde ou navegar por outras páginas do Periferia Viva Reformas.
     dashboard: Voltar para o painel de controle
     image: Erro
 
