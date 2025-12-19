@@ -75,7 +75,7 @@ describe('Listagem de propostas', () => {
         cy.get('#price-per-household').contains('R$ 35.000,00').should('exist');
         cy.get('#total-price').contains('R$ 3.500.000,00').should('exist');
 
-        cy.get('.modal-body > :nth-child(13)').should('contain.text','Baixar arquivo KML/KMZ/SHP');
+        cy.get('.modal-body > :nth-child(13)').should('contain.text','Baixar arquivo KML');
         cy.get(':nth-child(14) > .col > .mt-4 > strong').should('contain.text','Arquivo do Projeto');
         cy.get('#project-file > a').contains('Clique aqui para baixar o arquivo do projeto.').click();
 

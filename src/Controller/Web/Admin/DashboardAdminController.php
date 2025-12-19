@@ -81,6 +81,13 @@ class DashboardAdminController extends AbstractAdminController
         $totalCompanies = count($this->organizationService->findBy([
             'type' => OrganizationTypeEnum::EMPRESA->value,
         ]));
+        
+        // Propostas são iniciativas com campos específicos (map_file, project_file, etc)
+        $allInitiatives = $this->initiativeService->findBy($createdBy ? ['createdBy' => $createdBy] : []);
+        $totalProposals = count(array_filter($allInitiatives, function($initiative) {
+            $extraFields = $initiative->getExtraFields();
+            return isset($extraFields['map_file']) || isset($extraFields['project_file']);
+        }));
 
         $totals = [
             'totalUsers' => $totalUsers,
@@ -92,6 +99,7 @@ class DashboardAdminController extends AbstractAdminController
             'totalCities' => $totalCities,
             'totalCompanies' => $totalCompanies,
             'totalOrganizations' => $totalOrganizations,
+            'totalProposals' => $totalProposals,
         ];
 
         // Busca notificações do usuário logado
