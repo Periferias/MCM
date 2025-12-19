@@ -73,13 +73,15 @@
                         <div class="col">
                             <label class="form-label required-label">Poligonal Mapa (PDF/JPG)</label>
                             <input type="file" name="map" data-allowed="pdf,jpg"
-                                        data-label="Poligonal Mapa" class="form-control">
+                                        data-label="Poligonal Mapa" class="form-control" data-max-size="40" required>
+                            <div class="form-text">O arquivo deve ter no máximo 40MB.</div>
                         </div>
 
                         <div class="col">
-                            <label class="form-label required-label">Poligonal Georreferenciada (KML/Shapefiles)</label>
-                            <input type="file" name="project" data-allowed="kml,shp,shx,dbf"
-                                        data-label="Poligonal Georreferenciada" class="form-control">
+                            <label class="form-label required-label">Poligonal Georreferenciada (KML)</label>
+                            <input type="file" name="project" data-allowed="kml"
+                                        data-label="Poligonal Georreferenciada" class="form-control" data-max-size="40">
+                            <div class="form-text">O arquivo deve ter no máximo 40MB.</div>
                         </div>
                     </div>
 
@@ -129,7 +131,7 @@
                                 </div>
                             </div>
 
-                            {# ================= NOVO CAMPO SNPR CORRIGIDO ================= #}
+                            {# ================= NOVO CAMPO SNPR ================= #}
 
                             <hr>
 
