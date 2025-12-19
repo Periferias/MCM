@@ -12,7 +12,7 @@ email:
 
 variables:
   price_per_household: 35000
-  min_houses: 20
+  min_houses: 10
   max_houses: 140
 
 visit_repository: false
