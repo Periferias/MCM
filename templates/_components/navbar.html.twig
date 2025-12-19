@@ -41,8 +41,9 @@
                             <span class="fw-semibold text-dark small">{{ 'notifications' | trans }}</span>
                             <span class="d-flex align-items-center position-relative">
                                 <span class="material-icons">notifications</span>
-                                {% if navbarNotificationsCount is defined and navbarNotificationsCount > 0 %}
-                                    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle p-1" style="font-size: 0.7rem;">{{ navbarNotificationsCount }}</span>
+                                {% set notificationCount = navbar_notifications_count() %}
+                                {% if notificationCount > 0 %}
+                                    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle p-1" style="font-size: 0.7rem;">{{ notificationCount }}</span>
                                 {% endif %}
                             </span>
                         </button>
@@ -53,8 +54,9 @@
                                     <strong>{{ 'your_notifications' | trans }}</strong>
                                 </div>
                             </li>
-                            {% if navbarNotifications is defined and navbarNotifications|length > 0 %}
-                                {% for notification in navbarNotifications %}
+                            {% set notifications = navbar_notifications() %}
+                            {% if notifications|length > 0 %}
+                                {% for notification in notifications %}
                                     <li>
                                         <div class="px-3 py-2">
                                             <div class="d-flex justify-content-between mb-1">
