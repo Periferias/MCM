@@ -71,13 +71,13 @@
 
                     <div class="row">
                         <div class="col">
-                            <label class="form-label">Poligonal Mapa (PDF/JPG)</label>
+                            <label class="form-label required-label">Poligonal Mapa (PDF/JPG)</label>
                             <input type="file" name="map" data-allowed="pdf,jpg"
                                         data-label="Poligonal Mapa" class="form-control">
                         </div>
 
                         <div class="col">
-                            <label class="form-label">Poligonal Georreferenciada (KML/Shapefiles)</label>
+                            <label class="form-label required-label">Poligonal Georreferenciada (KML/Shapefiles)</label>
                             <input type="file" name="project" data-allowed="kml,shp,shx,dbf"
                                         data-label="Poligonal Georreferenciada" class="form-control">
                         </div>
@@ -94,13 +94,13 @@
 
                             <div class="row">
                                 <div class="col">
-                                    <label class="form-label">Área estimada da Poligonal (m²)</label>
+                                    <label class="form-label required-label">Área estimada da Poligonal (m²)</label>
                                     <input type="text" id="area_size" name="area_size"
                                                 placeholder="0" class="form-control">
                                 </div>
 
                                 <div class="col">
-                                    <label class="form-label">
+                                    <label class="form-label required-label">
                                         Número de Domicílios
                                         (min {{ env.aurora.variables.min_houses }}
                                         / max {{ env.aurora.variables.max_houses }})
