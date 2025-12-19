@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const citySelect = new TomSelect(cityElement, {
     create: false,
     sortField: { field: 'text', direction: 'asc' },
-    placeholder: 'Selecione uma cidade',
+    placeholder: 'Selecione um município',
     allowEmptyOption: false,
   });
 
