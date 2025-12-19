@@ -184,6 +184,17 @@ dashboard:
         text: search
         route: admin_opportunity_list
       total_key: totalOpportunities
+    proposals_admin:
+      csv: true
+      acl: ['ROLE_ADMIN', 'ROLE_MANAGER']
+      title: Propostas
+      subtitle: Propostas
+      icon: check_circle
+      color: "#00A859"
+      action:
+        text: search
+        route: admin_regmel_proposal_list
+      total_key: totalProposals
     companies:
       csv: true
       acl: ['ROLE_COMPANY', 'ROLE_ADMIN', 'ROLE_MANAGER']

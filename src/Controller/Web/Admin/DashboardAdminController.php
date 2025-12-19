@@ -7,6 +7,7 @@ namespace App\Controller\Web\Admin;
 use App\DocumentService\NotificationDocumentService;
 use App\Enum\OrganizationTypeEnum;
 use App\Enum\UserRolesEnum;
+use App\Regmel\Service\Interface\ProposalServiceInterface;
 use App\Service\Interface\AgentServiceInterface;
 use App\Service\Interface\EventServiceInterface;
 use App\Service\Interface\InitiativeServiceInterface;
@@ -27,6 +28,7 @@ class DashboardAdminController extends AbstractAdminController
         readonly private InscriptionOpportunityServiceInterface $inscriptionService,
         readonly private OrganizationServiceInterface $organizationService,
         readonly private NotificationDocumentService $notificationService,
+        readonly private ProposalServiceInterface $proposalService,
     ) {
     }
 
@@ -81,6 +83,7 @@ class DashboardAdminController extends AbstractAdminController
         $totalCompanies = count($this->organizationService->findBy([
             'type' => OrganizationTypeEnum::EMPRESA->value,
         ]));
+        $totalProposals = $this->proposalService->count($createdBy);
 
         $totals = [
             'totalUsers' => $totalUsers,
@@ -92,6 +95,7 @@ class DashboardAdminController extends AbstractAdminController
             'totalCities' => $totalCities,
             'totalCompanies' => $totalCompanies,
             'totalOrganizations' => $totalOrganizations,
+            'totalProposals' => $totalProposals,
         ];
 
         // Busca notificações do usuário logado
