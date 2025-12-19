@@ -23,7 +23,7 @@
 
                     <div class="row">
                         <div class="col-md-3">
-                            <label for="state" class="form-label">{{ 'state'|trans }}</label>
+                            <label for="state" class="form-label required-label">{{ 'state'|trans }}</label>
                             <select id="state" required name="state" class="form-select">
                                 <option value="">{{ 'select'|trans }}</option>
                                 {% for state in states %}
@@ -33,7 +33,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label for="city" class="form-label">{{ 'city'|trans }}</label>
+                            <label for="city" class="form-label required-label">{{ 'city'|trans }}</label>
                             <select id="city" required name="city" class="form-select">
                                 <option value="">{{ 'select'|trans }}</option>
                             </select>
@@ -43,14 +43,14 @@
                     <hr>
 
                     <div class="mt-4 mb-2 text-primary fw-bold">
-                        <label for="name">Nome da Área de Intervenção</label>
+                        <label for="name" class="required-label">Nome da Área de Intervenção</label>
                     </div>
-                    <input id="name" name="name" placeholder="Digite aqui" type="text" class="form-control">
+                    <input id="name" name="name" placeholder="Digite aqui" type="text" class="form-control" required>
 
                     <hr>
 
                     <div class="mt-4 mb-2 text-primary">
-                        <strong>A área é caracterizada como:</strong>
+                        <strong class="required-label">A área é caracterizada como:</strong>
                     </div>
 
                     {% for i in 1..4 %}
