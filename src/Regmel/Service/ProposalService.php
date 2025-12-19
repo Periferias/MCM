@@ -170,8 +170,8 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             'snpr_affiliation' => $data['snpr_affiliation'] ?? 'Não',
             'snpr_affiliation_details' => $data['snpr_affiliation_details'] ?? '',
             // Campos de Endereço e CEP
-            'address' => $data['address'] ?? '',
             'zipcode' => $data['zipcode'] ?? '',
+            'address' => $data['address'] ?? '',
         ]);
 
         $this->initiativeRepository->save($initiative);
