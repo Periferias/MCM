@@ -1,12 +1,12 @@
 <h4 class="mt-4">{{ 'organization_data' | trans }}</h4>
 
 <div class="alert alert-info">
-    Apenas para municípios e/ou <em>Arranjos Populacionais</em> a partir de 50.000 habitantes
+    Municípios com mais de 50 mil habitantes ou integrantes de arranjos populacionais acima de 300 mil habitantes
 </div>
 
 <div class="row">
     <div class="col-6 mb-3">
-        <label for="state" class="form-label required">{{ 'state' | trans }}</label>
+        <label for="state" class="form-label required-label">{{ 'state' | trans }}</label>
         <select id="state" name="state" class="form-select">
             <option value="">{{ 'select' | trans }}</option>
             {% for state in states %}
@@ -15,7 +15,7 @@
         </select>
     </div>
     <div class="col-6 mb-3">
-        <label for="city" class="form-label required">{{ 'city'| trans }}</label>
+        <label for="city" class="form-label required-label">{{ 'city'| trans }}</label>
         <select id="city" name="city" class="form-select" data-placeholder="{{ 'select'|trans }}">
             <option value="">{{ 'select'|trans }}</option>
         </select>
@@ -28,15 +28,16 @@
         <input type="text" class="form-control" id="site" name="site" placeholder="{{ 'view.organization.site' | trans }}">
     </div>
     <div class="col-4 mb-3">
-        <label for="phone" class="form-label">{{ 'view.organization.phone' | trans }}</label>
+        <label for="phone" class="form-label required-label">{{ 'view.organization.phone' | trans }}</label>
         <input type="tel" class="form-control" maxlength="16" data-mask="phone" id="phone" name="phone" placeholder="{{ 'view.organization.phone' | trans }}" required>
     </div>
     <div class="col-4 mb-3">
-        <label for="email" class="form-label">{{ 'view.organization.email' | trans }}</label>
+        <label for="email" class="form-label required-label">{{ 'view.organization.email' | trans }}</label>
         <input type="email" class="form-control" id="email" name="email" placeholder="{{ 'view.organization.email' | trans }}" required>
     </div>
 </div>
 
+{# Exclusão de bloco do formulário
 <div class="alert alert-info border border-primary shadow-sm mt-4">
     <i class="material-icons align-middle text-primary me-2">info</i>
     <strong>{{ 'additional_information' | trans }}</strong> — {{ 'options_exclusive' | trans }}
@@ -55,10 +56,11 @@
         </div>
     </div>
 </div>
+#}
 
 <div class="row">
     <div class="col-12 mb-3">
-        <label class="form-label d-block">{{ 'plhis' | trans }}</label>
+        <label class="form-label d-block required-label">{{ 'plhis' | trans }}</label>
         <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" name="hasPlhis" id="hasPlhisYes" value="true" required>
             <label class="form-check-label" for="hasPlhisYes">{{ 'yes' | trans }}</label>
@@ -72,7 +74,7 @@
 
 <div class="row mt-2">
     <div class="col-12 mb-3">
-        <label for="joinForm" class="form-label">
+        <label for="joinForm required-l" class="form-label required-label">
             {{ 'view.organization.file_part1' | trans }}
         </label>
         <a class="mx-1" href="/files/adesao-ao-programa.pdf" download>{{ 'view.organization.download_form_model' | trans }}</a>
