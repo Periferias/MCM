@@ -35,6 +35,14 @@
 	# Disable Topics tracking if not enabled explicitly: https://github.com/jkarlin/topics
 	header ?Permissions-Policy "browsing-topics=()"
 
+	# Serve uploaded files from assets/uploads directory (must come before php routing)
+	@uploads path /uploads/*
+	route @uploads {
+		uri strip_prefix /uploads
+		root * /app/assets/uploads
+		file_server
+	}
+
 	@phpRoute {
 		not file {path}
 	}
