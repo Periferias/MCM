@@ -29,8 +29,20 @@ spec:
       serviceAccountName: {{ include "pvr.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: assets-volume 
+          persistentVolumeClaim:
+            claimName: pvr-assets
+        - name: storage-volume 
+          persistentVolumeClaim:
+            claimName: pvr-storage
       containers:
         - name: {{ .Chart.Name }}-php
+          volumeMounts:
+            - mountPath: /app/assets/uploads
+              name: assets-volume
+            - mountPath: /app/var/storage
+              name: storage-volume
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.php.image.repository }}:{{ .Values.php.image.tag | default .Chart.AppVersion }}"
