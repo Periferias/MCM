@@ -45,6 +45,8 @@
                                 <tr>
                                     <th>{{ 'photo'|trans }}</th>
                                     <th>{{ 'name'|trans }}</th>
+                                    <th>Status da Adesão</th>
+                                    <th>Quantidade de Propostas</th>
                                     <th>{{ 'description'|trans }}</th>
                                     <th>{{ 'email'|trans }}</th>
                                     <th>{{ 'site'|trans }}</th>
@@ -67,6 +69,24 @@
                                                 {{ municipality.name }}-{{ municipality.extraFields.state }}
                                             </a>
                                         </td>
+                                        <td>
+                                            {% set status = municipality.extraFields.term_status|default('pending') %}
+                                            
+                                            {% if status == 'approved' %}
+                                                <span class="badge bg-success text-white text-dark text-uppercase">
+                                                    Aprovado
+                                                </span>
+                                            {% elseif status == 'rejected' %}
+                                                <span class="badge bg-danger text-white text-uppercase">
+                                                    Reprovado
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark text-uppercase">
+                                                    Aguardando
+                                                </span>
+                                            {% endif %}
+                                        </td>                    
+                                        <td>{{ municipality.totalProposalsCount|default(0) }}</td>
                                         <td>{{ municipality.description }}</td>
                                         <td>{{ municipality.extraFields.email ?? '' }}</td>
                                         <td>{{ municipality.extraFields.site ?? '' }}</td>
