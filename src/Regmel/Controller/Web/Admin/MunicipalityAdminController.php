@@ -78,25 +78,23 @@ class MunicipalityAdminController extends AbstractAdminController
                 return (!$filterRegion || ($extra['region'] ?? null) === $filterRegion)
                     && (!$filterState || ($extra['state'] ?? null) === $filterState);
             });
+        } else {
+            $agents = $user->getAgents();
 
-            return $this->render('regmel/admin/municipality/list.html.twig', [
-                'municipalities' => $municipalities,
-                'regions' => $regions,
-                'states' => $states,
-                'token' => $this->jwtManager->create($user),
-                'context_title' => 'my_municipalities',
-            ], parentPath: '');
+            if ($agents->isEmpty()) {
+                $this->addFlash('error', $this->translator->trans('user_associated'));
+                return $this->redirectToRoute('admin_dashboard');
+            }
+
+            $municipalities = $this->organizationService->getMunicipalitiesByAgents($agents);
         }
 
-        $agents = $user->getAgents();
-
-        if ($agents->isEmpty()) {
-            $this->addFlash('error', $this->translator->trans('user_associated'));
-
-            return $this->redirectToRoute('admin_dashboard');
+        // --- ALTERAÇÃO: Contagem de propostas para cada município ---
+        foreach ($municipalities as $municipality) {
+            $proposals = $this->municipalityService->getProposals($municipality);
+            $municipality->totalProposalsCount = is_countable($proposals) ? count($proposals) : 0;
         }
-
-        $municipalities = $this->organizationService->getMunicipalitiesByAgents($agents);
+        // ------------------------------------------------------------
 
         return $this->render('regmel/admin/municipality/list.html.twig', [
             'municipalities' => $municipalities,
@@ -122,13 +120,11 @@ class MunicipalityAdminController extends AbstractAdminController
             'type' => OrganizationTypeEnum::MUNICIPIO->value,
         ]);
 
-        // $this->denyAccessUnlessGranted('get', $municipality);
-
-        $createdById = $municipality->getCreatedBy()->getId()->toRfc4122();
-
         if (null === $municipality) {
             throw $this->createNotFoundException($this->translator->trans('municipality_found'));
         }
+
+        $createdById = $municipality->getCreatedBy() ? $municipality->getCreatedBy()->getId()->toRfc4122() : '-';
 
         $proposals = $this->municipalityService->getProposals($municipality);
 
