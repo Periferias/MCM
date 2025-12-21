@@ -432,7 +432,16 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $initiative = $this->initiativeService->get($id);
         $extraFields = $initiative->getExtraFields();
         $extraFields['status'] = $status->value;
-        $extraFields['status_reason'] = $status->value;
+        $extraFields['status_reason'] = $reason;
+        
+        // Rastreia qual usuário aprovou/rejeitou a proposta
+        $user = $this->security->getUser();
+        if ($user) {
+            $extraFields['status_updated_by'] = $user->getId()->toRfc4122();
+            $extraFields['status_updated_at'] = (new \DateTime())->format('Y-m-d H:i:s');
+            $extraFields['status_updated_by_name'] = $user->getName();
+        }
+        
         $initiative->setExtraFields($extraFields);
         $this->initiativeRepository->save($initiative);
 
