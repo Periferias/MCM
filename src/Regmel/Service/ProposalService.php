@@ -436,6 +436,14 @@ public function updateStatusProposal(Uuid $id, StatusProposalEnum $status, strin
         $initiative->setExtraFields($extraFields);
         $this->initiativeRepository->save($initiative);
 
+                // Rastreia qual usuário aprovou/rejeitou a proposta
+        $user = $this->security->getUser();
+        if ($user) {
+            $extraFields['status_updated_by'] = $user->getId()->toRfc4122();
+            $extraFields['status_updated_at'] = (new \DateTime())->format('Y-m-d H:i:s');
+            $extraFields['status_updated_by_name'] = $user->getName();
+        }
+
         // --- INÍCIO DA CORREÇÃO ---
         $municipalityEmails = [];
         $organizationTo = $initiative->getOrganizationTo();
