@@ -427,36 +427,54 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         return "{$path}/storage/regmel/company/documents/{$file}";
     }
 
-    public function updateStatusProposal(Uuid $id, StatusProposalEnum $status, string $reason): void
+public function updateStatusProposal(Uuid $id, StatusProposalEnum $status, string $reason): void
     {
         $initiative = $this->initiativeService->get($id);
         $extraFields = $initiative->getExtraFields();
         $extraFields['status'] = $status->value;
-        $extraFields['status_reason'] = $reason;
-        
-        // Rastreia qual usuário aprovou/rejeitou a proposta
-        $user = $this->security->getUser();
-        if ($user) {
-            $extraFields['status_updated_by'] = $user->getId()->toRfc4122();
-            $extraFields['status_updated_at'] = (new \DateTime())->format('Y-m-d H:i:s');
-            $extraFields['status_updated_by_name'] = $user->getName();
-        }
-        
+        $extraFields['status_reason'] = $status->value;
         $initiative->setExtraFields($extraFields);
         $this->initiativeRepository->save($initiative);
 
-        $municipalityEmails = $initiative->getOrganizationTo()->getAgents()->map(fn ($agent) => $agent->getUser()?->getEmail())->toArray();
-        $companyEmails = $initiative->getOrganizationFrom()->getAgents()->map(fn ($agent) => $agent->getUser()?->getEmail())->toArray();
+        // --- INÍCIO DA CORREÇÃO ---
+        $municipalityEmails = [];
+        $organizationTo = $initiative->getOrganizationTo();
+        
+        // Verifica se a organização de destino existe e tem agentes
+        if ($organizationTo && $organizationTo->getAgents()) {
+            $municipalityEmails = $organizationTo->getAgents()
+                ->filter(fn ($agent) => $agent->getUser() !== null)
+                ->map(fn ($agent) => $agent->getUser()->getEmail())
+                ->toArray();
+        }
 
-        $this->emailService->sendTemplatedEmail(
-            [...$municipalityEmails, ...$companyEmails],
-            'Status da proposta atualizado',
-            '_emails/new-proposal-status.html.twig',
-            [
-                'municipalityName' => $initiative->getOrganizationTo()->getName(),
-                'companyName' => $initiative->getOrganizationFrom()->getName(),
-            ]
-        );
+        $companyEmails = [];
+        $organizationFrom = $initiative->getOrganizationFrom();
+        
+        // Verifica se a organização de origem existe e tem agentes
+        if ($organizationFrom && $organizationFrom->getAgents()) {
+            $companyEmails = $organizationFrom->getAgents()
+                ->filter(fn ($agent) => $agent->getUser() !== null)
+                ->map(fn ($agent) => $agent->getUser()->getEmail())
+                ->toArray();
+        }
+
+        // Junta os e-mails, remove duplicados e valores nulos
+        $allEmails = array_unique(array_filter([...$municipalityEmails, ...$companyEmails]));
+
+        // Só tenta enviar se houver pelo menos um e-mail válido
+        if (!empty($allEmails)) {
+            $this->emailService->sendTemplatedEmail(
+                $allEmails,
+                'Status da proposta atualizado',
+                '_emails/new-proposal-status.html.twig',
+                [
+                    'municipalityName' => $organizationTo ? $organizationTo->getName() : ($extraFields['city_name'] ?? 'Município'),
+                    'companyName' => $organizationFrom ? $organizationFrom->getName() : 'Empresa',
+                ]
+            );
+        }
+        // --- FIM DA CORREÇÃO ---
     }
 
     public function bulkUpdateStatus(array $proposals, string $status): void
