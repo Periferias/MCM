@@ -436,7 +436,7 @@ public function updateStatusProposal(Uuid $id, StatusProposalEnum $status, strin
         $initiative->setExtraFields($extraFields);
         $this->initiativeRepository->save($initiative);
 
-                // Rastreia qual usuário aprovou/rejeitou a proposta
+        // Rastreia qual usuário aprovou/rejeitou a proposta
         $user = $this->security->getUser();
         if ($user) {
             $extraFields['status_updated_by'] = $user->getId()->toRfc4122();
