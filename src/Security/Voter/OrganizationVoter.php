@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\Security\Voter;
 
 use App\Entity\Organization;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 final class OrganizationVoter extends AbstractVoter
 {
+    public function __construct(private readonly LoggerInterface $logger)
+    {
+    }
+
     protected array $actions = [
         'get',
         'get_form',
@@ -25,21 +30,33 @@ final class OrganizationVoter extends AbstractVoter
         $user = $token->getUser();
         
         if (!$user) {
+            $this->logger->error('OrganizationVoter: No user found');
             return false;
         }
 
+        $roles = implode(', ', $user->getRoles());
+        $this->logger->info("OrganizationVoter: User {$user->getEmail()} with roles: {$roles}, attribute: {$attribute}");
+
         // Admin, Manager, Support e Municipality podem visualizar qualquer organização
         if ($attribute === 'get' || $attribute === 'get_form') {
-            if ($this->isUserAdminOrManagerOrSupport($user) || $this->isUserMunicipality($user)) {
+            $isAdminOrManagerOrSupport = $this->isUserAdminOrManagerOrSupport($user);
+            $isMunicipality = $this->isUserMunicipality($user);
+            
+            $this->logger->info("OrganizationVoter: isAdminOrManagerOrSupport={$isAdminOrManagerOrSupport}, isMunicipality={$isMunicipality}");
+            
+            if ($isAdminOrManagerOrSupport || $isMunicipality) {
+                $this->logger->info('OrganizationVoter: Access granted by role');
                 return true;
             }
             
             // Verifica se é o owner
             $owner = $subject->getOwner();
             if ($owner && $owner->getUser() && $user->getId()->equals($owner->getUser()->getId())) {
+                $this->logger->info('OrganizationVoter: Access granted as owner');
                 return true;
             }
             
+            $this->logger->warning('OrganizationVoter: Access denied');
             return false;
         }
 
