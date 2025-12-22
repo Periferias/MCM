@@ -24,9 +24,11 @@ final class OrganizationVoter extends AbstractVoter
     {
         $user = $token->getUser();
 
-        // Admin, Manager e Support podem visualizar qualquer organização
+        // Admin, Manager, Support e Municipality podem visualizar qualquer organização
         if ($attribute === 'get' || $attribute === 'get_form') {
-            return $this->isUserAdminOrManagerOrSupport($user) || $user == $subject->getOwner()->getUser();
+            return $this->isUserAdminOrManagerOrSupport($user) 
+                || in_array('ROLE_MUNICIPALITY', $user->getRoles())
+                || $user == $subject->getOwner()->getUser();
         }
 
         // Apenas Admin, Manager e o owner podem editar
