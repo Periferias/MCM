@@ -6,5 +6,6 @@ namespace App\Regmel\Repository\Interface;
 
 interface ProposalRepositoryInterface
 {
-    public function bulkUpdateStatus(array $proposals, string $statusTo): void;
+    // Adicionamos a string $userName aqui para bater com o Repository
+    public function bulkUpdateStatus(array $proposals, string $statusTo, string $userName): void;
 }
