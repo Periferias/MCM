@@ -1173,9 +1173,10 @@ csv:
     state: Estado
     created_by: Criado por
     city: Município
-    company_name: Nome da Empresa
+    city_code: Código Município
+    company_name: Nome da Empresa/OSC
     company_cnpj: CNPJ da Empresa
-    company_phone: Telefone da Empresa
+    company_phone: Telefone da Empresa/OSC
     project_file: Arquivo do Projeto
     map_file: Arquivo da Área Poligonal
     houses_quantity: Quantidade de Domicílios
