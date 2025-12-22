@@ -176,8 +176,8 @@ dashboard:
       total_key: totalCities
     opportunities:
       acl: ['ROLE_ADMIN', 'ROLE_MANAGER']
-      title: Credenciamentos
-      subtitle: Credenciamentos
+      title: Cadastros
+      subtitle: Cadastros
       icon: lightbulb
       color: "#E70DCB"
       action:
@@ -237,7 +237,7 @@ sidebar:
       admin_opportunity_list:
         acl: [ROLE_ADMIN, ROLE_MANAGER]
         icon: diversity_2
-        text: Credenciamentos
+        text: Cadastros
 
       admin_review_list:
         acl: []
