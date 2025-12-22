@@ -48,6 +48,11 @@ abstract class AbstractVoter extends Voter
         return in_array(UserRolesEnum::ROLE_SUPPORT->value, $user->getRoles());
     }
 
+    protected function isUserMunicipality(UserInterface $user): bool
+    {
+        return in_array(UserRolesEnum::ROLE_MUNICIPALITY->value, $user->getRoles());
+    }
+
     protected function isUserAdminOrManagerOrSupport(UserInterface $user): bool
     {
         return $this->isUserAdmin($user) || $this->isUserManager($user) || $this->isUserSupport($user);
