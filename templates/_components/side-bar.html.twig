@@ -19,7 +19,7 @@
                 {% endif %}
 
                 {% if hasAccess == true %}
-                    <li class="nav-item{% if not app.request or not app.request.attributes.get('_route') == key %} active{% endif %}">
+                    <li class="nav-item{% if app.request and app.request.attributes.get('_route') == key %} active{% endif %}">
                         <a href="{{ path(key) }}" class="{{ item.color ?? '' }} nav-link d-flex align-items-center">
                             <i class="material-icons icon-size-1">{{ item.icon }}</i>
                             <span class="font-title">{{ item.text | trans }}</span>
