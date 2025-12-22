@@ -77,31 +77,35 @@
                                         <td>{{ company.createdBy.name ?? '-' }}</td>
                                         <td>{{ company.createdAt|date('d/m/Y H:i:s') }}</td>
                                         <td style="position: relative;">
-                                            <div class="dropdown">
-                                                <button class="btn btn-outline-warning btn-sm dropdown-toggle"
-                                                        type="button"
-                                                        id="dropdownMenu{{ company.id }}"
-                                                        data-bs-toggle="dropdown"
-                                                        data-bs-display="static"
-                                                        data-bs-flip="false"        {# desabilita o flip #}
-                                                        aria-expanded="false">
-                                                    {{ 'actions'|trans }}
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end"
-                                                    aria-labelledby="dropdownMenu{{ company.id }}"
-                                                    style="--bs-dropdown-min-width: 0; width: auto;">
-                                                    <li>
-                                                        <a href="#"
-                                                           class="dropdown-item edit-company"
-                                                           data-bs-toggle="modal"
-                                                           data-bs-target="#modalEditCompany"
-                                                           data-id="{{ company.id }}"
-                                                           data-token="{{ token }}">
-                                                            {{ 'edit'|trans }}
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_COMPANY') %}
+                                                <div class="dropdown">
+                                                    <button class="btn btn-outline-warning btn-sm dropdown-toggle"
+                                                            type="button"
+                                                            id="dropdownMenu{{ company.id }}"
+                                                            data-bs-toggle="dropdown"
+                                                            data-bs-display="static"
+                                                            data-bs-flip="false"        {# desabilita o flip #}
+                                                            aria-expanded="false">
+                                                        {{ 'actions'|trans }}
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end"
+                                                        aria-labelledby="dropdownMenu{{ company.id }}"
+                                                        style="--bs-dropdown-min-width: 0; width: auto;">
+                                                        <li>
+                                                            <a href="#"
+                                                               class="dropdown-item edit-company"
+                                                               data-bs-toggle="modal"
+                                                               data-bs-target="#modalEditCompany"
+                                                               data-id="{{ company.id }}"
+                                                               data-token="{{ token }}">
+                                                                {{ 'edit'|trans }}
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            {% else %}
+                                                -
+                                            {% endif %}
                                         </td>
                                     </tr>
                                 {% else %}
