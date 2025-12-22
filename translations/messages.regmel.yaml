@@ -1182,6 +1182,7 @@ csv:
     houses_quantity: Quantidade de Domicílios
     total_area: Área Total
     total_value: Valor Global da Proposta
+    consented_by: Quem anuiu
     proposal_status: Status da Proposta
     intervention_area_name: Nome da Área de Intervenção
     proposal_type: Tipo de Proposta
