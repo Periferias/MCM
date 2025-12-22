@@ -143,7 +143,7 @@ dashboard:
   cards:
     municipalities:
       csv: true
-      acl: ['ROLE_MUNICIPALITY', 'ROLE_ADMIN', 'ROLE_MANAGER']
+      acl: ['ROLE_MUNICIPALITY', 'ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SUPPORT']
       title: Municípios
       subtitle: Municípios
       icon: place
@@ -154,7 +154,7 @@ dashboard:
       total_key: totalCities
     documents:
       download: true
-      acl: ['ROLE_MUNICIPALITY', 'ROLE_ADMIN', 'ROLE_MANAGER']
+      acl: ['ROLE_MUNICIPALITY', 'ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SUPPORT']
       title: Termos de Adesão
       subtitle: Termos de adesão para Aprovação
       icon: description
@@ -186,7 +186,7 @@ dashboard:
       total_key: totalOpportunities
     proposals_admin:
       csv: true
-      acl: ['ROLE_ADMIN', 'ROLE_MANAGER']
+      acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SUPPORT']
       title: Propostas
       subtitle: Propostas
       icon: check_circle
@@ -255,22 +255,22 @@ sidebar:
         text: Propostas
 
       admin_regmel_company_list:
-        acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_COMPANY']
+        acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_COMPANY', 'ROLE_SUPPORT']
         icon: business
         text: Empresas/OSC
 
       admin_regmel_municipality_list:
-        acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_MUNICIPALITY']
+        acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_MUNICIPALITY', 'ROLE_SUPPORT']
         icon: location_city
         text: Municípios
 
       admin_regmel_municipality_document_list:
-        acl: ['ROLE_ADMIN', 'ROLE_MANAGER']
+        acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SUPPORT']
         icon: description
         text: Termos de Adesão
 
       admin_regmel_proposal_list:
-        acl: ['ROLE_ADMIN', 'ROLE_MANAGER']
+        acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SUPPORT']
         icon: cases
         text: Propostas
 

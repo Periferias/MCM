@@ -53,7 +53,8 @@ class MunicipalityAdminController extends AbstractAdminController
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or 
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or 
-        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/municipios', name: 'admin_regmel_municipality_list', methods: ['GET'])]
     public function list(Request $request): Response
