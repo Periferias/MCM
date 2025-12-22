@@ -275,7 +275,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $this->translator->trans('csv.header.created_by'),
             $this->translator->trans('csv.header.proposal_date'),
             $this->translator->trans('csv.header.proposal_update_date'),
-            'Atualizado por',
         ];
     }
 
@@ -326,7 +325,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $entity->getCreatedBy()?->getName() ?? '',
             $entity->getCreatedAt()->format('d/m/Y H:i:s'),
             $modificationDate,
-            $updatedBy,
         ];
     }
 
