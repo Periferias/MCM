@@ -47,7 +47,7 @@ abstract readonly class AbstractEntityService
     {
         $user = $this->security->getUser();
         
-        if (null !== $user && ($user->isRole(UserRolesEnum::ROLE_ADMIN) || $user->isRole(UserRolesEnum::ROLE_MANAGER))) {
+        if (null !== $user && ($user->isRole(UserRolesEnum::ROLE_ADMIN) || $user->isRole(UserRolesEnum::ROLE_MANAGER) || $user->isRole(UserRolesEnum::ROLE_SUPPORT))) {
             return [];
         }
 

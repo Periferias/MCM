@@ -65,7 +65,8 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
 
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/municipios-documentos', name: 'admin_regmel_municipality_document_list', methods: ['GET'])]
     public function list(Request $request): Response
@@ -118,7 +119,8 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
 
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/municipios/{id}/document/decision', name: 'admin_municipality_document_decision', methods: ['POST'])]
     public function handleDocumentDecision(Uuid $id, Request $request): Response
@@ -145,7 +147,8 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
 
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/municipios-documentos/download', name: 'admin_regmel_municipality_document_download', methods: ['GET'])]
     public function downloadDocuments(): Response

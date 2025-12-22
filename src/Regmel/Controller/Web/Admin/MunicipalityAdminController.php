@@ -53,7 +53,8 @@ class MunicipalityAdminController extends AbstractAdminController
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or 
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or 
-        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/municipios', name: 'admin_regmel_municipality_list', methods: ['GET'])]
     public function list(Request $request): Response
@@ -68,7 +69,11 @@ class MunicipalityAdminController extends AbstractAdminController
             ? $this->stateService->findBy(['region' => $filterRegion])
             : $this->stateService->list();
 
-        if (true === in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles())) {
+        $isAdminOrManagerOrSupport = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles()) ||
+            in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles()) ||
+            in_array(UserRolesEnum::ROLE_SUPPORT->value, $user->getRoles());
+
+        if (true === $isAdminOrManagerOrSupport) {
             $criteria = ['type' => OrganizationTypeEnum::MUNICIPIO->value];
             $allMunicipalities = $this->organizationService->findBy($criteria);
 

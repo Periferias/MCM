@@ -62,18 +62,19 @@ class DashboardAdminController extends AbstractAdminController
 
         $recentRegistrations = $this->inscriptionService->findRecentByUser($user->getId());
         
-        // Admin e Manager veem todos os registros, outros usuários veem apenas os que criaram
-        $isAdminOrManager = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles()) 
-            || in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles());
+        // Admin, Manager e Support veem todos os registros, outros usuários veem apenas os que criaram
+        $isAdminOrManagerOrSupport = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles()) 
+            || in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles())
+            || in_array(UserRolesEnum::ROLE_SUPPORT->value, $user->getRoles());
         
-        $createdBy = $isAdminOrManager ? null : $this->agentService->getAgentsFromLoggedUser()[0];
+        $createdBy = $isAdminOrManagerOrSupport ? null : $this->agentService->getAgentsFromLoggedUser()[0];
 
         $totalAgents = $this->agentService->count($user);
         $totalUsers = $this->agentService->count();
         $totalOpportunities = $this->opportunityService->count($createdBy);
         $totalEvents = $this->eventService->count($createdBy);
         $totalSpaces = $this->spaceService->count($createdBy);
-        $totalOrganizations = $this->organizationService->count($createdBy);
+        $totalOrganizations = $this->organizationService->count();
         $totalInitiatives = $this->initiativeService->count($createdBy);
         $totalCities = count($this->organizationService->findBy([
             'type' => OrganizationTypeEnum::MUNICIPIO->value,
@@ -83,7 +84,9 @@ class DashboardAdminController extends AbstractAdminController
         ]));
         
         // Propostas são iniciativas com campos específicos (map_file, project_file, etc)
-        $allInitiatives = $this->initiativeService->findBy($createdBy ? ['createdBy' => $createdBy] : []);
+        $allInitiatives = $isAdminOrManagerOrSupport 
+            ? $this->initiativeService->findBy([])
+            : $this->initiativeService->findBy(['createdBy' => $createdBy]);
         $totalProposals = count(array_filter($allInitiatives, function($initiative) {
             $extraFields = $initiative->getExtraFields();
             return isset($extraFields['map_file']) || isset($extraFields['project_file']);

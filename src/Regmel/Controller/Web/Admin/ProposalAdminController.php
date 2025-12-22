@@ -48,7 +48,8 @@ class ProposalAdminController extends AbstractAdminController
 
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or 
-        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") 
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas', name: 'admin_regmel_proposal_list', methods: ['GET'])]
     public function list(Request $request): Response
@@ -218,7 +219,8 @@ class ProposalAdminController extends AbstractAdminController
 
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas/list/download', name: 'admin_regmel_proposal_list_download', methods: ['GET'])]
     public function exportProposalsCsv(Request $request): Response
@@ -230,7 +232,8 @@ class ProposalAdminController extends AbstractAdminController
 
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas/list/download-project-files', name: 'admin_regmel_proposal_project_file_download', methods: ['GET'])]
     public function exportProjectFiles(): Response
@@ -250,7 +253,8 @@ class ProposalAdminController extends AbstractAdminController
 
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas/list/download-map-files', name: 'admin_regmel_proposal_map_file_download', methods: ['GET'])]
     public function exportMapFiles(): Response
