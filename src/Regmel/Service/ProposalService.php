@@ -237,9 +237,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
 
     public function generateProposalCode(Initiative $proposal): string
     {
-        $extraFields = $proposal->getExtraFields();
-
-        return 'MCM-'.$extraFields['cityCode'].'-1-'.(new DateTime())->format('Y').'-'.substr($proposal->getId()->toRfc4122(), 0, 4);
+        return substr($proposal->getId()->toRfc4122(), 0, 8);
     }
 
     private function generateUrlForField(Initiative $entity, string $fieldName, string $routeName): string
