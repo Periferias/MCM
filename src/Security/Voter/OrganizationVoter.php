@@ -37,14 +37,15 @@ final class OrganizationVoter extends AbstractVoter
         $roles = implode(', ', $user->getRoles());
         $this->logger->info("OrganizationVoter: User {$user->getEmail()} with roles: {$roles}, attribute: {$attribute}");
 
-        // Admin, Manager, Support e Municipality podem visualizar qualquer organização
+        // Admin, Manager, Support, Municipality e Company podem visualizar qualquer organização
         if ($attribute === 'get' || $attribute === 'get_form') {
             $isAdminOrManagerOrSupport = $this->isUserAdminOrManagerOrSupport($user);
             $isMunicipality = $this->isUserMunicipality($user);
+            $isCompany = $this->isUserCompany($user);
             
-            $this->logger->info("OrganizationVoter: isAdminOrManagerOrSupport={$isAdminOrManagerOrSupport}, isMunicipality={$isMunicipality}");
+            $this->logger->info("OrganizationVoter: isAdminOrManagerOrSupport={$isAdminOrManagerOrSupport}, isMunicipality={$isMunicipality}, isCompany={$isCompany}");
             
-            if ($isAdminOrManagerOrSupport || $isMunicipality) {
+            if ($isAdminOrManagerOrSupport || $isMunicipality || $isCompany) {
                 $this->logger->info('OrganizationVoter: Access granted by role');
                 return true;
             }
