@@ -1173,14 +1173,17 @@ csv:
     state: Estado
     created_by: Criado por
     city: Município
-    company_name: Nome da Empresa
+    city_code: Código Município
+    company_name: Nome da Empresa/OSC
     company_cnpj: CNPJ da Empresa
-    company_phone: Telefone da Empresa
+    profit_type: Com/Sem fins lucrativos
+    company_phone: Telefone da Empresa/OSC
     project_file: Arquivo do Projeto
     map_file: Arquivo da Área Poligonal
     houses_quantity: Quantidade de Domicílios
     total_area: Área Total
     total_value: Valor Global da Proposta
+    consented_by: Quem anuiu
     proposal_status: Status da Proposta
     intervention_area_name: Nome da Área de Intervenção
     proposal_type: Tipo de Proposta
