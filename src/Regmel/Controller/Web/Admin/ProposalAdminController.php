@@ -83,13 +83,12 @@ class ProposalAdminController extends AbstractAdminController
             $organization = $initiative->getOrganizationFrom();
             $extraFields = $initiative->getExtraFields();
             $areaCharacteristic = $extraFields['area_characteristic'] ?? null;
-
             $quantityHouses = (int) ($extraFields['quantity_houses'] ?? 0);
 
             return [
                 'id' => $initiative->getId()->toRfc4122(),
                 'name' => $initiative->getName(),
-                'company' => $organization?->getName() ?? '',
+                'company' => $organization?->getName() ?? '', // Esta é a chave que deu erro!
                 'city_name' => $extraFields['city_name'] ?? '',
                 'region' => $extraFields['region'] ?? '',
                 'state' => $extraFields['state'] ?? '',
@@ -103,12 +102,12 @@ class ProposalAdminController extends AbstractAdminController
                 'map_file' => $extraFields['map_file'] ?? '',
                 'project_file' => $extraFields['project_file'] ?? '',
                 'anticipation' => $extraFields['anticipation'] ?? '',
-                // --- NOVOS CAMPOS ---
                 'snpr_affiliation' => $extraFields['snpr_affiliation'] ?? 'Não',
                 'snpr_affiliation_details' => $extraFields['snpr_affiliation_details'] ?? '',
                 'zipcode' => $extraFields['zipcode'] ?? 'Não Informado',
                 'address' => $extraFields['address'] ?? 'Não Informado',
-                // ----------------------------------
+                // O novo campo que você queria:
+                'status_updated_by_name' => $extraFields['status_updated_by_name'] ?? 'Não informado',
             ];
         }, $filtered);
 

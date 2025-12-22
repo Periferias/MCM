@@ -83,6 +83,7 @@
                             <th>Empresa</th>
                             <th>{{ 'municipality' | trans}}</th>
                             <th>{{ 'status' | trans }}</th>
+                            <th>Usuário Anuência</th>
                             <th>Qtd. Domicílios</th>
                             <th>Área Total</th>
                             <th>Valor Global da Proposta</th>
@@ -114,6 +115,7 @@
                                         {{ status }}
                                     </span>
                                 </td>
+                                <td>{{ proposal.status_updated_by_name }}</td>
                                 <td>{{ proposal.quantity_houses }}</td>
                                 <td>{{ proposal.area_size }}</td>
                                 <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>

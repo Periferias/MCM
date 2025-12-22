@@ -19,7 +19,7 @@ use App\Regmel\Repository\Interface\ProposalRepositoryInterface;
 use App\Regmel\Service\Interface\ProposalServiceInterface;
 use App\Repository\Interface\InitiativeRepositoryInterface;
 use App\Repository\OrganizationRepository;
-use App\Service\AbstractEntityService; // Importação essencial
+use App\Service\AbstractEntityService;
 use App\Service\InitiativeService;
 use App\Service\Interface\CityServiceInterface;
 use App\Service\Interface\EmailServiceInterface;
@@ -61,9 +61,9 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         private OrganizationServiceInterface $organizationService,
         private UrlGeneratorInterface $urlGenerator,
         private TranslatorInterface $translator,
-        private readonly ConfigEnvironment $configEnvironment,
-        private readonly EmailServiceInterface $emailService,
-        private readonly ProposalRepositoryInterface $proposalRepository,
+        private ConfigEnvironment $configEnvironment,
+        private EmailServiceInterface $emailService,
+        private ProposalRepositoryInterface $proposalRepository,
     ) {
         parent::__construct(
             $this->security,
@@ -87,9 +87,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
     ): Initiative {
         $user = $this->security->getUser();
 
-        $municipality = $this->organizationRepository->findOrganizationByCityId(
-            $data['city']
-        );
+        $municipality = $this->organizationRepository->findOrganizationByCityId($data['city']);
 
         $municipalityTermStatus = $municipality?->getExtraFields()['term_status'] ?? null;
         $status = match ($municipalityTermStatus) {
@@ -127,26 +125,25 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $technicalManagerFileName = null;
         $rrtArtFileName = null;
 
-        // Gera número de inscrição a partir do UUID (primeiros 8 caracteres)
         $inscriptionNumber = substr($initiative->getId()->toRfc4122(), 0, 8);
 
         if (null !== $map) {
-            $mapFileName = $this->uploadFile($map, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), extraName: 'area-poligonal');
+            $mapFileName = $this->uploadFile($map, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'area-poligonal');
         }
 
         if (null !== $project) {
-            $projectFileName = $this->uploadFile($project, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), extraName: 'projeto');
+            $projectFileName = $this->uploadFile($project, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'projeto');
         }
 
         if (($data['anticipation'] ?? null) === 'true') {
             if ($annexIvC) {
-                $annexIvCFileName = $this->uploadFile($annexIvC, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), extraName: 'anexo-iv-c');
+                $annexIvCFileName = $this->uploadFile($annexIvC, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'anexo-iv-c');
             }
             if ($technicalManager) {
-                $technicalManagerFileName = $this->uploadFile($technicalManager, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), extraName: 'responsavel-tecnico');
+                $technicalManagerFileName = $this->uploadFile($technicalManager, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'responsavel-tecnico');
             }
             if ($rrtArt) {
-                $rrtArtFileName = $this->uploadFile($rrtArt, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), extraName: 'rrt-art');
+                $rrtArtFileName = $this->uploadFile($rrtArt, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'rrt-art');
             }
         }
 
@@ -166,10 +163,8 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             'annex_iv_c_file' => $annexIvCFileName,
             'technical-manager_file' => $technicalManagerFileName,
             'rrt_art_file' => $rrtArtFileName,
-            // Estes são os campos que serão populados pelo formulário corrigido.
             'snpr_affiliation' => $data['snpr_affiliation'] ?? 'Não',
             'snpr_affiliation_details' => $data['snpr_affiliation_details'] ?? '',
-            // Campos de Endereço e CEP
             'zipcode' => $data['zipcode'] ?? '',
             'address' => $data['address'] ?? '',
         ]);
@@ -192,10 +187,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
     private function createInscriptionForOrganization(string $opportunityId, Organization $organization): void
     {
         $opportunityId = Uuid::fromString($opportunityId);
-
-        $opportunity = $this->opportunityService->get(
-            $opportunityId
-        );
+        $opportunity = $this->opportunityService->get($opportunityId);
 
         $inscription = new InscriptionOpportunity();
         $inscription->setOpportunity($opportunity);
@@ -231,8 +223,8 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
     ): string {
         $pdf = $this->fileService->uploadMixedFile(
             $uploadedFile,
-            extraPath: '/regmel/company/documents',
-            optionalName: "{$inscriptionNumber}-{$cityCode}-{$state}-{$municipality}-{$extraName}-{$company}-{$version}",
+            '/regmel/company/documents',
+            "{$inscriptionNumber}-{$cityCode}-{$state}-{$municipality}-{$extraName}-{$company}-{$version}",
         );
 
         return $pdf->getFilename();
@@ -255,9 +247,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $extraFields = $entity->getExtraFields();
 
         return isset($extraFields[$fieldName])
-            ? $this->urlGenerator->generate($routeName, [
-                'id' => $entity->getId(),
-            ], UrlGeneratorInterface::ABSOLUTE_URL)
+            ? $this->urlGenerator->generate($routeName, ['id' => $entity->getId()], UrlGeneratorInterface::ABSOLUTE_URL)
             : '';
     }
 
@@ -282,6 +272,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $this->translator->trans('csv.header.proposal_type'),
             $this->translator->trans('csv.header.proposal_date'),
             $this->translator->trans('csv.header.proposal_update_date'),
+            'Atualizado por',
         ];
     }
 
@@ -292,7 +283,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         }
 
         $variables = (new ConfigEnvironment())->aurora()['variables'];
-
         $pricePerHousehold = $variables['price_per_household'];
         $extraFields = $entity->getExtraFields();
         $organizationFrom = $entity->getOrganizationFrom();
@@ -303,20 +293,20 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $projectFileLink = $this->generateUrlForField($entity, 'project_file', 'admin_regmel_proposal_projeto');
 
         $env = $this->configEnvironment->aurora();
-
-        $region = $extraFields['region'];
-        $state = $extraFields['state'];
-
+        $region = $extraFields['region'] ?? '';
+        $state = $extraFields['state'] ?? '';
         $modificationDate = $entity->getUpdatedAt()?->format('d/m/Y H:i:s') ?? $this->translator->trans('csv.info.not_modified');
-
         $phoneCompany = $organizationFrom->getExtraFields()['telefone'] ?? '';
+
+        // Tenta pegar o nome de quem atualizou do extra_fields (salvo via updateStatusProposal)
+        $updatedBy = $extraFields['status_updated_by_name'] ?? '---';
 
         return [
             $this->generateProposalCode($entity),
             $region,
             $state,
             $extraFields['city_name'] ?? '',
-            $entity->getCreatedBy()->getName() ?? '',
+            $entity->getCreatedBy()?->getName() ?? '',
             $organizationFrom->getName(),
             $organizationFrom->getExtraFields()['cnpj'] ?? '',
             $phoneCompany,
@@ -327,16 +317,16 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             number_format($totalValue, 2, ',', '.'),
             $extraFields['status'] ?? '',
             $entity->getName() ?? '',
-            $env['proposals']['area_characteristics'][$extraFields['area_characteristic']] ?? '',
+            $env['proposals']['area_characteristics'][$extraFields['area_characteristic'] ?? ''] ?? '',
             $entity->getCreatedAt()->format('d/m/Y H:i:s'),
             $modificationDate,
+            $updatedBy,
         ];
     }
 
     public function exportProjectFiles(array $proposals): string
     {
         $zipFilePath = sprintf('%s/storage/regmel/company/documents/export.zip', $this->parameterBag->get('kernel.project_dir'));
-
         $zip = new ZipArchive();
 
         if (true !== $zip->open($zipFilePath, ZipArchive::CREATE)) {
@@ -344,17 +334,14 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         }
 
         foreach ($proposals as $proposal) {
-            if (true === empty($proposal->getExtraFields()['project_file'])) {
+            if (empty($proposal->getExtraFields()['project_file'])) {
                 continue;
             }
-
             $filePath = $this->getDocumentPath($proposal->getExtraFields()['project_file']);
-
-            if (true === file_exists($filePath)) {
+            if (file_exists($filePath)) {
                 $zip->addFile($filePath, basename($filePath));
             }
         }
-
         $zip->close();
 
         return $zipFilePath;
@@ -363,7 +350,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
     public function exportMapFiles(array $proposals): string
     {
         $zipFilePath = sprintf('%s/storage/regmel/company/documents/export.zip', $this->parameterBag->get('kernel.project_dir'));
-
         $zip = new ZipArchive();
 
         if (true !== $zip->open($zipFilePath, ZipArchive::CREATE)) {
@@ -371,17 +357,14 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         }
 
         foreach ($proposals as $proposal) {
-            if (true === empty($proposal->getExtraFields()['map_file'])) {
+            if (empty($proposal->getExtraFields()['map_file'])) {
                 continue;
             }
-
             $filePath = $this->getDocumentPath($proposal->getExtraFields()['map_file']);
-
-            if (true === file_exists($filePath)) {
+            if (file_exists($filePath)) {
                 $zip->addFile($filePath, basename($filePath));
             }
         }
-
         $zip->close();
 
         return $zipFilePath;
@@ -390,7 +373,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
     public function exportAnticipationFiles(array $proposals): string
     {
         $zipFilePath = sprintf('%s/storage/regmel/company/documents/anticipation_export.zip', $this->parameterBag->get('kernel.project_dir'));
-
         $zip = new ZipArchive();
 
         if (true !== $zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
@@ -399,22 +381,16 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
 
         foreach ($proposals as $proposal) {
             $extra = $proposal->getExtraFields();
-            $files = [
-                'annex_iv_c_file',
-                'technical-manager_file',
-                'rrt_art_file',
-            ];
+            $files = ['annex_iv_c_file', 'technical-manager_file', 'rrt_art_file'];
             foreach ($files as $field) {
                 if (!empty($extra[$field])) {
                     $filePath = $this->getDocumentPath($extra[$field]);
-
                     if (file_exists($filePath)) {
                         $zip->addFile($filePath, $extra[$field]);
                     }
                 }
             }
         }
-
         $zip->close();
 
         return $zipFilePath;
@@ -423,7 +399,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
     private function getDocumentPath(string $file): string
     {
         $path = $this->parameterBag->get('kernel.project_dir');
-
         return "{$path}/storage/regmel/company/documents/{$file}";
     }
 
@@ -431,27 +406,62 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
     {
         $initiative = $this->initiativeService->get($id);
         $extraFields = $initiative->getExtraFields();
+        
         $extraFields['status'] = $status->value;
-        $extraFields['status_reason'] = $status->value;
+        $extraFields['status_reason'] = $reason;
+
+        $user = $this->security->getUser();
+        if ($user) {
+            $extraFields['status_updated_by'] = $user->getId()->toRfc4122();
+            $extraFields['status_updated_at'] = (new DateTime())->format('Y-m-d H:i:s');
+            // Aqui estamos salvando o nome!
+            $extraFields['status_updated_by_name'] = $user->getName();
+        }
+
         $initiative->setExtraFields($extraFields);
+        
         $this->initiativeRepository->save($initiative);
+        $this->entityManager->flush();
 
-        $municipalityEmails = $initiative->getOrganizationTo()->getAgents()->map(fn ($agent) => $agent->getUser()?->getEmail())->toArray();
-        $companyEmails = $initiative->getOrganizationFrom()->getAgents()->map(fn ($agent) => $agent->getUser()?->getEmail())->toArray();
+        $municipalityEmails = [];
+        $organizationTo = $initiative->getOrganizationTo();
+        if ($organizationTo && $organizationTo->getAgents()) {
+            foreach ($organizationTo->getAgents() as $agent) {
+                if ($agent->getUser()) {
+                    $municipalityEmails[] = $agent->getUser()->getEmail();
+                }
+            }
+        }
 
-        $this->emailService->sendTemplatedEmail(
-            [...$municipalityEmails, ...$companyEmails],
-            'Status da proposta atualizado',
-            '_emails/new-proposal-status.html.twig',
-            [
-                'municipalityName' => $initiative->getOrganizationTo()->getName(),
-                'companyName' => $initiative->getOrganizationFrom()->getName(),
-            ]
-        );
+        $companyEmails = [];
+        $organizationFrom = $initiative->getOrganizationFrom();
+        if ($organizationFrom && $organizationFrom->getAgents()) {
+            foreach ($organizationFrom->getAgents() as $agent) {
+                if ($agent->getUser()) {
+                    $companyEmails[] = $agent->getUser()->getEmail();
+                }
+            }
+        }
+
+        $allEmails = array_unique(array_filter([...$municipalityEmails, ...$companyEmails]));
+
+        if (!empty($allEmails)) {
+            $this->emailService->sendTemplatedEmail(
+                $allEmails,
+                'Status da proposta atualizado',
+                '_emails/new-proposal-status.html.twig',
+                [
+                    'municipalityName' => $organizationTo ? $organizationTo->getName() : ($extraFields['city_name'] ?? 'Município'),
+                    'companyName' => $organizationFrom ? $organizationFrom->getName() : 'Empresa',
+                ]
+            );
+        }
     }
 
     public function bulkUpdateStatus(array $proposals, string $status): void
     {
-        $this->proposalRepository->bulkUpdateStatus($proposals, $status);
+        $user = $this->security->getUser();
+        $userName = $user ? $user->getName() : 'Usuário Desconhecido';
+        $this->proposalRepository->bulkUpdateStatus($proposals, $status, $userName);
     }
 }
