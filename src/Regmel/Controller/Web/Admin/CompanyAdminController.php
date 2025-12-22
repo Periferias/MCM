@@ -49,7 +49,8 @@ class CompanyAdminController extends AbstractAdminController
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or 
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or 
-        is_granted("'.UserRolesEnum::ROLE_COMPANY->value.'")
+        is_granted("'.UserRolesEnum::ROLE_COMPANY->value.'") or 
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/empresas', name: 'admin_regmel_company_list', methods: ['GET'])]
     public function list(Request $request): Response
@@ -69,7 +70,11 @@ class CompanyAdminController extends AbstractAdminController
             }
         }
 
-        if (true === in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles())) {
+        $isAdminOrManagerOrSupport = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles()) ||
+            in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles()) ||
+            in_array(UserRolesEnum::ROLE_SUPPORT->value, $user->getRoles());
+
+        if (true === $isAdminOrManagerOrSupport) {
             $criteria = ['type' => OrganizationTypeEnum::EMPRESA->value];
             $allCompanies = $this->organizationService->findBy($criteria);
 
@@ -189,7 +194,8 @@ class CompanyAdminController extends AbstractAdminController
 
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/empresas/list/download', name: 'admin_regmel_company_list_download', methods: ['GET'])]
     public function exportCompaniesCsv(Request $request): Response
