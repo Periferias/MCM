@@ -1176,6 +1176,7 @@ csv:
     city_code: Código Município
     company_name: Nome da Empresa/OSC
     company_cnpj: CNPJ da Empresa
+    profit_type: Com/Sem fins lucrativos
     company_phone: Telefone da Empresa/OSC
     project_file: Arquivo do Projeto
     map_file: Arquivo da Área Poligonal
