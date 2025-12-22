@@ -69,7 +69,11 @@ class MunicipalityAdminController extends AbstractAdminController
             ? $this->stateService->findBy(['region' => $filterRegion])
             : $this->stateService->list();
 
-        if (true === in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles())) {
+        $isAdminOrManagerOrSupport = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles()) ||
+            in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles()) ||
+            in_array(UserRolesEnum::ROLE_SUPPORT->value, $user->getRoles());
+
+        if (true === $isAdminOrManagerOrSupport) {
             $criteria = ['type' => OrganizationTypeEnum::MUNICIPIO->value];
             $allMunicipalities = $this->organizationService->findBy($criteria);
 

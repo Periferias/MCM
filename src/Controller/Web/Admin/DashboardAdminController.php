@@ -74,7 +74,7 @@ class DashboardAdminController extends AbstractAdminController
         $totalOpportunities = $this->opportunityService->count($createdBy);
         $totalEvents = $this->eventService->count($createdBy);
         $totalSpaces = $this->spaceService->count($createdBy);
-        $totalOrganizations = $this->organizationService->count($createdBy);
+        $totalOrganizations = $this->organizationService->count();
         $totalInitiatives = $this->initiativeService->count($createdBy);
         $totalCities = count($this->organizationService->findBy([
             'type' => OrganizationTypeEnum::MUNICIPIO->value,
@@ -84,7 +84,9 @@ class DashboardAdminController extends AbstractAdminController
         ]));
         
         // Propostas são iniciativas com campos específicos (map_file, project_file, etc)
-        $allInitiatives = $this->initiativeService->findBy($createdBy ? ['createdBy' => $createdBy] : []);
+        $allInitiatives = $isAdminOrManagerOrSupport 
+            ? $this->initiativeService->findBy([])
+            : $this->initiativeService->findBy(['createdBy' => $createdBy]);
         $totalProposals = count(array_filter($allInitiatives, function($initiative) {
             $extraFields = $initiative->getExtraFields();
             return isset($extraFields['map_file']) || isset($extraFields['project_file']);
