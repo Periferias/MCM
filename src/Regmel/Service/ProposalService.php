@@ -308,7 +308,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $region,
             $state,
             $extraFields['city_name'] ?? '',
-            $extraFields['city_code'] ?? '',
+            $extraFields['cityCode'] ?? '',
             $entity->getName() ?? '',
             $env['proposals']['area_characteristics'][$extraFields['area_characteristic'] ?? ''] ?? '',
             $housesQuantity,
