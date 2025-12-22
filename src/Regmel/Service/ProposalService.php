@@ -266,6 +266,8 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $this->translator->trans('csv.header.total_value'),
             $this->translator->trans('csv.header.consented_by'),
             $this->translator->trans('csv.header.proposal_status'),
+            $this->translator->trans('csv.header.map_file'),
+            $this->translator->trans('csv.header.project_file'),
             $this->translator->trans('csv.header.company_name'),
             $this->translator->trans('csv.header.company_cnpj'),
             $this->translator->trans('csv.header.company_phone'),
@@ -273,8 +275,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $this->translator->trans('csv.header.proposal_date'),
             $this->translator->trans('csv.header.proposal_update_date'),
             'Atualizado por',
-            $this->translator->trans('csv.header.map_file'),
-            $this->translator->trans('csv.header.project_file'),
         ];
     }
 
@@ -316,6 +316,8 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             number_format($totalValue, 2, ',', '.'),
             $extraFields['status_updated_by_name'] ?? '---',
             $extraFields['status'] ?? '',
+            $mapFileLink,
+            $projectFileLink,
             $organizationFrom->getName(),
             $organizationFrom->getExtraFields()['cnpj'] ?? '',
             $phoneCompany,
@@ -323,8 +325,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $entity->getCreatedAt()->format('d/m/Y H:i:s'),
             $modificationDate,
             $updatedBy,
-            $mapFileLink,
-            $projectFileLink,
         ];
     }
 
