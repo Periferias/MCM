@@ -1185,6 +1185,8 @@ csv:
     total_value: Valor Global da Proposta
     consented_by: Usuário Anuência
     proposal_status: Status da Proposta
+    snpr_affiliation: Vinculação com programa ou ação da SNP
+    snpr_affiliation_details: Se sim, Qual?
     intervention_area_name: Nome da Área de Intervenção
     proposal_type: Tipo de Proposta
     proposal_date: Data da Proposta
