@@ -264,6 +264,8 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $this->translator->trans('csv.header.total_value'),
             $this->translator->trans('csv.header.consented_by'),
             $this->translator->trans('csv.header.proposal_status'),
+            $this->translator->trans('csv.header.snpr_affiliation'),
+            $this->translator->trans('csv.header.snpr_affiliation_details'),
             $this->translator->trans('csv.header.map_file'),
             $this->translator->trans('csv.header.project_file'),
             $this->translator->trans('csv.header.company_name'),
@@ -301,6 +303,19 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         // Tenta pegar o nome de quem atualizou do extra_fields (salvo via updateStatusProposal)
         $updatedBy = $extraFields['status_updated_by_name'] ?? '---';
 
+        // Determina se é com ou sem fins lucrativos
+        $profitType = '';
+        $framework = $organizationFrom->getExtraFields()['framework'] ?? '';
+        $tipo = $organizationFrom->getExtraFields()['tipo'] ?? '';
+        
+        if (!empty($framework)) {
+            $profitType = $framework;
+        } elseif ($tipo === 'Empresa') {
+            $profitType = 'Empresa';
+        } elseif ($tipo === 'Entidade') {
+            $profitType = 'Organização da Sociedade Civil - OSC';
+        }
+
         return [
             $this->generateProposalCode($entity),
             $region,
@@ -314,11 +329,13 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             number_format($totalValue, 2, ',', '.'),
             $extraFields['status_updated_by_name'] ?? '---',
             $extraFields['status'] ?? '',
+            $extraFields['snpr_affiliation'] ?? 'Não',
+            $extraFields['snpr_affiliation_details'] ?? '',
             $mapFileLink,
             $projectFileLink,
             $organizationFrom->getName(),
             $organizationFrom->getExtraFields()['cnpj'] ?? '',
-            $organizationFrom->getExtraFields()['framework'] ?? '',
+            $profitType,
             $phoneCompany,
             $entity->getCreatedBy()?->getName() ?? '',
             $entity->getCreatedAt()->format('d/m/Y H:i:s'),

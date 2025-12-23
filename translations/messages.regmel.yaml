@@ -1171,11 +1171,11 @@ csv:
     id: Identificador
     region: Região
     state: Estado
-    created_by: Criado por
+    created_by: Agente Promotor
     city: Município
     city_code: Código Município
     company_name: Nome da Empresa/OSC
-    company_cnpj: CNPJ da Empresa
+    company_cnpj: CNPJ da Empresa/OSC
     profit_type: Com/Sem fins lucrativos
     company_phone: Telefone da Empresa/OSC
     project_file: Arquivo do Projeto
@@ -1183,8 +1183,10 @@ csv:
     houses_quantity: Quantidade de Domicílios
     total_area: Área Total
     total_value: Valor Global da Proposta
-    consented_by: Quem anuiu
+    consented_by: Usuário Anuência
     proposal_status: Status da Proposta
+    snpr_affiliation: Vinculação com programa ou ação da SNP
+    snpr_affiliation_details: Se sim, Qual?
     intervention_area_name: Nome da Área de Intervenção
     proposal_type: Tipo de Proposta
     proposal_date: Data da Proposta
