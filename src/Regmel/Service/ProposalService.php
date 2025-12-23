@@ -309,9 +309,9 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         if (!empty($framework)) {
             $profitType = $framework;
         } elseif ($tipo === 'Empresa') {
-            $profitType = 'Organização com fins lucrativos';
+            $profitType = 'Empresa';
         } elseif ($tipo === 'Entidade') {
-            $profitType = 'Organização sem fins lucrativos';
+            $profitType = 'Organização da Sociedade Civil - OSC';
         }
 
         return [
