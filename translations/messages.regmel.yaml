@@ -1171,7 +1171,7 @@ csv:
     id: Identificador
     region: Região
     state: Estado
-    created_by: Criado por
+    created_by: Agente Promotor
     city: Município
     city_code: Código Município
     company_name: Nome da Empresa/OSC
