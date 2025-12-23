@@ -120,12 +120,6 @@ describe('Cadastro de proposta com empresa do tipo entidade', () => {
 
         cy.get('input[name="acceptTerms"]').check({ force: true });
 
-        cy.get("#antecipacao_sim").click()
-        cy.get("input[data-label$='Anexo IV-C']").selectFile('./cypress/regmel/fixtures/file.pdf');
-        cy.get("input[data-label='Responsável técnico']").selectFile('./cypress/regmel/fixtures/file.pdf');
-        cy.get("input[data-label$='ART']").selectFile('./cypress/regmel/fixtures/file.pdf');
-
-
         cy.get('button[type="submit"]').click();
 
         cy.contains('Empresa Norte').click();
@@ -161,12 +155,6 @@ describe('Cadastro de proposta com empresa do tipo entidade', () => {
         cy.get('input[name="quantity_houses"]').type('100');
 
         cy.get('input[name="acceptTerms"]').check({ force: true });
-
-        cy.get("#antecipacao_sim").click()
-        cy.get("input[data-label$='Anexo IV-C']").selectFile('./cypress/regmel/fixtures/file.pdf');
-        cy.get("input[data-label='Responsável técnico']").selectFile('./cypress/regmel/fixtures/file.pdf');
-        cy.get("input[data-label$='ART']").selectFile('./cypress/regmel/fixtures/file.pdf');
-
 
         cy.get('button[type="submit"]').click();
 

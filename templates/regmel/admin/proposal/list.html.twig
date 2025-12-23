@@ -87,7 +87,6 @@
                             <th>Qtd. Domicílios</th>
                             <th>Área Total</th>
                             <th>Valor Global da Proposta</th>
-                            <th>{{ 'proposal.anticipation'|trans }}</th>
                             <th>{{ 'actions' | trans }}</th>
                         </tr>
                         </thead>
@@ -119,17 +118,6 @@
                                 <td>{{ proposal.quantity_houses }}</td>
                                 <td>{{ proposal.area_size }}</td>
                                 <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
-                                <td>
-                                    {% set anticipation = proposal.anticipation %}
-                                    {% set anticipationClass = ({
-                                        'true': 'bg-primary',
-                                        'false': 'bg-secondary',
-                                    }[anticipation] ?? 'bg-secondary') %}
-
-                                    <span class="badge {{ anticipationClass }}">
-                                        {{ proposal.anticipation == 'true' ? 'proposal.in_anticipation'|trans : 'proposal.no_anticipation'|trans }}
-                                    </span>
-                                </td>
                                 <td style="position: relative;">
                                     <div class="dropdown">
                                         <button
@@ -168,16 +156,6 @@
                                                     Atualizar Status
                                                 </a>
                                             </li>
-                                            {% if proposal.anticipation == 'true' %}
-                                                <li>
-                                                    <a
-                                                            href="{{ path('admin_regmel_proposal_anticipation_files_download', {'id': proposal.id}) }}"
-                                                            class="dropdown-item"
-                                                    >
-                                                        Baixar documentos de antecipação
-                                                    </a>
-                                                </li>
-                                            {% endif %}
                                         </ul>
                                     </div>
                                 </td>

@@ -117,7 +117,6 @@
                                 <th>Num. de Domicílios</th>
                                 <th>Valor Global da Proposta</th>
                                 <th>Status</th>
-                                <th>{{ 'proposal.anticipation'|trans }}</th>
                                 <th>Ações</th>
                             </tr>
                             </thead>
@@ -142,17 +141,6 @@
                                     }[status] ?? 'bg-dark') %}
                                     <span class="badge {{ badgeClass }} text-dark">
                                         {{ status }}
-                                    </span>
-                                </td>
-                                <td>
-                                    {% set anticipation = proposal.extraFields.anticipation ?? 'false' %}
-                                    {% set anticipationClass = ({
-                                        'true': 'bg-primary',
-                                        'false': 'bg-secondary',
-                                    }[anticipation] ?? 'bg-secondary') %}
-
-                                    <span class="badge {{ anticipationClass }}">
-                                        {{ anticipation == 'true' ? 'proposal.in_anticipation'|trans : 'proposal.no_anticipation'|trans }}
                                     </span>
                                 </td>
                                 <td style="position: relative;">
@@ -209,17 +197,6 @@
                                                     Atualizar Status
                                                 </a>
                                             </li>
-                                            {% endif %}
-
-                                            {% if proposal.extraFields.anticipation == 'true' %}
-                                                <li>
-                                                    <a
-                                                        href="{{ path('admin_regmel_proposal_anticipation_files_download', {'id': proposal.id}) }}"
-                                                        class="dropdown-item"
-                                                    >
-                                                        Baixar documentos de antecipação
-                                                    </a>
-                                                </li>
                                             {% endif %}
                                         </ul>
                                     </div>

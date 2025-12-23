@@ -183,32 +183,6 @@
 
                             {# ============================================================= #}
 
-                            {% if company.extraFields.tipo == 'Entidade' %}
-                                <hr>
-
-                                <div class="mt-4 mb-2 text-primary">
-                                    <strong>{{ 'proposal.need_advance'|trans }}<span class="text-danger">*</span></strong>
-                                </div>
-
-                                <input type="radio" id="antecipacao_sim" name="anticipation"
-                                            value="true" required>
-                                <label for="antecipacao_sim">{{ 'yes'|trans }}</label>
-
-                                <input type="radio" id="antecipacao_nao" name="anticipation"
-                                            value="false" required class="ms-2">
-                                <label for="antecipacao_nao">{{ 'no'|trans }}</label>
-
-                                <div id="campos-antecipacao" style="display:none;">
-                                    <div class="alert alert-info mt-3">
-                                        <strong>{{ 'attention'|trans }}</strong>
-                                        {{ 'all_documents'|trans }}
-                                    </div>
-
-                                    <input type="file" name="annex_iv_c_file" class="form-control mt-2" required>
-                                    <input type="file" name="technical-manager_file" class="form-control mt-2" required>
-                                    <input type="file" name="rrt_art_file" class="form-control mt-2" required>
-                                </div>
-                            {% endif %}
                         </div>
 
                         {#<div class="col">

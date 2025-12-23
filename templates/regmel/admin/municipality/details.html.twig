@@ -235,9 +235,6 @@
                                             <th>Titulo</th>
                                             <th>Empresa/OSC</th>
                                             <th>Status</th>
-                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
-                                                <th>{{ 'proposal.anticipation'|trans }}</th>
-                                            {% endif %}
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
@@ -262,19 +259,6 @@
                                                     {{ status }}
                                                 </span>
                                             </td>
-                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
-                                                <td>
-                                                    {% set anticipation = proposal.extraFields.anticipation ?? 'false' %}
-                                                    {% set anticipationClass = ({
-                                                        'true': 'bg-primary',
-                                                        'false': 'bg-secondary',
-                                                    }[anticipation] ?? 'bg-secondary') %}
-
-                                                    <span class="badge {{ anticipationClass }}">
-                                                        {{ anticipation == 'true' ? 'proposal.in_anticipation'|trans : 'proposal.no_anticipation'|trans }}
-                                                    </span>
-                                                </td>
-                                            {% endif %}
                                             <td>
                                                 <button
                                                         class="btn btn-outline-info btn-sm"
