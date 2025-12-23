@@ -301,6 +301,19 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         // Tenta pegar o nome de quem atualizou do extra_fields (salvo via updateStatusProposal)
         $updatedBy = $extraFields['status_updated_by_name'] ?? '---';
 
+        // Determina se é com ou sem fins lucrativos
+        $profitType = '';
+        $framework = $organizationFrom->getExtraFields()['framework'] ?? '';
+        $tipo = $organizationFrom->getExtraFields()['tipo'] ?? '';
+        
+        if (!empty($framework)) {
+            $profitType = $framework;
+        } elseif ($tipo === 'Empresa') {
+            $profitType = 'Organização com fins lucrativos';
+        } elseif ($tipo === 'Entidade') {
+            $profitType = 'Organização sem fins lucrativos';
+        }
+
         return [
             $this->generateProposalCode($entity),
             $region,
@@ -318,7 +331,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $projectFileLink,
             $organizationFrom->getName(),
             $organizationFrom->getExtraFields()['cnpj'] ?? '',
-            $organizationFrom->getExtraFields()['framework'] ?? '',
+            $profitType,
             $phoneCompany,
             $entity->getCreatedBy()?->getName() ?? '',
             $entity->getCreatedAt()->format('d/m/Y H:i:s'),
