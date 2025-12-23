@@ -124,6 +124,16 @@ spec:
                 configMapKeyRef:
                   name: {{ include "pvr.fullname" . }}
                   key: caddy-global-options
+            - name: MAX_FILE_SIZE_MB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pvr.fullname" . }}
+                  key: max-file-size-mb
+            - name: MAILER_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pvr.fullname" . }}
+                  key: mailer-dsn
           ports:
             - name: http
               containerPort: 80
