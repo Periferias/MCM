@@ -164,10 +164,7 @@ class ProposalAdminController extends AbstractAdminController
             $company,
             $request->request->all(),
             $request->files->get('map'),
-            $request->files->get('project'),
-            $request->files->get('annex_iv_c_file'),
-            $request->files->get('technical-manager_file'),
-            $request->files->get('rrt_art_file')
+            $request->files->get('project')
         );
 
         $this->addFlashSuccess('Pronto, nova proposta enviada');

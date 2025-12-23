@@ -80,10 +80,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         Organization $company,
         array $data,
         ?UploadedFile $map = null,
-        ?UploadedFile $project = null,
-        ?UploadedFile $annexIvC = null,
-        ?UploadedFile $technicalManager = null,
-        ?UploadedFile $rrtArt = null
+        ?UploadedFile $project = null
     ): Initiative {
         $user = $this->security->getUser();
 
@@ -135,18 +132,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $projectFileName = $this->uploadFile($project, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'projeto');
         }
 
-        if (($data['anticipation'] ?? null) === 'true') {
-            if ($annexIvC) {
-                $annexIvCFileName = $this->uploadFile($annexIvC, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'anexo-iv-c');
-            }
-            if ($technicalManager) {
-                $technicalManagerFileName = $this->uploadFile($technicalManager, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'responsavel-tecnico');
-            }
-            if ($rrtArt) {
-                $rrtArtFileName = $this->uploadFile($rrtArt, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'rrt-art');
-            }
-        }
-
         $initiative->setExtraFields([
             'status' => $status,
             'area_size' => (float) $data['area_size'],
@@ -159,10 +144,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             'city_id' => $cityId,
             'state' => $state,
             'region' => $region,
-            'anticipation' => $data['anticipation'] ?? 'false',
-            'annex_iv_c_file' => $annexIvCFileName,
-            'technical-manager_file' => $technicalManagerFileName,
-            'rrt_art_file' => $rrtArtFileName,
+            'anticipation' => 'false',
             'snpr_affiliation' => $data['snpr_affiliation'] ?? 'Não',
             'snpr_affiliation_details' => $data['snpr_affiliation_details'] ?? '',
             'zipcode' => $data['zipcode'] ?? '',
