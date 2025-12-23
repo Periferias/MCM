@@ -28,9 +28,8 @@
                                         <p>{{ error.message }}</p>
                                     {% endfor %}
                                 </div>
-                            {% else %}
-                                <div class="alert alert-danger d-none" id="error-message"></div>
                             {% endif %}
+                            <div class="alert alert-danger d-none" id="error-message"></div>
 
                             <label for="opportunity">{{ 'view.authentication.register.opportunity_type'|trans }}</label>
                             <select name="opportunity" id="opportunity" required class="form-select mt-1 mb-3">
