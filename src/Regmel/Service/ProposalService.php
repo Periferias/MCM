@@ -80,7 +80,10 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         Organization $company,
         array $data,
         ?UploadedFile $map = null,
-        ?UploadedFile $project = null
+        ?UploadedFile $project = null,
+        ?UploadedFile $annexIvC = null,
+        ?UploadedFile $technicalManager = null,
+        ?UploadedFile $rrtArt = null
     ): Initiative {
         $user = $this->security->getUser();
 
@@ -132,6 +135,18 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $projectFileName = $this->uploadFile($project, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'projeto');
         }
 
+        if (null !== $annexIvC) {
+            $annexIvCFileName = $this->uploadFile($annexIvC, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'anexo-iv-c');
+        }
+
+        if (null !== $technicalManager) {
+            $technicalManagerFileName = $this->uploadFile($technicalManager, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'responsavel-tecnico');
+        }
+
+        if (null !== $rrtArt) {
+            $rrtArtFileName = $this->uploadFile($rrtArt, $inscriptionNumber, $cityCode, $state, $cityName, $company->getName(), '01', 'rrt-art');
+        }
+
         $initiative->setExtraFields([
             'status' => $status,
             'area_size' => (float) $data['area_size'],
@@ -139,6 +154,9 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             'area_characteristic' => $data['area_characteristic'],
             'map_file' => $mapFileName,
             'project_file' => $projectFileName,
+            'annex_iv_c_file' => $annexIvCFileName,
+            'technical-manager_file' => $technicalManagerFileName,
+            'rrt_art_file' => $rrtArtFileName,
             'cityCode' => $cityCode,
             'city_name' => $cityName,
             'city_id' => $cityId,
