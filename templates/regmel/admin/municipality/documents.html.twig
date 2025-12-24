@@ -115,12 +115,18 @@
 
             const isAdmin = {{ is_granted('ROLE_ADMIN') ? 'true' : 'false' }};
 
-            if ('awaiting' !== status || !isAdmin) {
+            if ('awaiting' !== status) {
                 form.classList.add('d-none');
                 termInfo.classList.remove('d-none');
             } else {
                 termInfo.classList.add('d-none');
                 form.classList.remove('d-none');
+                
+                // Ocultar botão de recusar para não-admin
+                const rejectButton = form.querySelector('button[onclick="confirmDecision(this, false)"]');
+                if (rejectButton && !isAdmin) {
+                    rejectButton.style.display = 'none';
+                }
             }
 
             document.getElementById('docId').value = organizationId;

@@ -118,13 +118,21 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
     }
 
     #[IsGranted(new Expression('
-        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'")
+        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/municipios/{id}/document/decision', name: 'admin_municipality_document_decision', methods: ['POST'])]
     public function handleDocumentDecision(Uuid $id, Request $request): Response
     {
         $approved = $request->request->getBoolean('approved');
         $reason = $request->request->get('reason');
+
+        // Apenas ADMIN pode rejeitar termos
+        if (!$approved && !$this->isGranted(UserRolesEnum::ROLE_ADMIN->value)) {
+            $this->addFlash('error', 'Apenas administradores podem rejeitar termos de adesão');
+            return $this->redirectToRoute('admin_regmel_municipality_document_list');
+        }
 
         if (true === empty(trim($reason))) {
             $this->addFlash('error', 'O motivo é obrigatório');
