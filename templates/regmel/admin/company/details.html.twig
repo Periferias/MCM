@@ -184,8 +184,8 @@
                                                 </a>
                                             </li>
                                             
-                                            {# BLOCO ALTERADO: Somente admin vê este botão #}
-                                            {% if is_granted('ROLE_ADMIN') %}
+                                            {# BLOCO ALTERADO: Somente admin e manager vêem este botão #}
+                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
                                             <li>
                                                 <a
                                                     href="#"
