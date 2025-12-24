@@ -115,18 +115,33 @@
 
             const isAdmin = {{ is_granted('ROLE_ADMIN') ? 'true' : 'false' }};
 
-            if ('awaiting' !== status) {
-                form.classList.add('d-none');
-                termInfo.classList.remove('d-none');
-            } else {
+            // Mostrar formulário se: aguardando OU (aprovado E admin)
+            const showForm = status === 'awaiting' || (status === 'approved' && isAdmin);
+            
+            if (showForm) {
                 termInfo.classList.add('d-none');
                 form.classList.remove('d-none');
                 
-                // Ocultar botão de recusar para não-admin
+                const approveButton = form.querySelector('button[onclick="confirmDecision(this)"]');
                 const rejectButton = form.querySelector('button[onclick="confirmDecision(this, false)"]');
-                if (rejectButton && !isAdmin) {
-                    rejectButton.style.display = 'none';
+                const reasonInput = form.querySelector('input[name="reason"]');
+                
+                if (status === 'approved') {
+                    // Termo já aprovado: mostrar apenas botão reprovar
+                    if (approveButton) approveButton.style.display = 'none';
+                    if (rejectButton) rejectButton.style.display = 'inline-block';
+                    if (reasonInput) reasonInput.placeholder = 'Informe o motivo da reprovação';
+                } else {
+                    // Termo aguardando: mostrar ambos os botões (aprovar sempre, reprovar só admin)
+                    if (approveButton) approveButton.style.display = 'inline-block';
+                    if (rejectButton) {
+                        rejectButton.style.display = isAdmin ? 'inline-block' : 'none';
+                    }
+                    if (reasonInput) reasonInput.placeholder = 'Informe o Motivo';
                 }
+            } else {
+                form.classList.add('d-none');
+                termInfo.classList.remove('d-none');
             }
 
             document.getElementById('docId').value = organizationId;
