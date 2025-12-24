@@ -282,20 +282,18 @@
                                                 >
                                                     Ver Proposta
                                                 </button>
-                                                {% if (is_granted('ROLE_MUNICIPALITY') or is_granted('ROLE_ADMIN')) and proposal.extraFields.status == 'Recebida' %}
-                                                    {% if municipality.extraFields.term_status == 'approved' %}
-                                                        <a  onclick="openAgreementModal('{{ municipality.id }}', '{{ proposal.id }}')" 
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#modalAgreement" 
-                                                            href="#" 
-                                                            class="btn btn-outline-success btn-sm">
-                                                            Anuir
-                                                        </a>
-                                                    {% else %}
-                                                        <button class="btn btn-outline-secondary btn-sm" disabled title="Termo de adesão não aprovado">
-                                                            Anuir
-                                                        </button>
-                                                    {% endif %}
+                                                {% if (is_granted('ROLE_MUNICIPALITY') or is_granted('ROLE_ADMIN')) and proposal.extraFields.status == 'Recebida' and municipality.extraFields.term_status == 'approved' %}
+                                                    <a  onclick="openAgreementModal('{{ municipality.id }}', '{{ proposal.id }}')" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#modalAgreement" 
+                                                        href="#" 
+                                                        class="btn btn-outline-success btn-sm">
+                                                        Anuir
+                                                    </a>
+                                                {% elseif (is_granted('ROLE_MUNICIPALITY') or is_granted('ROLE_ADMIN')) and proposal.extraFields.status == 'Recebida' %}
+                                                    <button class="btn btn-outline-secondary btn-sm" disabled title="Termo de adesão não aprovado">
+                                                        Anuir
+                                                    </button>
                                                 {% endif %}
                                                 {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
                                                     <a href="" data-bs-toggle="modal" data-bs-target="#modalConfirmation" class="btn btn-outline-success btn-sm">Avaliar</a>
