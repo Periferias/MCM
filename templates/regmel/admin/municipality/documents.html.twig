@@ -113,7 +113,9 @@
             const termInfo = document.getElementById('termInfo');
             document.getElementById('termUpdatedAt').innerHTML = termUpdatedAt;
 
-            if ('awaiting' !== status) {
+            const isAdmin = {{ is_granted('ROLE_ADMIN') ? 'true' : 'false' }};
+
+            if ('awaiting' !== status || !isAdmin) {
                 form.classList.add('d-none');
                 termInfo.classList.remove('d-none');
             } else {

@@ -118,9 +118,7 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
     }
 
     #[IsGranted(new Expression('
-        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
+        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/municipios/{id}/document/decision', name: 'admin_municipality_document_decision', methods: ['POST'])]
     public function handleDocumentDecision(Uuid $id, Request $request): Response
