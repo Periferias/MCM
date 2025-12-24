@@ -280,7 +280,7 @@
                                                 >
                                                     Ver Proposta
                                                 </button>
-                                                {% if is_granted('ROLE_MUNICIPALITY') and proposal.extraFields.status == 'Recebida' %}
+                                                {% if (is_granted('ROLE_MUNICIPALITY') or is_granted('ROLE_ADMIN')) and proposal.extraFields.status == 'Recebida' %}
                                                     {% if municipality.extraFields.term_status == 'approved' %}
                                                         <a  onclick="openAgreementModal('{{ municipality.id }}', '{{ proposal.id }}')" 
                                                             data-bs-toggle="modal" 

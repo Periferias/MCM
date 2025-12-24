@@ -251,6 +251,10 @@ class MunicipalityAdminController extends AbstractAdminController
         return $this->organizationService->generateSpreadSheet($municipalities, 'municipios', $type);
     }
 
+    #[IsGranted(new Expression('
+        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or 
+        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'")
+    '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/municipios/{municipalityId}/propostas/{id}/status', name: 'admin_regmel_municipality_proposal_update_status', methods: ['POST'])]
     public function updateStatusProposal(Request $request, $municipalityId, Uuid $id): Response
     {
