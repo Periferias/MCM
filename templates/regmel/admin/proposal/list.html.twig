@@ -145,6 +145,7 @@
                                                     Ver Proposta
                                                 </a>
                                             </li>
+                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
                                             <li>
                                                 <a
                                                         href="#"
@@ -156,6 +157,7 @@
                                                     Atualizar Status
                                                 </a>
                                             </li>
+                                            {% endif %}
                                         </ul>
                                     </div>
                                 </td>

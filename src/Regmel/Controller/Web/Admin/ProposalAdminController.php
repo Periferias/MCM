@@ -301,6 +301,10 @@ class ProposalAdminController extends AbstractAdminController
         return $response;
     }
 
+    #[IsGranted(new Expression('
+        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or 
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+    '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas/{id}/status', name: 'admin_regmel_proposal_update_status', methods: ['POST'])]
     public function updateStatusProposal(Request $request, Uuid $id): Response
     {
