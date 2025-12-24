@@ -512,6 +512,13 @@ type_organization: Tipo do Município
 type_space: Tipo do espaço
 total_value: Valor total
 
+# Organization Types
+Empresa: Empresa
+OSC: Organização da Sociedade Civil (OSC)
+Municipio: Município
+Entidade: Entidade
+Undefined: Indefinido
+
 user: Usuário
 users: Usuários
 user_cpf: CPF do Usuário

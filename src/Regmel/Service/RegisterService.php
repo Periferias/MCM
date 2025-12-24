@@ -107,10 +107,19 @@ class RegisterService implements RegisterServiceInterface
             throw $exception;
         }
 
+        // Determinar o tipo correto para exibição no email
+        $organizationType = $organizationObj->getType();
+        if ($organizationType === OrganizationTypeEnum::EMPRESA->value) {
+            $extraFields = $organizationObj->getExtraFields();
+            if (isset($extraFields['tipo']) && $extraFields['tipo'] === 'OSC') {
+                $organizationType = 'OSC';
+            }
+        }
+
         $this->accountEventService->notifyManagerOfNewRegistration(
             $userObj->getName(),
             $organizationObj->getName(),
-            $organizationObj->getType(),
+            $organizationType,
             $organizationObj->getCreatedAt(),
         );
 
