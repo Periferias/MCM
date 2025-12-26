@@ -19,7 +19,7 @@ php:
     # tag: ""
   appEnv: prod
   appDebug: "0"
-  appSecret: ""
+  appSecret: "f7ed06fdfaf1e1b2fcb415ffddb6995df888e7690df2889f9acbe8648d07efc4"
   corsAllowOrigin: "^https?://.*?\\.chart-example\\.local$"
   trustedHosts: "^127\\.0\\.0\\.1|localhost|.*\\.chart-example\\.local$"
   trustedProxies:
@@ -130,6 +130,7 @@ resources: {}
 app:
   defaultUri: "http://localhost:8080"
   maxFileSizeMb: "10"
+  emailAddress: "contato@cidades.gov.br"
 
 mailer:
   dsn: "smtp://localhost:587"
