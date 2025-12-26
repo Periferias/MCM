@@ -16,3 +16,4 @@ data:
   {{- end }}
   default-uri: {{ .Values.app.defaultUri | quote }}
   max-file-size-mb: {{ .Values.app.maxFileSizeMb | quote }}
+  email-address: {{ .Values.app.emailAddress | quote }}

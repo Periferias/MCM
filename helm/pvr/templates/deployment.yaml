@@ -129,6 +129,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "pvr.fullname" . }}
                   key: max-file-size-mb
+            - name: EMAIL_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "pvr.fullname" . }}
+                  key: email-address
             - name: MAILER_DSN
               valueFrom:
                 secretKeyRef:
