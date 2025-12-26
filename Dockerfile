@@ -96,7 +96,7 @@ COPY . ./
 
 RUN set -eux; \
 	rm -rf frankenphp; \
-	mkdir -p var/cache var/log; \
+	mkdir -p var/cache var/log var/translations; \
 	composer dump-autoload --classmap-authoritative --no-dev; \
 	composer dump-env prod; \
 	composer run-script --no-dev post-install-cmd; \
