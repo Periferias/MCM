@@ -135,6 +135,10 @@ app:
 mailer:
   dsn: "smtp://localhost:587"
 
+jwt:
+  secretKey: "/app/storage/jwt/private.pem"
+  publicKey: "/app/storage/jwt/public.pem"
+
 # If you use Mercure, you need the managed or the On Premise version to deploy more than one pod: https://mercure.rocks/docs/hub/cluster
 replicaCount: 1
 
