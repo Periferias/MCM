@@ -139,6 +139,10 @@ spec:
                 secretKeyRef:
                   name: {{ include "pvr.fullname" . }}
                   key: mailer-dsn
+            - name: JWT_SECRET_KEY
+              value: {{ .Values.jwt.secretKey | quote }}
+            - name: JWT_PUBLIC_KEY
+              value: {{ .Values.jwt.publicKey | quote }}
           ports:
             - name: http
               containerPort: 80
