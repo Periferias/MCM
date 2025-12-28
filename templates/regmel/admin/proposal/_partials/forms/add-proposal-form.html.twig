@@ -114,7 +114,7 @@
                                 <div class="col">
                                     <label class="form-label required-label">Área estimada da Poligonal (m²)</label>
                                     <input type="text" id="area_size" name="area_size"
-                                                placeholder="0" class="form-control">
+                                                placeholder="0" class="form-control" required>
                                 </div>
 
                                 <div class="col">
@@ -129,7 +129,7 @@
                                                 max="{{ env.aurora.variables.max_houses }}"
                                                 placeholder="0"
                                                 class="form-control"
-                                                oninput="atualizarValor()">
+                                                oninput="atualizarValor()" required>
                                 </div>
                             </div>
 
