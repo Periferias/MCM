@@ -279,10 +279,10 @@ sidebar:
         icon: manage_accounts
         text: users
 
-      admin_faq_list:
-        acl: ['ROLE_ADMIN']
-        icon: quiz
-        text: faq
+      # admin_faq_list:
+      #   acl: ['ROLE_ADMIN']
+      #   icon: quiz
+      #   text: faq
 
 homepage:
   sections:
