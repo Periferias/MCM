@@ -145,7 +145,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    {% if status == 'Não Anuída' %}
+                                    {% if status == statusEnum.NAO_ANUIDA.value %}
                                         {{ proposal.extraFields.reason ?? '-' }}
                                     {% else %}
                                         -
