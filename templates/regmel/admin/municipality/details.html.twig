@@ -237,6 +237,7 @@
                                             <th>Titulo</th>
                                             <th>Empresa/OSC</th>
                                             <th>Status</th>
+                                            <th>Motivo da Anuência</th>
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
@@ -261,6 +262,7 @@
                                                     {{ status }}
                                                 </span>
                                             </td>
+                                            <td>{{ proposal.extraFields.reason ?? '-' }}</td>
                                             <td>
                                                 <button
                                                         class="btn btn-outline-info btn-sm"
