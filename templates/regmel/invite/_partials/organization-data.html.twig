@@ -20,31 +20,31 @@
 
 <div class="row">
     <div class="col-6 mb-3">
-        <label for="site" class="form-label">{{ 'view.organization.site' | trans }}</label>
-        <input type="text" class="form-control" id="site" name="site" placeholder={{ 'view.organization.site' | trans}}>
+        <label for="site" class="form-label">{{ 'site' | trans }}</label>
+        <input type="text" class="form-control" id="site" name="site" placeholder="{{ 'site' | trans }}">
     </div>
     <div class="col-6 mb-3">
-        <label for="phone" class="form-label">{{ 'view.organization.phone' | trans }}</label>
-        <input type="tel" class="form-control" maxlength="16" data-mask="phone" id="phone" name="phone" placeholder={{ 'view.organization.phone' | trans}} required>
+        <label for="phone" class="form-label">{{ 'phone' | trans }}</label>
+        <input type="tel" class="form-control" maxlength="16" data-mask="phone" id="phone" name="phone" placeholder="{{ 'phone' | trans }}" required>
     </div>
 </div>
 
 <div class="row">
     <div class="col-12 mb-3">
-        <label for="email" class="form-label">{{ 'view.organization.email' | trans }}</label>
-        <input type="email" class="form-control" id="email" name="email" placeholder={{ 'view.organization.email' | trans}} required>
+        <label for="email" class="form-label">{{ 'email' | trans }}</label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="{{ 'email' | trans }}" required>
     </div>
 </div>
 
 <div class="row">
     <div class="col-12 mb-3">
         <label for="joinForm" class="form-label">
-            {{ 'view.organization.file' | trans}}
-            <a class="ms-3" href="/files/adesao-ao-programa.pdf" download>{{ 'view.organization.download_form_model' | trans }}</a>
+            Termo de Adesão ao Programa
+            <a class="ms-3" href="/files/adesao-ao-programa.pdf" download>{{ 'download_model' | trans }}</a>
         </label>
         <input class="form-control" type="file" id="joinForm" name="joinForm" accept="application/pdf" required>
         <div class="form-text">
-            {{ 'view.organization.pdf_advice' | trans}}
+            O formato do arquivo deve ser PDF
         </div>
         <div class="form-text">
         </div>
