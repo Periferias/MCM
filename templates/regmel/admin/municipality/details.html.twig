@@ -264,7 +264,7 @@
                                             </td>
                                             <td>
                                                 {% if status == 'Não Anuída' %}
-                                                    {{ proposal.extraFields.reason ?? '-' }}
+                                                    {{ proposal.extraFields.status_reason ?? '-' }}
                                                 {% else %}
                                                     -
                                                 {% endif %}

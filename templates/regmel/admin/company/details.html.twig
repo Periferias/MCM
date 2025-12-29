@@ -146,7 +146,7 @@
                                 </td>
                                 <td>
                                     {% if status == statusEnum.NAO_ANUIDA.value %}
-                                        {{ proposal.extraFields.reason ?? '-' }}
+                                        {{ proposal.extraFields.status_reason ?? '-' }}
                                     {% else %}
                                         -
                                     {% endif %}
