@@ -53,14 +53,16 @@ readonly class EmailService implements EmailServiceInterface
             throw new RuntimeException('EmailService was not initialized. Call the EmailService::initialize() first.');
         }
 
+        $subjectWithPrefix = 'Periferia Viva Reformas - ' . $subject;
+
         $this->mailer->send(
             (new TemplatedEmail())
                 ->from($this->fromAddress)
                 ->to(...$to)
-                ->subject($subject)
+                ->subject($subjectWithPrefix)
                 ->htmlTemplate('_emails/layout.html.twig')
                 ->context(array_merge($context, [
-                    'subject' => $subject,
+                    'subject' => $subjectWithPrefix,
                     'content' => $this->twig->render($htmlTemplate, $context),
                 ]))
         );
