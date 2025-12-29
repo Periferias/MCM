@@ -11,7 +11,7 @@
         </select>
     </div>
     <div class="col-6 mb-3">
-        <label for="city" class="form-label">{{ 'city' | trans }}</label>
+        <label for="city" class="form-label required-label">{{ 'city' | trans }}</label>
         <select class="form-select" id="city" name="city" required>
             <option value="">{{ 'select' | trans }}</option>
         </select>
@@ -24,21 +24,21 @@
         <input type="text" class="form-control" id="site" name="site" placeholder="{{ 'site' | trans }}">
     </div>
     <div class="col-6 mb-3">
-        <label for="phone" class="form-label">{{ 'phone' | trans }}</label>
+        <label for="phone" class="form-label required-label">{{ 'phone' | trans }}</label>
         <input type="tel" class="form-control" maxlength="16" data-mask="phone" id="phone" name="phone" placeholder="{{ 'phone' | trans }}" required>
     </div>
 </div>
 
 <div class="row">
     <div class="col-12 mb-3">
-        <label for="email" class="form-label">{{ 'email' | trans }}</label>
+        <label for="email" class="form-label required-label">{{ 'email' | trans }}</label>
         <input type="email" class="form-control" id="email" name="email" placeholder="{{ 'email' | trans }}" required>
     </div>
 </div>
 
 <div class="row">
     <div class="col-12 mb-3">
-        <label for="joinForm" class="form-label">
+        <label for="joinForm" class="form-label required-label">
             Termo de Adesão ao Programa
             <a class="ms-3" href="/files/adesao-ao-programa.pdf" download>{{ 'download_model' | trans }}</a>
         </label>
