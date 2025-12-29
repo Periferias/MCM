@@ -98,6 +98,7 @@ readonly class InviteService extends AbstractEntityService implements InviteServ
             [
                 'name' => $name,
                 'organization' => $organization->getName(),
+                'organization_type' => $organizationType,
                 'confirmationUrl' => $confirmationUrl,
             ]
         );
