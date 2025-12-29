@@ -237,6 +237,7 @@
                                             <th>Titulo</th>
                                             <th>Empresa/OSC</th>
                                             <th>Status</th>
+                                            <th>Motivo da Anuência</th>
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
@@ -260,6 +261,13 @@
                                                 <span class="badge {{ badgeClass }} text-dark">
                                                     {{ status }}
                                                 </span>
+                                            </td>
+                                            <td>
+                                                {% if status == 'Não Anuída' %}
+                                                    {{ proposal.extraFields.reason ?? '-' }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
                                             </td>
                                             <td>
                                                 <button
