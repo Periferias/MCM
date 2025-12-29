@@ -23,15 +23,19 @@
 </div>
 
 <div class="row">
-    <div class="col-4 mb-3">
+    <div class="col-3 mb-3">
+        <label for="cnpj" class="form-label">CNPJ</label>
+        <input type="text" maxlength="18" data-mask="cnpj" class="form-control" id="cnpj" name="cnpj" placeholder="00.000.000/0000-00">
+    </div>
+    <div class="col-3 mb-3">
         <label for="site" class="form-label">{{ 'view.organization.site' | trans }}</label>
         <input type="text" class="form-control" id="site" name="site" placeholder="{{ 'view.organization.site' | trans }}">
     </div>
-    <div class="col-4 mb-3">
+    <div class="col-3 mb-3">
         <label for="phone" class="form-label required-label">{{ 'view.organization.phone' | trans }}</label>
         <input type="tel" class="form-control" maxlength="16" data-mask="phone" id="phone" name="phone" placeholder="{{ 'view.organization.phone' | trans }}" required>
     </div>
-    <div class="col-4 mb-3">
+    <div class="col-3 mb-3">
         <label for="email" class="form-label required-label">{{ 'view.organization.email' | trans }}</label>
         <input type="email" class="form-control" id="email" name="email" placeholder="{{ 'view.organization.email' | trans }}" required>
     </div>
