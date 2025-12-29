@@ -262,7 +262,13 @@
                                                     {{ status }}
                                                 </span>
                                             </td>
-                                            <td>{{ proposal.extraFields.reason ?? '-' }}</td>
+                                            <td>
+                                                {% if status == 'Não Anuída' %}
+                                                    {{ proposal.extraFields.reason ?? '-' }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
                                             <td>
                                                 <button
                                                         class="btn btn-outline-info btn-sm"
