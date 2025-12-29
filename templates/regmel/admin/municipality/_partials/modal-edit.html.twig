@@ -34,6 +34,11 @@
           </div>
 
           <div class="mb-3">
+            <label for="organization-cnpj" class="form-label">CNPJ</label>
+            <input type="text" maxlength="18" class="form-control" id="organization-cnpj" name="cnpj" data-mask="cnpj" placeholder="00.000.000/0000-00">
+          </div>
+
+          <div class="mb-3">
             <label class="form-label d-block">{{ 'improvement_municipality' | trans }}</label>
             <div class="form-check form-check-inline">
               <input class="form-check-input" type="radio" name="hasHousingExperience" id="edit-hasHousingExperienceYes" value="true">

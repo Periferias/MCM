@@ -15,6 +15,7 @@ document.addEventListener('click', function (event) {
                 document.getElementById('organization-site').value = data.extraFields?.site ?? '';
                 document.getElementById('organization-phone').value = data.extraFields?.telefone ?? '';
                 document.getElementById('organization-email').value = data.extraFields?.email ?? '';
+                document.getElementById('organization-cnpj').value = data.extraFields?.cnpj ?? '';
 
                 if (data.image) {
                     document.getElementById('profile-img').src = data.image;
