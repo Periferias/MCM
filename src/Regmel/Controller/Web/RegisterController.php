@@ -213,6 +213,7 @@ class RegisterController extends AbstractWebController
                     'cityCode' => $city?->getCityCode(),
                     'region' => $city?->getState()?->getRegion(),
                     'state' => $city?->getState()?->getAcronym(),
+                    'cnpj' => $request->get('cnpj'),
                     'email' => $request->get('email'),
                     'telefone' => $request->get('phone'),
                     'site' => $request->get('site'),
