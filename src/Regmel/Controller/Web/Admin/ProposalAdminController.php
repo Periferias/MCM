@@ -236,7 +236,16 @@ class ProposalAdminController extends AbstractAdminController
     #[Route('/painel/admin/propostas/list/download-project-files', name: 'admin_regmel_proposal_project_file_download', methods: ['GET'])]
     public function exportProjectFiles(): Response
     {
-        $initiatives = $this->initiativeService->list();
+        $user = $this->security->getUser();
+        $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
+        
+        if ($isMunicipality) {
+            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $municipality = $agent->getOrganizations()->first();
+            $initiatives = $this->initiativeService->list(params: ['organizationTo' => $municipality]);
+        } else {
+            $initiatives = $this->initiativeService->list();
+        }
 
         $zipFileName = sprintf('arquivos_geográficos_%s.zip', date('Y-m-d_H-i-s'));
 
@@ -258,7 +267,16 @@ class ProposalAdminController extends AbstractAdminController
     #[Route('/painel/admin/propostas/list/download-map-files', name: 'admin_regmel_proposal_map_file_download', methods: ['GET'])]
     public function exportMapFiles(): Response
     {
-        $initiatives = $this->initiativeService->list();
+        $user = $this->security->getUser();
+        $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
+        
+        if ($isMunicipality) {
+            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $municipality = $agent->getOrganizations()->first();
+            $initiatives = $this->initiativeService->list(params: ['organizationTo' => $municipality]);
+        } else {
+            $initiatives = $this->initiativeService->list();
+        }
 
         $zipFileName = sprintf('mapas_poligonais_%s.zip', date('Y-m-d_H-i-s'));
 
