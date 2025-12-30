@@ -217,12 +217,22 @@ class ProposalAdminController extends AbstractAdminController
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas/list/download', name: 'admin_regmel_proposal_list_download', methods: ['GET'])]
     public function exportProposalsCsv(Request $request): Response
     {
-        $initiatives = $this->initiativeService->list();
+        $user = $this->security->getUser();
+        $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
+        
+        if ($isMunicipality) {
+            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $municipality = $agent->getOrganizations()->first();
+            $initiatives = $this->initiativeService->list(params: ['organizationTo' => $municipality]);
+        } else {
+            $initiatives = $this->initiativeService->list();
+        }
 
         return $this->proposalService->generateSpreadSheet($initiatives, 'propostas', null);
     }
