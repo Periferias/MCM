@@ -15,4 +15,6 @@ interface OrganizationRepositoryInterface
     public function findOrganizationByRegionAndState(string $region, string $state): array;
 
     public function findOrganizationByCompanyFilters(string $tipo): array;
+
+    public function findByCnpj(string $cnpj, ?string $excludeId = null): ?Organization;
 }
