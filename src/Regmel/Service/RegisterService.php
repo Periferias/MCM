@@ -67,6 +67,17 @@ class RegisterService implements RegisterServiceInterface
 
     public function saveOrganization(array $data, ?UploadedFile $uploadedFile = null): Organization
     {
+        // Validar CNPJ único
+        if (isset($data['organization']['extraFields']['cnpj'])) {
+            $cnpj = $data['organization']['extraFields']['cnpj'];
+            if (!empty($cnpj)) {
+                $existingOrg = $this->organizationService->findByCnpj($cnpj);
+                if ($existingOrg !== null) {
+                    throw new \InvalidArgumentException('CNPJ já cadastrado no sistema.');
+                }
+            }
+        }
+
         if (null !== $uploadedFile) {
             $fileName = $this->getTermFileName(
                 $data['organization']['name'] ?? '',

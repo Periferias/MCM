@@ -147,4 +147,29 @@ class OrganizationRepository extends AbstractRepository implements OrganizationR
 
         return $query->getResult();
     }
+
+    public function findByCnpj(string $cnpj, ?string $excludeId = null): ?Organization
+    {
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addRootEntityFromClassMetadata(Organization::class, 'o');
+
+        $sql = <<<SQL
+                SELECT *
+                FROM organization o
+                WHERE o.extra_fields->>'cnpj' = :cnpj
+            SQL;
+
+        if (null !== $excludeId) {
+            $sql .= " AND o.id::text != :excludeId";
+        }
+
+        $query = $this->getEntityManager()->createNativeQuery($sql, $rsm);
+        $query->setParameter('cnpj', $cnpj);
+
+        if (null !== $excludeId) {
+            $query->setParameter('excludeId', $excludeId);
+        }
+
+        return $query->getOneOrNullResult();
+    }
 }

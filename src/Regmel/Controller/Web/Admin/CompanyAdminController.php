@@ -170,6 +170,15 @@ class CompanyAdminController extends AbstractAdminController
         $this->validCsrfToken('edit-company', $request);
 
         try {
+            // Validar CNPJ único ao editar
+            $newCnpj = $request->get('cnpj');
+            if (!empty($newCnpj)) {
+                $existingOrg = $this->organizationService->findByCnpj($newCnpj, $id->toRfc4122());
+                if ($existingOrg !== null) {
+                    throw new \InvalidArgumentException('CNPJ já cadastrado em outra organização.');
+                }
+            }
+
             $this->organizationService->update($id, [
                 'name' => $request->get('name'),
                 'description' => $request->get('description'),
