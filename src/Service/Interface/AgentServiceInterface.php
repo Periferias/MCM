@@ -32,4 +32,6 @@ interface AgentServiceInterface
     public function updateImage(Uuid $id, UploadedFile $uploadedFile): Agent;
 
     public function count(?User $user = null): int;
+
+    public function findByCpf(string $cpf, ?string $excludeId = null): ?Agent;
 }

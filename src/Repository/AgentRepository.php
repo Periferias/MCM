@@ -37,4 +37,33 @@ class AgentRepository extends AbstractRepository implements AgentRepositoryInter
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function findByCpf(string $cpf, ?string $excludeId = null): ?Agent
+    {
+        $connection = $this->getEntityManager()->getConnection();
+
+        $sql = "SELECT * FROM agent WHERE extra_fields->>'cpf' = :cpf";
+
+        if (null !== $excludeId) {
+            $sql .= " AND id::text != :excludeId";
+        }
+
+        $sql .= " LIMIT 1";
+
+        $statement = $connection->prepare($sql);
+        $params = ['cpf' => $cpf];
+
+        if (null !== $excludeId) {
+            $params['excludeId'] = $excludeId;
+        }
+
+        $result = $statement->executeQuery($params);
+        $data = $result->fetchAssociative();
+
+        if (!$data) {
+            return null;
+        }
+
+        return $this->find($data['id']);
+    }
 }
