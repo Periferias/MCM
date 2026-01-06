@@ -221,4 +221,9 @@ readonly class AgentService extends AbstractEntityService implements AgentServic
 
         return $agent;
     }
+
+    public function findByCpf(string $cpf, ?string $excludeId = null): ?Agent
+    {
+        return $this->repository->findByCpf($cpf, $excludeId);
+    }
 }

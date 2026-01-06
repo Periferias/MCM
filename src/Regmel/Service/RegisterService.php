@@ -20,6 +20,7 @@ use App\Regmel\Service\Interface\RegisterServiceInterface;
 use App\Repository\Interface\OrganizationRepositoryInterface;
 use App\Repository\Interface\PhaseRepositoryInterface;
 use App\Service\Interface\AccountEventServiceInterface;
+use App\Service\Interface\AgentServiceInterface;
 use App\Service\Interface\FileServiceInterface;
 use App\Service\OpportunityService;
 use App\Service\OrganizationService;
@@ -39,6 +40,7 @@ class RegisterService implements RegisterServiceInterface
     public function __construct(
         private readonly OrganizationService $organizationService,
         private readonly UserService $userService,
+        private readonly AgentServiceInterface $agentService,
         private readonly SerializerInterface $serializer,
         private readonly OrganizationRepositoryInterface $organizationRepository,
         private readonly OpportunityService $opportunityService,
@@ -55,6 +57,17 @@ class RegisterService implements RegisterServiceInterface
     public function saveUser(array $data): User
     {
         try {
+            // Validar CPF único
+            if (isset($data['extraFields']['cpf'])) {
+                $cpf = $data['extraFields']['cpf'];
+                if (!empty($cpf)) {
+                    $existingAgent = $this->agentService->findByCpf($cpf);
+                    if ($existingAgent !== null) {
+                        throw new \InvalidArgumentException('CPF já cadastrado no sistema.');
+                    }
+                }
+            }
+
             $user = $this->userService->validateInput($data, UserDto::class, UserDto::CREATE);
 
             $userObj = $this->userService->create($user);
@@ -67,6 +80,17 @@ class RegisterService implements RegisterServiceInterface
 
     public function saveOrganization(array $data, ?UploadedFile $uploadedFile = null): Organization
     {
+        // Validar CPF único
+        if (isset($data['user']['extraFields']['cpf'])) {
+            $cpf = $data['user']['extraFields']['cpf'];
+            if (!empty($cpf)) {
+                $existingAgent = $this->agentService->findByCpf($cpf);
+                if ($existingAgent !== null) {
+                    throw new \InvalidArgumentException('CPF já cadastrado no sistema.');
+                }
+            }
+        }
+
         // Validar CNPJ único
         if (isset($data['organization']['extraFields']['cnpj'])) {
             $cnpj = $data['organization']['extraFields']['cnpj'];

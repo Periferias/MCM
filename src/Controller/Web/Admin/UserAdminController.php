@@ -73,6 +73,15 @@ class UserAdminController extends AbstractAdminController
         $errors = [];
 
         try {
+            // Validar CPF único
+            $cpf = $request->get('cpf');
+            if (!empty($cpf)) {
+                $existingAgent = $this->agentService->findByCpf($cpf);
+                if ($existingAgent !== null) {
+                    throw new \InvalidArgumentException('CPF já cadastrado no sistema.');
+                }
+            }
+
             $this->service->create([
                 'id' => Uuid::v4(),
                 'firstname' => $request->get('firstname'),
@@ -173,6 +182,15 @@ class UserAdminController extends AbstractAdminController
     {
         if ($agentIdString = $request->request->get('agent')) {
             $agentId = Uuid::fromString($agentIdString);
+
+            // Validar CPF único ao editar
+            $newCpf = $request->request->get('cpf');
+            if (!empty($newCpf)) {
+                $existingAgent = $this->agentService->findByCpf($newCpf, $agentId->toRfc4122());
+                if ($existingAgent !== null) {
+                    throw new \InvalidArgumentException('CPF já cadastrado em outro usuário.');
+                }
+            }
 
             $agentData = [
                 'name' => $request->request->get('name'),
