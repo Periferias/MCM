@@ -301,4 +301,9 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
             $entity->getCreatedBy() ? $entity->getCreatedBy()->getName() : '-',
         ];
     }
+
+    public function findByCnpj(string $cnpj, ?string $excludeId = null): ?Organization
+    {
+        return $this->repository->findByCnpj($cnpj, $excludeId);
+    }
 }

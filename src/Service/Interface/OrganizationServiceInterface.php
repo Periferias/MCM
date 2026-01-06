@@ -35,4 +35,6 @@ interface OrganizationServiceInterface
     public function getCsvHeaders(?string $type): array;
 
     public function getCsvRow(object $entity, ?string $type): array;
+
+    public function findByCnpj(string $cnpj, ?string $excludeId = null): ?Organization;
 }
