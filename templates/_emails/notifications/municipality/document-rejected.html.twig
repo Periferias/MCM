@@ -3,7 +3,7 @@
 
     <h1>Olá!</h1>
 
-    <p>O termo de adesão do município, <strong>{{ municipality }}</strong>, foi <span style="font-weight: bold; color: red;">reprovado</span>.</p>
+    <p>O termo de adesão do município <strong>{{ municipality }} - {{ municipality.extraFields.state }}</strong> foi <span style="font-weight: bold; color: red;">reprovado</span>.</p>
 
     <p>Motivo: {{ reason }}</p>
 
