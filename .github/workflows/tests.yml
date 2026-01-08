@@ -57,7 +57,7 @@ jobs:
 
       - name: Start the PHPUnit
         run: |
-          docker compose exec -T php bash -c "export MONGODB_URL=mongodb://root:password@mongo:27017 && export MONGODB_DB=regmel_nosql_test && bin/paratest --no-coverage"
+          docker compose exec -T php bash -c "export DATABASE_URL=postgresql://regmel:password@regmel-postgres:5432/regmel_psql?serverVersion=16 && export MONGODB_URL=mongodb://root:password@mongo:27017 && export MONGODB_DB=regmel_nosql_test && bin/paratest --no-coverage"
 
       - name: Remove o .env file
         run: rm .env
