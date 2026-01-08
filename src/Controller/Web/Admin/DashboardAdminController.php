@@ -89,6 +89,7 @@ class DashboardAdminController extends AbstractAdminController
             : $this->initiativeService->findBy(['createdBy' => $createdBy]);
         $totalProposals = count(array_filter($allInitiatives, function ($initiative) {
             $extraFields = $initiative->getExtraFields();
+
             return isset($extraFields['map_file']) || isset($extraFields['project_file']);
         }));
 

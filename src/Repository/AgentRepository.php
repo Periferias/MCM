@@ -45,10 +45,10 @@ class AgentRepository extends AbstractRepository implements AgentRepositoryInter
         $sql = "SELECT * FROM agent WHERE extra_fields->>'cpf' = :cpf";
 
         if (null !== $excludeId) {
-            $sql .= " AND id::text != :excludeId";
+            $sql .= ' AND id::text != :excludeId';
         }
 
-        $sql .= " LIMIT 1";
+        $sql .= ' LIMIT 1';
 
         $statement = $connection->prepare($sql);
         $params = ['cpf' => $cpf];

@@ -13,6 +13,7 @@ use App\Service\Interface\InscriptionOpportunityServiceInterface;
 use App\Service\Interface\OrganizationServiceInterface;
 use App\Service\Interface\PhaseServiceInterface;
 use Exception;
+use InvalidArgumentException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\ExpressionLanguage\Expression;
@@ -70,9 +71,9 @@ class CompanyAdminController extends AbstractAdminController
             }
         }
 
-        $isAdminOrManagerOrSupport = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles()) ||
-            in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles()) ||
-            in_array(UserRolesEnum::ROLE_SUPPORT->value, $user->getRoles());
+        $isAdminOrManagerOrSupport = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles())
+            || in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles())
+            || in_array(UserRolesEnum::ROLE_SUPPORT->value, $user->getRoles());
 
         if (true === $isAdminOrManagerOrSupport) {
             $criteria = ['type' => OrganizationTypeEnum::EMPRESA->value];
@@ -174,8 +175,8 @@ class CompanyAdminController extends AbstractAdminController
             $newCnpj = $request->get('cnpj');
             if (!empty($newCnpj)) {
                 $existingOrg = $this->organizationService->findByCnpj($newCnpj, $id->toRfc4122());
-                if ($existingOrg !== null) {
-                    throw new \InvalidArgumentException('CNPJ já cadastrado em outra organização.');
+                if (null !== $existingOrg) {
+                    throw new InvalidArgumentException('CNPJ já cadastrado em outra organização.');
                 }
             }
 

@@ -227,7 +227,7 @@ class ProposalAdminController extends AbstractAdminController
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
 
         if ($isMunicipality) {
-            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $agent = $user->getAgents()->filter(fn ($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
             $initiatives = $this->initiativeService->list(params: ['organizationTo' => $municipality]);
         } else {
@@ -250,7 +250,7 @@ class ProposalAdminController extends AbstractAdminController
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
 
         if ($isMunicipality) {
-            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $agent = $user->getAgents()->filter(fn ($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
             $initiatives = $this->initiativeService->list(params: ['organizationTo' => $municipality]);
         } else {
@@ -281,7 +281,7 @@ class ProposalAdminController extends AbstractAdminController
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
 
         if ($isMunicipality) {
-            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $agent = $user->getAgents()->filter(fn ($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
             $initiatives = $this->initiativeService->list(params: ['organizationTo' => $municipality]);
         } else {
@@ -348,8 +348,9 @@ class ProposalAdminController extends AbstractAdminController
         if ($municipality) {
             $termStatus = $municipality->getExtraFields()['term_status'] ?? null;
 
-            if ($termStatus !== 'approved' && in_array($status, [StatusProposalEnum::ANUIDA, StatusProposalEnum::NAO_ANUIDA, StatusProposalEnum::SELECIONADA])) {
+            if ('approved' !== $termStatus && in_array($status, [StatusProposalEnum::ANUIDA, StatusProposalEnum::NAO_ANUIDA, StatusProposalEnum::SELECIONADA])) {
                 $this->addFlash('error', 'Não é possível anuir ou selecionar proposta sem termo de adesão aprovado');
+
                 return $this->redirectToRoute('admin_regmel_proposal_list');
             }
         }

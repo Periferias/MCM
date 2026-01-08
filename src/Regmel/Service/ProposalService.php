@@ -311,9 +311,9 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
 
         if (!empty($framework)) {
             $profitType = $framework;
-        } elseif ($tipo === 'Empresa') {
+        } elseif ('Empresa' === $tipo) {
             $profitType = 'Empresa';
-        } elseif ($tipo === 'Entidade') {
+        } elseif ('Entidade' === $tipo) {
             $profitType = 'Organização da Sociedade Civil - OSC';
         }
 
@@ -427,6 +427,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
     private function getDocumentPath(string $file): string
     {
         $path = $this->parameterBag->get('kernel.project_dir');
+
         return "{$path}/storage/regmel/company/documents/{$file}";
     }
 

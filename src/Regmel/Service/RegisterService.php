@@ -29,6 +29,7 @@ use App\Service\UserService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
@@ -62,8 +63,8 @@ class RegisterService implements RegisterServiceInterface
                 $cpf = $data['extraFields']['cpf'];
                 if (!empty($cpf)) {
                     $existingAgent = $this->agentService->findByCpf($cpf);
-                    if ($existingAgent !== null) {
-                        throw new \InvalidArgumentException('CPF já cadastrado no sistema.');
+                    if (null !== $existingAgent) {
+                        throw new InvalidArgumentException('CPF já cadastrado no sistema.');
                     }
                 }
             }
@@ -85,8 +86,8 @@ class RegisterService implements RegisterServiceInterface
             $cpf = $data['user']['extraFields']['cpf'];
             if (!empty($cpf)) {
                 $existingAgent = $this->agentService->findByCpf($cpf);
-                if ($existingAgent !== null) {
-                    throw new \InvalidArgumentException('CPF já cadastrado no sistema.');
+                if (null !== $existingAgent) {
+                    throw new InvalidArgumentException('CPF já cadastrado no sistema.');
                 }
             }
         }
@@ -96,8 +97,8 @@ class RegisterService implements RegisterServiceInterface
             $cnpj = $data['organization']['extraFields']['cnpj'];
             if (!empty($cnpj)) {
                 $existingOrg = $this->organizationService->findByCnpj($cnpj);
-                if ($existingOrg !== null) {
-                    throw new \InvalidArgumentException('CNPJ já cadastrado no sistema.');
+                if (null !== $existingOrg) {
+                    throw new InvalidArgumentException('CNPJ já cadastrado no sistema.');
                 }
             }
         }
@@ -146,7 +147,7 @@ class RegisterService implements RegisterServiceInterface
         $organizationType = $organizationObj->getType();
         if ($organizationType === OrganizationTypeEnum::EMPRESA->value) {
             $extraFields = $organizationObj->getExtraFields();
-            if (isset($extraFields['tipo']) && $extraFields['tipo'] === 'OSC') {
+            if (isset($extraFields['tipo']) && 'OSC' === $extraFields['tipo']) {
                 $organizationType = 'OSC';
             }
         }

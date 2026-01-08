@@ -164,7 +164,7 @@ class OrganizationRepository extends AbstractRepository implements OrganizationR
             SQL;
 
         if (null !== $excludeId) {
-            $sql .= " AND o.id::text != :excludeId";
+            $sql .= ' AND o.id::text != :excludeId';
         }
 
         $query = $this->getEntityManager()->createNativeQuery($sql, $rsm);

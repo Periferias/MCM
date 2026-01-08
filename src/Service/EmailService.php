@@ -53,7 +53,7 @@ readonly class EmailService implements EmailServiceInterface
             throw new RuntimeException('EmailService was not initialized. Call the EmailService::initialize() first.');
         }
 
-        $subjectWithPrefix = 'Periferia Viva Reformas - ' . $subject;
+        $subjectWithPrefix = 'Periferia Viva Reformas - '.$subject;
 
         $this->mailer->send(
             (new TemplatedEmail())

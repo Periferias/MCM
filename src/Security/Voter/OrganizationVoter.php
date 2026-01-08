@@ -31,6 +31,7 @@ final class OrganizationVoter extends AbstractVoter
 
         if (!$user) {
             $this->logger->error('OrganizationVoter: No user found');
+
             return false;
         }
 
@@ -38,7 +39,7 @@ final class OrganizationVoter extends AbstractVoter
         $this->logger->info("OrganizationVoter: User {$user->getEmail()} with roles: {$roles}, attribute: {$attribute}");
 
         // Admin, Manager, Support, Municipality e Company podem visualizar qualquer organização
-        if ($attribute === 'get' || $attribute === 'get_form') {
+        if ('get' === $attribute || 'get_form' === $attribute) {
             $isAdminOrManagerOrSupport = $this->isUserAdminOrManagerOrSupport($user);
             $isMunicipality = $this->isUserMunicipality($user);
             $isCompany = $this->isUserCompany($user);
@@ -47,6 +48,7 @@ final class OrganizationVoter extends AbstractVoter
 
             if ($isAdminOrManagerOrSupport || $isMunicipality || $isCompany) {
                 $this->logger->info('OrganizationVoter: Access granted by role');
+
                 return true;
             }
 
@@ -54,15 +56,17 @@ final class OrganizationVoter extends AbstractVoter
             $owner = $subject->getOwner();
             if ($owner && $owner->getUser() && $user->getId()->equals($owner->getUser()->getId())) {
                 $this->logger->info('OrganizationVoter: Access granted as owner');
+
                 return true;
             }
 
             $this->logger->warning('OrganizationVoter: Access denied');
+
             return false;
         }
 
         // Apenas Admin, Manager e o owner podem editar
-        if ($attribute === 'edit') {
+        if ('edit' === $attribute) {
             if ($this->isUserAdmin($user) || $this->isUserManager($user)) {
                 return true;
             }

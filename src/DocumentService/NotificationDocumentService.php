@@ -21,7 +21,7 @@ final class NotificationDocumentService
     /**
      * Busca notificações para um usuário específico (target)
      * Ordena por data de criação (mais recentes primeiro)
-     * Limita a quantidade de notificações retornadas
+     * Limita a quantidade de notificações retornadas.
      */
     public function findByTarget(string $targetUserId, int $limit = 10): array
     {
@@ -33,7 +33,7 @@ final class NotificationDocumentService
     }
 
     /**
-     * Busca notificações não visitadas para um usuário específico
+     * Busca notificações não visitadas para um usuário específico.
      */
     public function findUnvisitedByTarget(string $targetUserId, int $limit = 10): array
     {
@@ -48,7 +48,7 @@ final class NotificationDocumentService
     }
 
     /**
-     * Conta o número de notificações não visitadas de um usuário
+     * Conta o número de notificações não visitadas de um usuário.
      */
     public function countUnvisitedByTarget(string $targetUserId): int
     {
@@ -59,7 +59,7 @@ final class NotificationDocumentService
     }
 
     /**
-     * Marca uma notificação como visitada
+     * Marca uma notificação como visitada.
      */
     public function markAsVisited(string $notificationId): void
     {
@@ -72,7 +72,7 @@ final class NotificationDocumentService
     }
 
     /**
-     * Marca todas as notificações de um usuário como visitadas
+     * Marca todas as notificações de um usuário como visitadas.
      */
     public function markAllAsVisitedByTarget(string $targetUserId): void
     {

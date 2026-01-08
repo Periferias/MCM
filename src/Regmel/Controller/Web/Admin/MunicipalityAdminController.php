@@ -16,6 +16,7 @@ use App\Regmel\Service\Interface\RegisterServiceInterface;
 use App\Service\Interface\OrganizationServiceInterface;
 use App\Service\Interface\StateServiceInterface;
 use Exception;
+use InvalidArgumentException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\ExpressionLanguage\Expression;
@@ -69,9 +70,9 @@ class MunicipalityAdminController extends AbstractAdminController
             ? $this->stateService->findBy(['region' => $filterRegion])
             : $this->stateService->list();
 
-        $isAdminOrManagerOrSupport = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles()) ||
-            in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles()) ||
-            in_array(UserRolesEnum::ROLE_SUPPORT->value, $user->getRoles());
+        $isAdminOrManagerOrSupport = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles())
+            || in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles())
+            || in_array(UserRolesEnum::ROLE_SUPPORT->value, $user->getRoles());
 
         if (true === $isAdminOrManagerOrSupport) {
             $criteria = ['type' => OrganizationTypeEnum::MUNICIPIO->value];
@@ -88,6 +89,7 @@ class MunicipalityAdminController extends AbstractAdminController
 
             if ($agents->isEmpty()) {
                 $this->addFlash('error', $this->translator->trans('user_associated'));
+
                 return $this->redirectToRoute('admin_dashboard');
             }
 
@@ -170,8 +172,8 @@ class MunicipalityAdminController extends AbstractAdminController
             $newCnpj = $request->get('cnpj');
             if (!empty($newCnpj)) {
                 $existingOrg = $this->organizationService->findByCnpj($newCnpj, $id->toRfc4122());
-                if ($existingOrg !== null) {
-                    throw new \InvalidArgumentException('CNPJ já cadastrado em outra organização.');
+                if (null !== $existingOrg) {
+                    throw new InvalidArgumentException('CNPJ já cadastrado em outra organização.');
                 }
             }
 
@@ -275,8 +277,9 @@ class MunicipalityAdminController extends AbstractAdminController
         $municipality = $this->organizationService->get(Uuid::fromString($municipalityId));
         $termStatus = $municipality->getExtraFields()['term_status'] ?? null;
 
-        if ($termStatus !== 'approved' && in_array($status, [StatusProposalEnum::ANUIDA, StatusProposalEnum::NAO_ANUIDA, StatusProposalEnum::SELECIONADA])) {
+        if ('approved' !== $termStatus && in_array($status, [StatusProposalEnum::ANUIDA, StatusProposalEnum::NAO_ANUIDA, StatusProposalEnum::SELECIONADA])) {
             $this->addFlash('error', 'Não é possível anuir ou selecionar proposta sem termo de adesão aprovado');
+
             return $this->redirectToRoute('admin_regmel_municipality_details', ['id' => $municipalityId]);
         }
 

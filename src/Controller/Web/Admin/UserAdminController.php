@@ -15,6 +15,7 @@ use App\Security\PasswordHasher;
 use App\Service\Interface\AgentServiceInterface;
 use App\Service\Interface\UserServiceInterface;
 use Exception;
+use InvalidArgumentException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\ExpressionLanguage\Expression;
@@ -77,8 +78,8 @@ class UserAdminController extends AbstractAdminController
             $cpf = $request->get('cpf');
             if (!empty($cpf)) {
                 $existingAgent = $this->agentService->findByCpf($cpf);
-                if ($existingAgent !== null) {
-                    throw new \InvalidArgumentException('CPF já cadastrado no sistema.');
+                if (null !== $existingAgent) {
+                    throw new InvalidArgumentException('CPF já cadastrado no sistema.');
                 }
             }
 
@@ -187,8 +188,8 @@ class UserAdminController extends AbstractAdminController
             $newCpf = $request->request->get('cpf');
             if (!empty($newCpf)) {
                 $existingAgent = $this->agentService->findByCpf($newCpf, $agentId->toRfc4122());
-                if ($existingAgent !== null) {
-                    throw new \InvalidArgumentException('CPF já cadastrado em outro usuário.');
+                if (null !== $existingAgent) {
+                    throw new InvalidArgumentException('CPF já cadastrado em outro usuário.');
                 }
             }
 
