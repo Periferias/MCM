@@ -18,9 +18,44 @@ document.addEventListener('DOMContentLoaded', function () {
         confirmPassword: document.querySelector('input[name="confirm_password"]')
     };
 
-    const progressBar = document.querySelector('#passwordStrength .progress-bar');
-
     btnSubmit.disabled = true;
+
+    function updatePasswordStrength(password) {
+        const progressBar = document.getElementById('progressBar');
+        const strengthMessage = document.getElementById('strengthMessage');
+
+        if (password.length === 0) {
+            progressBar.style.width = '0%';
+            progressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+            strengthMessage.textContent = '';
+            return;
+        }
+
+        let strength = 0;
+
+        if (password.length >= 8) strength += 1;
+        if (/[a-z]/.test(password)) strength += 1;
+        if (/[A-Z]/.test(password)) strength += 1;
+        if (/\d/.test(password)) strength += 1;
+        if (/[\W_]/.test(password)) strength += 1;
+
+        const strengthPercentage = (strength / 5) * 100;
+        progressBar.style.width = strengthPercentage + '%';
+
+        if (strengthPercentage <= 40) {
+            progressBar.classList.add('bg-danger');
+            progressBar.classList.remove('bg-warning', 'bg-success');
+            strengthMessage.textContent = 'Senha fraca';
+        } else if (strengthPercentage <= 80) {
+            progressBar.classList.add('bg-warning');
+            progressBar.classList.remove('bg-danger', 'bg-success');
+            strengthMessage.textContent = 'Senha média';
+        } else {
+            progressBar.classList.add('bg-success');
+            progressBar.classList.remove('bg-danger', 'bg-warning');
+            strengthMessage.textContent = 'Senha forte';
+        }
+    }
 
     async function validateFields() {
         const password = inputs.password.value.trim();
@@ -65,30 +100,6 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault();
         }
     });
-
-    function updatePasswordStrength(password) {
-        let strength = 0;
-
-        if (password.length >= 8) strength += 1;
-        if (/[a-z]/.test(password)) strength += 1;
-        if (/[A-Z]/.test(password)) strength += 1;
-        if (/\d/.test(password)) strength += 1;
-        if (/[\W_]/.test(password)) strength += 1;
-
-        const strengthPercentage = (strength / 5) * 100;
-        progressBar.style.width = strengthPercentage + '%';
-
-        if (strengthPercentage <= 40) {
-            progressBar.classList.add('bg-danger');
-            progressBar.classList.remove('bg-warning', 'bg-success');
-        } else if (strengthPercentage <= 80) {
-            progressBar.classList.add('bg-warning');
-            progressBar.classList.remove('bg-danger', 'bg-success');
-        } else {
-            progressBar.classList.add('bg-success');
-            progressBar.classList.remove('bg-danger', 'bg-warning');
-        }
-    }
 });
 
 function validatePassword(password) {
