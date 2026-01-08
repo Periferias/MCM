@@ -40,14 +40,14 @@ jobs:
       - name: Install dependencies
         run: docker compose exec -T --user root php composer install --ignore-platform-req=ext-mongodb
 
+      - name: Remove test cache directory and force rebuild
+        run: docker compose exec -T --user root php rm -rf var/cache/test
+
       - name: Generate public/private keys for use in your application.
         run: docker compose exec -T --user root php bin/console lexik:jwt:generate-keypair
 
       - name: Create the phpunit.xml
         run: docker compose exec -T --user root php cp phpunit.xml.dist phpunit.xml
-
-      - name: Remove test cache directory
-        run: docker compose exec -T --user root php rm -rf var/cache/test
 
       - name: Run migrations
         run: docker compose exec -T php bin/console d:m:migrate -n
