@@ -58,7 +58,7 @@ readonly class MunicipalityDocumentService implements MunicipalityDocumentServic
             $subject,
             $htmlTemplate,
             [
-                'municipality' => $municipality->getName(),
+                'municipality' => $municipality, // Passa o objeto ao invés da string
                 'reason' => $reason,
                 'loginPage' => $loginPage,
             ]
