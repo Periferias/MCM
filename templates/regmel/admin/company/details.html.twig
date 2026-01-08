@@ -13,7 +13,14 @@
         <div class="management-content w-100 p-4">
             <div class="card card-body shadow">
                 <div class="d-flex justify-content-between">
-                    <h2>{{ 'company'|trans }} - {{ company.name }}</h2>
+                    <h2>
+                        {% if company.extraFields.tipo == 'Entidade' %}
+                            OSC
+                        {% else %}
+                            {{ 'company'|trans }}
+                        {% endif %}
+                        - {{ company.name }}
+                    </h2>
 
                     <div class="col text-end">
                         <a href="#"
