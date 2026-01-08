@@ -284,7 +284,22 @@
                                     </td>
                                     <td>
                                         {% if app.user.agents.first.id == createdById and agent.id != createdById %}
-                                            <button type="submit" class="btn btn-danger btn-sm">Remover</button>
+                                            <button
+                                                    data-cy="remove-{{ loop.index }}"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalRemoveConfirm"
+                                                    onclick="confirmRemove(this)"
+                                                    data-href="{{ path(
+                                                        'admin_regmel_company_remove',
+                                                        {
+                                                            companyId: company.id,
+                                                            agentId: agent.id
+                                                        }
+                                                    ) }}"
+                                                    class="btn btn-outline-danger btn-sm"
+                                            >
+                                                {{ 'delete'|trans }}
+                                            </button>
                                         {% endif %}
                                     </td>
                                 </tr>
