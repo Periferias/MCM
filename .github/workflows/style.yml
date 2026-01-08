@@ -26,7 +26,7 @@ jobs:
         run: cp .env.example .env
 
       - name: Install dependencies
-        run: composer install --ignore-platform-req=ext-mongodb --no-progress --prefer-dist
+        run: composer install --ignore-platform-req=ext-mongodb --ignore-platform-req=php --no-progress --prefer-dist
 
       - name: Run PHP-CS-Fixer
         run: vendor/bin/php-cs-fixer fix --dry-run --diff -vvv
@@ -52,7 +52,7 @@ jobs:
         run: cp .env.example .env
 
       - name: Install dependencies
-        run: composer install --ignore-platform-req=ext-mongodb --no-progress --prefer-dist
+        run: composer install --ignore-platform-req=ext-mongodb --ignore-platform-req=php --no-progress --prefer-dist
 
       - name: Create the phpcs.xml
         run: cp phpcs.xml.dist phpcs.xml
