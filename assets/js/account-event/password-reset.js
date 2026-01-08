@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (password.length === 0) {
             progressBar.style.width = '0%';
+            progressBar.style.backgroundColor = '';
             progressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
             strengthMessage.textContent = '';
             return;
@@ -48,16 +49,19 @@ document.addEventListener('DOMContentLoaded', function () {
         progressBar.style.width = strengthPercentage + '%';
 
         if (strengthPercentage <= 40) {
-            progressBar.classList.add('bg-danger');
+            progressBar.style.backgroundColor = '#dc3545'; // Bootstrap danger color
             progressBar.classList.remove('bg-warning', 'bg-success');
+            progressBar.classList.add('bg-danger');
             strengthMessage.textContent = 'Senha fraca';
         } else if (strengthPercentage <= 80) {
-            progressBar.classList.add('bg-warning');
+            progressBar.style.backgroundColor = '#ffc107'; // Bootstrap warning color
             progressBar.classList.remove('bg-danger', 'bg-success');
+            progressBar.classList.add('bg-warning');
             strengthMessage.textContent = 'Senha média';
         } else {
-            progressBar.classList.add('bg-success');
+            progressBar.style.backgroundColor = '#198754'; // Bootstrap success color
             progressBar.classList.remove('bg-danger', 'bg-warning');
+            progressBar.classList.add('bg-success');
             strengthMessage.textContent = 'Senha forte';
         }
     }
