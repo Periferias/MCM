@@ -15,6 +15,6 @@ require dirname(__DIR__).'/vendor/squizlabs/php_codesniffer/tests/bootstrap.php'
 //     (new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
 // }
 
-if ($_SERVER['APP_DEBUG']) {
+if (isset($_SERVER['APP_DEBUG']) && $_SERVER['APP_DEBUG']) {
     umask(0o000);
 }
