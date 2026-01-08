@@ -82,6 +82,10 @@ class OrganizationRepository extends AbstractRepository implements OrganizationR
                 SELECT *
                 FROM organization o
                 WHERE o.extra_fields->>'cityId' = :cityId
+                AND o.type = 'Municipio'
+                AND o.deleted_at IS NULL
+                ORDER BY o.created_at DESC
+                LIMIT 1
             SQL;
 
         $query = $this->getEntityManager()->createNativeQuery($sql, $rsm);
