@@ -39,6 +39,9 @@ jobs:
       - name: Create the phpunit.xml
         run: docker compose exec -T --user root php cp phpunit.xml.dist phpunit.xml
 
+      - name: Clear test cache
+        run: docker compose exec -T php bin/console cache:clear --env=test
+
       - name: Run migrations
         run: docker compose exec -T php bin/console d:m:migrate -n
 
