@@ -13,6 +13,7 @@ $finder = (new Finder())
 
 return (new Config())
     ->setRiskyAllowed(true)
+    ->setUnsupportedPhpVersionAllowed(true)
     ->setRules([
         'psr_autoloading' => true,
         '@PSR12' => true,

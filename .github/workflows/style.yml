@@ -16,13 +16,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
       - name: Create .env file
         run: cp .env.example .env
 
-      - name: Set up PHP
-        uses: erkenes/php-cs-fixer-action@main
-        with:
-          args: '--dry-run --diff -vvv'
+      - name: Install dependencies
+        run: composer install --ignore-platform-req=ext-mongodb --no-progress --prefer-dist
+
+      - name: Run PHP-CS-Fixer
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff -vvv
 
       - name: Remove o .env file
         run: rm .env
@@ -38,7 +45,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.3'
           tools: composer:v2, phpcs
 
       - name: Create .env file

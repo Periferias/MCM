@@ -28,7 +28,7 @@ final class OrganizationVoter extends AbstractVoter
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
     {
         $user = $token->getUser();
-        
+
         if (!$user) {
             $this->logger->error('OrganizationVoter: No user found');
             return false;
@@ -42,21 +42,21 @@ final class OrganizationVoter extends AbstractVoter
             $isAdminOrManagerOrSupport = $this->isUserAdminOrManagerOrSupport($user);
             $isMunicipality = $this->isUserMunicipality($user);
             $isCompany = $this->isUserCompany($user);
-            
+
             $this->logger->info("OrganizationVoter: isAdminOrManagerOrSupport={$isAdminOrManagerOrSupport}, isMunicipality={$isMunicipality}, isCompany={$isCompany}");
-            
+
             if ($isAdminOrManagerOrSupport || $isMunicipality || $isCompany) {
                 $this->logger->info('OrganizationVoter: Access granted by role');
                 return true;
             }
-            
+
             // Verifica se é o owner
             $owner = $subject->getOwner();
             if ($owner && $owner->getUser() && $user->getId()->equals($owner->getUser()->getId())) {
                 $this->logger->info('OrganizationVoter: Access granted as owner');
                 return true;
             }
-            
+
             $this->logger->warning('OrganizationVoter: Access denied');
             return false;
         }
@@ -66,12 +66,12 @@ final class OrganizationVoter extends AbstractVoter
             if ($this->isUserAdmin($user) || $this->isUserManager($user)) {
                 return true;
             }
-            
+
             $owner = $subject->getOwner();
             if ($owner && $owner->getUser() && $user->getId()->equals($owner->getUser()->getId())) {
                 return true;
             }
-            
+
             return false;
         }
 

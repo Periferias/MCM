@@ -61,12 +61,12 @@ class DashboardAdminController extends AbstractAdminController
         }
 
         $recentRegistrations = $this->inscriptionService->findRecentByUser($user->getId());
-        
+
         // Admin, Manager e Support veem todos os registros, outros usuários veem apenas os que criaram
-        $isAdminOrManagerOrSupport = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles()) 
+        $isAdminOrManagerOrSupport = in_array(UserRolesEnum::ROLE_ADMIN->value, $user->getRoles())
             || in_array(UserRolesEnum::ROLE_MANAGER->value, $user->getRoles())
             || in_array(UserRolesEnum::ROLE_SUPPORT->value, $user->getRoles());
-        
+
         $createdBy = $isAdminOrManagerOrSupport ? null : $this->agentService->getAgentsFromLoggedUser()[0];
 
         $totalAgents = $this->agentService->count($user);
@@ -82,12 +82,12 @@ class DashboardAdminController extends AbstractAdminController
         $totalCompanies = count($this->organizationService->findBy([
             'type' => OrganizationTypeEnum::EMPRESA->value,
         ]));
-        
+
         // Propostas são iniciativas com campos específicos (map_file, project_file, etc)
-        $allInitiatives = $isAdminOrManagerOrSupport 
+        $allInitiatives = $isAdminOrManagerOrSupport
             ? $this->initiativeService->findBy([])
             : $this->initiativeService->findBy(['createdBy' => $createdBy]);
-        $totalProposals = count(array_filter($allInitiatives, function($initiative) {
+        $totalProposals = count(array_filter($allInitiatives, function ($initiative) {
             $extraFields = $initiative->getExtraFields();
             return isset($extraFields['map_file']) || isset($extraFields['project_file']);
         }));

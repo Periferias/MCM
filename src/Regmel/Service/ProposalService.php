@@ -308,7 +308,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $profitType = '';
         $framework = $organizationFrom->getExtraFields()['framework'] ?? '';
         $tipo = $organizationFrom->getExtraFields()['tipo'] ?? '';
-        
+
         if (!empty($framework)) {
             $profitType = $framework;
         } elseif ($tipo === 'Empresa') {
@@ -434,7 +434,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
     {
         $initiative = $this->initiativeService->get($id);
         $extraFields = $initiative->getExtraFields();
-        
+
         $extraFields['status'] = $status->value;
         $extraFields['status_reason'] = $reason;
 
@@ -447,7 +447,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         }
 
         $initiative->setExtraFields($extraFields);
-        
+
         $this->initiativeRepository->save($initiative);
         $this->entityManager->flush();
 

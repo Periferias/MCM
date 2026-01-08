@@ -225,7 +225,7 @@ class ProposalAdminController extends AbstractAdminController
     {
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
-        
+
         if ($isMunicipality) {
             $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
@@ -248,7 +248,7 @@ class ProposalAdminController extends AbstractAdminController
     {
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
-        
+
         if ($isMunicipality) {
             $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
@@ -279,7 +279,7 @@ class ProposalAdminController extends AbstractAdminController
     {
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
-        
+
         if ($isMunicipality) {
             $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
@@ -344,10 +344,10 @@ class ProposalAdminController extends AbstractAdminController
         // Verifica se o município tem termo aprovado antes de permitir anuência ou seleção
         $proposal = $this->initiativeService->get($id);
         $municipality = $proposal->getOrganizationTo();
-        
+
         if ($municipality) {
             $termStatus = $municipality->getExtraFields()['term_status'] ?? null;
-            
+
             if ($termStatus !== 'approved' && in_array($status, [StatusProposalEnum::ANUIDA, StatusProposalEnum::NAO_ANUIDA, StatusProposalEnum::SELECIONADA])) {
                 $this->addFlash('error', 'Não é possível anuir ou selecionar proposta sem termo de adesão aprovado');
                 return $this->redirectToRoute('admin_regmel_proposal_list');
