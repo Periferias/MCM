@@ -202,6 +202,20 @@ class CompanyAdminController extends AbstractAdminController
     }
 
     #[IsGranted(new Expression('
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_COMPANY->value.'")
+    '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/empresas/{companyId}/remove/{agentId}', name: 'admin_regmel_company_remove', methods: ['GET'])]
+    public function remove(Uuid $agentId, Uuid $companyId): Response
+    {
+        $this->organizationService->removeAgent($agentId, $companyId);
+
+        $this->addFlash('success', $this->translator->trans('view.organization.message.deleted_member'));
+
+        return $this->redirectToRoute('admin_regmel_company_details', ['id' => $companyId]);
+    }
+
+    #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
         is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
