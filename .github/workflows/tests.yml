@@ -18,6 +18,13 @@ jobs:
       - name: Create .env file
         run: cp .env.example .env
 
+      - name: Add MongoDB variables to .env
+        run: |
+          echo "" >> .env
+          echo "# Test MongoDB Configuration" >> .env
+          echo "MONGODB_URL=mongodb://root:password@mongo:27017" >> .env
+          echo "MONGODB_DB=regmel_nosql_test" >> .env
+
       - name: Start the aurora
         run: docker compose up -d --build
 
@@ -62,6 +69,13 @@ jobs:
 
       - name: Create .env file
         run: cp .env.example .env
+
+      - name: Add MongoDB variables to .env
+        run: |
+          echo "" >> .env
+          echo "# Test MongoDB Configuration" >> .env
+          echo "MONGODB_URL=mongodb://root:password@mongo:27017" >> .env
+          echo "MONGODB_DB=regmel_nosql_test" >> .env
 
       - name: Start the aurora
         run: docker compose up -d --build
