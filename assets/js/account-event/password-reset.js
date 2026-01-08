@@ -18,11 +18,16 @@ document.addEventListener('DOMContentLoaded', function () {
         confirmPassword: document.querySelector('input[name="confirm_password"]')
     };
 
+    const progressBar = document.getElementById('progressBar');
+    const strengthMessage = document.getElementById('strengthMessage');
+
     btnSubmit.disabled = true;
 
     function updatePasswordStrength(password) {
-        const progressBar = document.getElementById('progressBar');
-        const strengthMessage = document.getElementById('strengthMessage');
+        if (!progressBar || !strengthMessage) {
+            console.error('Progress bar or strength message element not found');
+            return;
+        }
 
         if (password.length === 0) {
             progressBar.style.width = '0%';
