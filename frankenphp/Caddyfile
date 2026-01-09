@@ -28,7 +28,12 @@
 	}
 
 	root /app/public
-	encode zstd br gzip 
+	encode zstd br gzip
+
+	# Increase request body size limit for file uploads
+	request_body {
+		max_size 40MB
+	} 
 
 	{$CADDY_SERVER_EXTRA_DIRECTIVES}
 
