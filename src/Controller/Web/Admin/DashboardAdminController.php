@@ -85,8 +85,8 @@ class DashboardAdminController extends AbstractAdminController
         
         // Propostas são iniciativas com campos específicos (map_file, project_file, etc)
         $allInitiatives = $isAdminOrManagerOrSupport 
-            ? $this->initiativeService->findBy([])
-            : $this->initiativeService->findBy(['createdBy' => $createdBy]);
+            ? $this->initiativeService->findBy([], PHP_INT_MAX)
+            : $this->initiativeService->findBy(['createdBy' => $createdBy], PHP_INT_MAX);
         $totalProposals = count(array_filter($allInitiatives, function($initiative) {
             $extraFields = $initiative->getExtraFields();
             return isset($extraFields['map_file']) || isset($extraFields['project_file']);
