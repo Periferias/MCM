@@ -22,9 +22,12 @@
         </properties>
     </rule>
 
+    <file>bin/</file>
+    <file>config/</file>
+    <file>public/</file>
     <file>src/</file>
     <file>tests/</file>
 
-    <rule ref="RepositoryPattern"/>
+    <rule ref="standards/RepositoryPattern/ruleset.xml"/>
 
 </ruleset>
