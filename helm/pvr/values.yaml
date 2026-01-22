@@ -10,7 +10,8 @@ php:
     # pullPolicy: IfNotPresent
   image:
     repository: 298680963177.dkr.ecr.us-east-1.amazonaws.com/melhorias-habitacionais
-    tag: "latest"
+    # tag: "latest"
+    tag: ""
     pullPolicy: IfNotPresent
 
   imagePullSecrets:

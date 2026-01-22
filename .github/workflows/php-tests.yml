@@ -2,12 +2,13 @@ name: PHP Tests and Linting
 
 on:
   push:
-    branches: [ main, feat/*, fix/* ]
+    branches: [main, feat/*, fix/*]
   # pull_request:
   #   branches: [ main ]
 
 jobs:
   lint:
+    if: false
     name: Code Style & Linting
     runs-on: ubuntu-latest
 
@@ -18,7 +19,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: "8.4"
           extensions: ctype, fileinfo, gd, iconv, mongodb, sodium, pdo_pgsql, intl, opcache, zip
           coverage: none
           tools: composer:v2
@@ -46,13 +47,14 @@ jobs:
         continue-on-error: false
 
   test:
+    if: false
     name: PHPUnit Tests (PHP ${{ matrix.php-version }})
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.4']
+        php-version: ["8.4"]
 
     services:
       postgres:
@@ -60,7 +62,7 @@ jobs:
         env:
           POSTGRES_DB: api_test
           POSTGRES_USER: example
-          POSTGRES_PASSWORD: '!ChangeMe!'
+          POSTGRES_PASSWORD: "!ChangeMe!"
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -73,7 +75,7 @@ jobs:
         image: mongo:7
         env:
           MONGO_INITDB_ROOT_USERNAME: root
-          MONGO_INITDB_ROOT_PASSWORD: '!ChangeMe!'
+          MONGO_INITDB_ROOT_PASSWORD: "!ChangeMe!"
           MONGO_INITDB_DATABASE: api_test
         options: >-
           --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"

@@ -1,37 +1,145 @@
-.PHONY: up deploy down shell migrate migrate-orm migrate-odm fixtures
+# Makefile para automatizar setup do projeto PHP com Docker
 
-# Get the pod name for the PHP application
-PHP_POD = $(shell kubectl get pods -l app.kubernetes.io/name=pvr,app.kubernetes.io/part-of=pvr -o jsonpath="{.items[0].metadata.name}")
+include .env
 
+.PHONY: up install_dependencies generate_proxies migrate_database load_fixtures install_frontend compile_frontend generate_keys
+
+# Função para bloquear comandos em produção
+guard-not-prod:
+ifeq ($(APP_ENV),prod)
+	$(error Este comando não pode ser executado em produção)
+endif
+
+# Inicia os serviços Docker em modo detached
 up:
-	skaffold dev --port-forward
+	docker compose up -d
 
-deploy:
-	skaffold run
+# Para os serviços Docker
+stop:
+	docker compose stop
 
+# Para e remove os serviços Docker
 down:
-	skaffold delete
+	docker compose --profile '*' down
 
-shell:
-	kubectl exec -it $(PHP_POD) -- bash
+# Para e remove os serviços Docker
+container_php:
+	docker compose exec php bash
 
-migrate: migrate-orm migrate-odm
+# Instala dependências dentro do contêiner PHP
+install_dependencies:
+	docker compose exec -T php bash -c "composer install --ignore-platform-req=ext-mongodb"
 
-migrate-orm:
-	kubectl exec -it $(PHP_POD) -- php bin/console doctrine:migrations:migrate -n
+# Gera os arquivos de Proxies do MongoDB
+generate_proxies:
+	docker compose exec -T php bash -c "php bin/console doctrine:mongodb:generate:proxies"
 
-migrate-odm:
-	kubectl exec -it $(PHP_POD) -- php bin/console app:mongo:migrations:execute
+# Executa as migrations no banco relacional e no não relacional
+migrate_database: migrate_orm migrate_odm
 
-fixtures:
-	kubectl exec -it $(PHP_POD) -- php bin/console doctrine:fixtures:load -n --purge-exclusions=city --purge-exclusions=state
+# Executa as migrations no banco de dados relacional
+migrate_orm:
+	docker compose exec -T php bash -c "php bin/console doctrine:migrations:migrate -n"
 
+# Executa as migrations no banco de dados não relacional
+migrate_odm:
+	docker compose exec -T php bash -c "php bin/console app:mongo:migrations:execute"
+
+# Executa as fixtures de dados
+load_fixtures: guard-not-prod
+	docker compose exec -T php bash -c "php bin/console doctrine:fixtures:load -n --purge-exclusions=city --purge-exclusions=state"
+
+# Instala dependências do frontend
+install_frontend:
+	docker compose exec -T php bash -c "php bin/console importmap:install"
+
+# Compila os arquivos do frontend
+compile_frontend: reset
+	docker compose exec -T php bash -c "php bin/console asset-map:compile"
+
+# Executa as fixtures de dados e os testes de front-end
+tests_front: guard-not-prod
+	make demo-regmel
+	sed -i 's/default_locale: regmel/default_locale: pt-br/' config/packages/translation.yaml
+	sed -i 's/municipios/organizacoes/' config/routes/web.yaml
+	sed -i 's/municipios/organizacoes/' config/routes/admin.yaml
+	docker compose up cypress
+	sed -i 's/default_locale: pt-br/default_locale: regmel/' config/packages/translation.yaml
+	sed -i 's/organizacoes/municipios/' config/routes/web.yaml
+	sed -i 's/organizacoes/municipios/' config/routes/admin.yaml
+
+# Executa as fixtures de dados e os testes de back-end
+tests_back:	guard-not-prod
+	if [ "$(fixtures)" != "no" ]; then \
+		make load_fixtures;\
+	fi;
+	docker compose exec -T php bash -c "php bin/paratest $(filename) --no-coverage"
+
+# Executa as fixtures de dados e os testes de back-end
+tests_back_coverage: guard-not-prod
+	if [ "$(fixtures)" != "no" ]; then \
+		make load_fixtures;\
+	fi;
+	docker compose exec -T php bash -c "php -d memory_limit=512M bin/paratest $(filename)"
+
+# Limpa o cache do projeto
 reset:
-	kubectl exec -it $(PHP_POD) -- php bin/console cache:clear
+	docker compose exec -T php bash -c "php bin/console cache:clear"
 
+# Limpa a cache e o banco
+reset-deep:	guard-not-prod
+	rm -rf var/storage
+	rm -rf assets/uploads
+	rm -rf assets/vendor
+	rm -rf public/assets
+	rm -rf var/cache
+	rm -rf var/log
+	docker compose exec -T php bash -c "php bin/console cache:clear"
+	docker compose exec -T php bash -c "php bin/console doctrine:mongodb:schema:drop --search-index"
+	docker compose exec -T php bash -c "php bin/console doctrine:mongodb:schema:drop --collection"
+	docker compose exec -T php bash -c "php bin/console doctrine:mongodb:schema:drop --db"
+	docker compose exec -T php bash -c "php bin/console doctrine:mongodb:schema:create"
+	docker compose exec -T php bash -c "php bin/console d:d:d -f"
+	docker compose exec -T php bash -c "php bin/console d:d:c"
+	make migrate_database
+	docker compose exec -T php bash -c "php bin/console importmap:install"
+	docker compose exec -T php bash -c "php bin/console asset-map:compile"
+
+# Executa o php cs fixer
 style:
-	kubectl exec -it $(PHP_POD) -- php bin/console app:code-style
-	kubectl exec -it $(PHP_POD) -- php vendor/bin/phpcs
+	docker compose exec -T -e PHP_CS_FIXER_IGNORE_ENV=1 php bash -c "php bin/console app:code-style"
+	docker compose exec -T php bash -c "php vendor/bin/phpcs --config-set installed_paths src/Standards"
+	docker compose exec -T php bash -c "php vendor/bin/phpcs"
 
 create-admin-user:
-	kubectl exec -it $(PHP_POD) -- php bin/console app:create-admin-user
+	docker compose exec -T php bash -c "php bin/console app:create-admin-user"
+
+demo-regmel: guard-not-prod
+	@echo "\n"
+	@echo ">>> Limpando dados residuais na velocidade da luz ✨"
+	@make reset-deep > /dev/null 2>&1
+
+	@echo "\n"
+	@echo ">>> Preparando nave para decolar 🚀"
+	@docker compose exec -T php bash -c "php bin/console app:create-admin-user"
+	@docker compose exec -T php bash -c "php bin/console app:demo-regmel"
+	@echo "\n >>> Tudo pronto, agora é ser feliz dançando 💃 \n"
+
+
+# Gera as chaves de autenticação JWT
+generate_keys:
+	docker compose exec -T php bash -c "php bin/console lexik:jwt:generate-keypair --overwrite -n"
+
+# Copiar arquivos de configurações locais dos pacotes utilizados
+copy_dist:
+	cp phpcs.xml.dist phpcs.xml
+	cp phpunit.xml.dist phpunit.xml
+
+permissions:
+	mkdir -p var/
+	mkdir -p vendor/
+	mkdir -p config/jwt
+	chmod -R 775 assets/ config/jwt var/ vendor/ public/
+
+# Comando para rodar todos os passos juntos
+setup: guard-not-prod up install_dependencies copy_dist reset-deep generate_proxies migrate_database load_fixtures install_frontend compile_frontend generate_keys

@@ -4,25 +4,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Aurora is a Symfony 7 application (formerly MCM/Mapas Culturais) that manages cultural spaces, events, opportunities, and agents. The project uses a layered, API-first architecture with both web and API controllers serving data to browsers and HTTP clients.
+Periferia Viva Reformas (PVR) is a Symfony 7 application (formerly known as Aurora) that manages beneficiary registration, renovation projects, construction monitoring, and administrative processes for the Periferia Viva Reformas program. The project uses a layered, API-first architecture with both web and API controllers serving data to browsers and HTTP clients.
 
 **Tech Stack:**
 - PHP 8.4 with Symfony 7.2
 - PostgreSQL 16 (relational data)
 - MongoDB 7 (audit logs/timelines via Doctrine ODM)
 - FrankenPHP (production runtime)
-- Bootstrap 5.3 (forked as Aurora UI)
-- Kubernetes deployment with Skaffold & Helm
+- Bootstrap 5.3 (customized for PVR)
+- Multi-environment deployment: Docker Compose (local), Kubernetes (staging/production)
 
 ## Quick Reference
 
-**First-time setup:**
+**First-time setup with Docker Compose (local):**
+```bash
+# Copy environment file
+cp .env.example .env
+
+# Start Docker Compose services and run complete setup
+make setup
+
+# This runs: up, install dependencies, migrations, fixtures, frontend compile, JWT keys
+```
+
+**First-time setup with Kubernetes:**
 ```bash
 # Copy environment file
 cp .env.example .env
 
 # Start Kubernetes cluster with Skaffold
-make up
+make up              # Requires Makefile configured for Kubernetes
 
 # In another terminal, access the PHP pod
 make shell
@@ -34,18 +45,31 @@ php bin/console doctrine:fixtures:load -n
 php bin/console lexik:jwt:generate-keypair
 ```
 
-**Daily development:**
+**Daily development with Docker Compose (local):**
 ```bash
-make up              # Start dev environment
-make shell           # Access PHP pod
+make up              # Start Docker Compose services
+make shell           # Access PHP container (docker compose exec php bash)
 make migrate         # Run migrations
 make tests_back      # Run tests
 make style           # Check code style
 make down            # Stop environment
 ```
 
-**Running commands in pod:**
-All `php bin/console` commands must run inside the Kubernetes pod. Use `make shell` to access it, or prefix commands with the Makefile (e.g., `make migrate`).
+**Daily development with Kubernetes (staging/production):**
+```bash
+make up              # Start dev environment with Skaffold (skaffold dev --port-forward)
+make shell           # Access PHP pod (kubectl exec)
+make migrate         # Run migrations in pod
+make tests_back      # Run tests in container
+make style           # Check code style
+make down            # Stop environment (skaffold delete)
+```
+
+**Note**: The Makefile commands (`make up`, `make down`, etc.) are configured for Docker Compose local development. For Kubernetes environments, use Skaffold commands directly or ensure the Makefile is properly configured for Kubernetes.
+
+**Running commands:**
+- **Docker Compose**: All `php bin/console` commands run inside the PHP container. Use `make shell` to access it, or prefix commands with the Makefile (e.g., `make migrate`).
+- **Kubernetes**: Commands run inside the Kubernetes pod. The Makefile adapts to the current environment.
 
 ## Continuous Integration
 
@@ -93,9 +117,40 @@ Runs on: Push to `main`, `feat/k8s-*` branches and all PRs to `main`
 
 ## Development Environment
 
+The project supports two development approaches:
+
+1. **Docker Compose (Local)**: Simplest setup for local development
+2. **Kubernetes with Skaffold & Helm**: For staging/production deployments and Kubernetes-based development
+
+### Docker Compose (Local Development)
+
+For local development, the project uses Docker Compose with these services:
+- `php`: PHP 8.4 with Symfony and required extensions
+- `nginx`: Web server
+- `postgres`: PostgreSQL 16 database
+- `mongo`: MongoDB 7 database
+- `cypress`: Frontend testing (optional)
+- `mailer`: Mailpit for email testing
+
+**Quick commands:**
+```bash
+make up              # Start all services
+make shell           # Access PHP container
+make migrate         # Run database migrations
+make tests_back      # Run backend tests
+make style           # Check code style
+make down            # Stop all services
+```
+
+**Full setup:**
+```bash
+cp .env.example .env
+make setup           # Runs: up, install dependencies, migrations, fixtures, frontend compile
+```
+
 ### Kubernetes with Skaffold & Helm
 
-The project uses **Skaffold** for local development and **Helm** for Kubernetes deployment. All infrastructure is managed through Kubernetes.
+The project uses **Skaffold** for Kubernetes development and **Helm** for Kubernetes deployment. All staging and production infrastructure is managed through Kubernetes.
 
 #### Skaffold Configuration
 
@@ -107,14 +162,16 @@ Skaffold (`skaffold.yaml`) handles:
 
 ```bash
 # Start dev environment (builds image, deploys to k8s, port-forwards)
-make up            # equivalent to: skaffold dev --port-forward
+skaffold dev --port-forward
 
 # Deploy to cluster without watching
-make deploy        # equivalent to: skaffold run
+skaffold run
 
 # Stop and cleanup resources
-make down          # equivalent to: skaffold delete
+skaffold delete
 ```
+
+**Note**: The Makefile commands (`make up`, `make down`, etc.) are configured for Docker Compose local development. For Kubernetes development, use Skaffold commands directly.
 
 #### Helm Chart Structure
 
@@ -136,32 +193,37 @@ The Helm chart is located in `helm/pvr/` and includes:
 
 **Values Files**:
 - `helm/pvr/values.yaml` - Default production values
-- `skaffold-values.yaml` - Development overrides (e.g., `service.type: NodePort`)
+- `skaffold-values.yaml` - Development overrides for local Kubernetes (e.g., `service.type: NodePort`)
+- `values-staging.yaml` - Staging environment overrides (AWS EKS)
+- `values-production.yaml` - Production environment overrides (Rancher Kubernetes)
 
 #### Working with Kubernetes
 
-The Makefile provides shortcuts for interacting with the Kubernetes cluster:
+The Makefile provides shortcuts for interacting with the Kubernetes cluster when properly configured. For Kubernetes environments, you can use these commands directly:
 
 ```bash
+# Get PHP pod name
+PHP_POD=$(kubectl get pods -l app.kubernetes.io/name=pvr,app.kubernetes.io/part-of=pvr -o jsonpath="{.items[0].metadata.name}")
+
 # Access PHP pod shell
-make shell         # Runs: kubectl exec -it <PHP_POD> -- bash
+kubectl exec -it $PHP_POD -- bash
 
 # Run migrations
-make migrate       # Both ORM and ODM
-make migrate-orm   # PostgreSQL migrations
-make migrate-odm   # MongoDB migrations
+kubectl exec -it $PHP_POD -- php bin/console doctrine:migrations:migrate -n
+kubectl exec -it $PHP_POD -- php bin/console app:mongo:migrations:execute
 
 # Load test data
-make fixtures
+kubectl exec -it $PHP_POD -- php bin/console doctrine:fixtures:load -n --purge-exclusions=city --purge-exclusions=state
 
 # Clear application cache
-make reset
+kubectl exec -it $PHP_POD -- php bin/console cache:clear
 
 # Check code style
-make style
+kubectl exec -it $PHP_POD -- php bin/console app:code-style
+kubectl exec -it $PHP_POD -- php vendor/bin/phpcs
 
 # Create admin user
-make create-admin-user
+kubectl exec -it $PHP_POD -- php bin/console app:create-admin-user
 ```
 
 **Note**: The Makefile automatically discovers the PHP pod using:
@@ -184,7 +246,11 @@ php.image.tag: "{{.IMAGE_TAG_pvr_php}}@{{.IMAGE_DIGEST_pvr_php}}"
 
 #### Customizing Helm Values
 
-To customize the deployment, modify `skaffold-values.yaml` (for dev) or `helm/pvr/values.yaml` (for defaults):
+To customize the deployment, modify the appropriate values file for your environment:
+- `skaffold-values.yaml` - Local Kubernetes development
+- `values-staging.yaml` - Staging environment (AWS EKS)
+- `values-production.yaml` - Production environment (Rancher Kubernetes)
+- `helm/pvr/values.yaml` - Default production values
 
 ```yaml
 # Example: Change service type, adjust database credentials, etc.
@@ -217,10 +283,11 @@ php:
 #### Accessing the Application
 
 When using `make up` or `skaffold dev --port-forward`:
-- The application will be accessible at `http://localhost:8080` (if port-forwarding is configured)
+- **Docker Compose**: The application will be accessible at `http://localhost:8080` (configured in docker-compose.yml)
+- **Kubernetes**: The application will be accessible at `http://localhost:8080` (if port-forwarding is configured)
 - Skaffold automatically handles port forwarding based on service configuration
 
-To manually port-forward:
+To manually port-forward in Kubernetes:
 ```bash
 kubectl port-forward svc/pvr 8080:80
 ```
@@ -233,8 +300,10 @@ If you want to work with Helm directly without Skaffold:
 # Install dependencies
 helm dependency update helm/pvr
 
-# Install/upgrade the release
-helm upgrade --install pvr helm/pvr -f skaffold-values.yaml
+# Install/upgrade the release (use appropriate values file)
+helm upgrade --install pvr helm/pvr -f helm/pvr/values.yaml -f skaffold-values.yaml  # for local dev
+# helm upgrade --install pvr helm/pvr -f helm/pvr/values.yaml -f values-staging.yaml   # for staging
+# helm upgrade --install pvr helm/pvr -f helm/pvr/values.yaml -f values-production.yaml # for production
 
 # Uninstall
 helm uninstall pvr
@@ -275,7 +344,7 @@ Routes are organized by controller type in `config/routes/`:
 Each controller typically has its own YAML route file.
 
 ### Database Strategy
-- **PostgreSQL**: Main application data (users, agents, spaces, events, opportunities, etc.)
+- **PostgreSQL**: Main application data (users, agents, spaces, initiatives, opportunities, etc.)
 - **MongoDB**: Audit timelines and logs for all entities (high-volume, time-series data)
 
 ## Common Commands
@@ -409,7 +478,7 @@ Uses Symfony's native event system (EventListeners and EventSubscribers). See Sy
 - **Security**: Be mindful of XSS, CSRF, SQL injection - Symfony provides built-in protections
 - The project was originally called "Aurora" - some references to this name remain in documentation
 - Test users are defined in fixtures (see README.md for credentials)
-- **Kubernetes-first**: All development and production deployments use Kubernetes/Helm/Skaffold
+- **Kubernetes-first**: All staging and production deployments use Kubernetes/Helm/Skaffold. Local development supports both Docker Compose and Kubernetes.
 
 ## Troubleshooting
 

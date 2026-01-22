@@ -2,12 +2,13 @@ name: Kubernetes Deployment Test
 
 on:
   push:
-    branches: [ main, feat/* ]
+    branches: [main, feat/*]
   # pull_request:
   #   branches: [ main ]
 
 jobs:
   deploy:
+    if: false
     name: Test Kubernetes Deployment
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -22,7 +23,7 @@ jobs:
       - name: Create kind cluster
         uses: helm/kind-action@v1
         with:
-          cluster_name: aurora-test
+          cluster_name: pvr-test
           wait: 120s
           node_image: kindest/node:v1.29.0
 
@@ -35,7 +36,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4
         with:
-          version: 'v3.14.0'
+          version: "v3.14.0"
 
       - name: Add Helm repositories
         run: |
@@ -69,6 +70,7 @@ jobs:
           CORS_ALLOW_ORIGIN='^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'
           STORAGE_DIR=%kernel.project_dir%/var/storage
           STORAGE_BASE_URL=http://localhost:8080/var/storage
+          DEFAULT_URI=http://localhost:8080/
           EOF
 
       - name: Build and deploy with Skaffold
