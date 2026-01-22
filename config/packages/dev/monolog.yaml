@@ -1,0 +1,29 @@
+monolog:
+    handlers:
+        # Send debug..notice to stderr (avoid contaminating HTTP response)
+        stdout_filter:
+            type: filter
+            min_level: debug
+            max_level: notice
+            handler: stdout
+        stdout:
+            type: stream
+            path: 'php://stdout'
+            level: debug
+            bubble: false
+
+        # Send warning+ to stderr
+        stderr:
+            type: stream
+            path: 'php://stdout'
+            level: warning
+            bubble: false
+
+        # Disable file-based handlers defined in base config to avoid duplicates
+        main: null
+
+        # Keep console handler for nice CLI output
+        console:
+            type: console
+            process_psr_3_messages: false
+            channels: ["!event", "!doctrine", "!console"]

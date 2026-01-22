@@ -1,185 +1,370 @@
 [![codecov](https://codecov.io/gh/secultce/aurora/graph/badge.svg?token=CG2AH922DO)](https://codecov.io/gh/secultce/aurora)
+[![Docker Build and Push](https://github.com/secultce/aurora/actions/workflows/docker-build-push.yml/badge.svg)](https://github.com/secultce/aurora/actions/workflows/docker-build-push.yml)
+[![Kubernetes Deployment Test](https://github.com/secultce/aurora/actions/workflows/k8s-deploy.yml/badge.svg)](https://github.com/secultce/aurora/actions/workflows/k8s-deploy.yml)
+[![PHP Tests](https://github.com/secultce/aurora/actions/workflows/php-tests.yml/badge.svg)](https://github.com/secultce/aurora/actions/workflows/php-tests.yml)
 
-# Estrutura inicial Aurora
+# Periferia Viva Reformas (PVR)
 
-Este repositório fornece uma configuração base de aplicação Symfony com Docker, Nginx e PostgreSQL para substituir o projeto Aurora utilizado no Ceará.
+> Plataforma de Verificação de Requerimentos para o programa Periferia Viva Reformas
 
-A configuração já está dockerizada, então você só precisa ter o Docker Compose rodando na sua máquina para que tudo funcione corretamente.
+> Sistema monolítico Symfony com arquitetura em camadas e abordagem API First. Gerencia cadastro de beneficiários, projetos de reforma, acompanhamento de obras e processos administrativos com suporte a PostgreSQL (dados relacionais) e MongoDB (timelines/auditoria).
 
-## Tecnologias
+### Ajustes e melhorias
 
-- **PHP** 8.4
-- **PostgreSQL** 16
-- **MongoDB** 7
-- **Symfony** 7
-- **Aurora User Interface** 5.3 
+O projeto ainda está em desenvolvimento e as próximas atualizações serão voltadas para as seguintes tarefas:
 
-## Links Rápidos
-- [Acesse aqui para entender melhor nossa Stack](./help/STACK.md)
-- [Acesse aqui para entender nossas decisões de backend](./help/TECHNICAL-DECISIONS.md)
+- [x] Suporte a desenvolvimento local com Docker Compose
+- [x] Implementação de CI/CD com GitHub Actions
+- [x] Deploy em Kubernetes com Skaffold e Helm
+- [x] Ambiente de staging na AWS EKS
+- [ ] Ambiente de produção no cluster Rancher do Ministério
+- [ ] Monitoramento e observabilidade
+
+## 💻 Pré-requisitos
+
+Antes de começar, verifique se você atendeu aos seguintes requisitos:
+
+- Docker e Docker Compose instalados (para desenvolvimento local)
+- kubectl e Helm (para ambientes Kubernetes)
+- Skaffold (para desenvolvimento com Kubernetes)
+- Acesso ao cluster Kubernetes (para staging/produção)
+- Credenciais AWS configuradas (para staging)
+- Acesso ao repositório ECR da AWS
+
+## 🚀 Instalação e Configuração
+
+### Desenvolvimento Local (Docker Compose)
+
+Para ambiente de desenvolvimento local com Docker Compose:
+
+```bash
+# Clone o repositório
+git clone git@github.com:periferias/pvr.git
+cd pvr
+
+# Copie o arquivo de ambiente
+cp .env.example .env  # Configure as variáveis de ambiente conforme necessário
+
+# Inicie os containers
+make up
+
+# Execute o setup completo (dependências, migrações, fixtures)
+make setup
+```
+
+A aplicação estará disponível em `http://localhost:8080`.
+
+#### Comandos úteis para desenvolvimento local
+
+```bash
+make shell              # Acessa o container PHP
+make migrate            # Executa migrações (ORM + ODM)
+make tests_back         # Executa testes de backend
+make tests_front        # Executa testes de frontend (Cypress)
+make style              # Verifica e corrige estilo de código
+make reset              # Limpa cache da aplicação
+make demo-regmel        # Carrega dados de demonstração REGMEL
+```
+
+### Desenvolvimento com Kubernetes Local (Opcional)
+
+Para desenvolvimento com Kubernetes local (Kind/Minikube), utilize Skaffold com o perfil de desenvolvimento:
+
+```bash
+# Instale Kind e Skaffold
+brew install kind skaffold  # macOS
+# ou use o script do CI
+
+# Crie um cluster Kind
+kind create cluster --name pvr
+
+# Configure o contexto kubectl
+kubectl cluster-info --context kind-pvr
+
+# Execute o deploy com Skaffold (watch mode)
+skaffold dev --port-forward
+```
+
+Isso criará um cluster local, construirá a imagem Docker e implantará a aplicação com hot-reload.
+
+### Staging (AWS EKS)
+
+O ambiente de staging utiliza um cluster Kubernetes na AWS com os seguintes componentes:
+
+- **Amazon EKS** (Kubernetes)
+- **ECR** (Container Registry)
+- **RDS PostgreSQL** (opcional)
+- **DocumentDB MongoDB** (opcional)
+
+#### Pipeline de CI/CD
+
+1. **Build de Imagem Docker**: O workflow `docker-build-push.yml` constrói a imagem Docker (target: `frankenphp_prod`) e a publica no ECR com tags seguindo convenções do FluxCD.
+2. **Teste de Deploy Kubernetes**: O workflow `k8s-deploy.yml` cria um cluster Kind local, executa deploy com Skaffold/Helm e valida a aplicação.
+3. **Testes PHP**: O workflow `php-tests.yml` executa testes unitários e funcionais com cobertura de código.
+
+#### Deploy manual para staging
+
+```bash
+# Configure credenciais AWS e contexto kubectl
+aws configure
+aws eks update-kubeconfig --name staging-cluster --region us-east-1
+
+# Atualize dependências do Helm
+helm dependency update helm/pvr
+
+# Deploy com Skaffold
+skaffold run --tail=false --wait-for-connection=true
+
+# Ou deploy direto com Helm (usando valores padrão + overrides)
+helm upgrade --install pvr helm/pvr -f helm/pvr/values.yaml -f values-staging.yaml
+```
+
+#### Configuração para staging
+
+Crie um arquivo `values-staging.yaml` com overrides específicos para o ambiente de staging:
+
+```yaml
+php:
+  appEnv: staging
+  appDebug: "1"
+  image:
+    repository: 298680963177.dkr.ecr.us-east-1.amazonaws.com/melhorias-habitacionais
+    tag: "latest"  # ou use tag específica do ECR
+
+service:
+  type: LoadBalancer
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+
+# Configurações de banco de dados externos (opcional)
+postgres:
+  enabled: false
+  url: "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}"
+
+mongodb:
+  enabled: false
+  url: "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27017/${MONGO_DB}"
+```
+
+### Produção (Cluster Rancher Kubernetes - Ministério)
+
+O ambiente de produção utiliza um cluster Rancher Kubernetes hospedado na infraestrutura do Ministério.
+
+#### Diferenças em relação ao staging
+
+- **Segurança reforçada**: Network policies, pod security policies, secrets gerenciados externamente
+- **Alta disponibilidade**: Múltiplas réplicas, auto-scaling horizontal
+- **Monitoramento**: Integração com Prometheus/Grafana do Ministério
+- **Backup**: Backup automatizado de bancos de dados
+- **DNS interno**: Utilização do DNS interno do Ministério
+
+#### Processo de deploy para produção
+
+```bash
+# Acesse o cluster via Rancher
+export KUBECONFIG=~/.kube/config-production
+
+# Valide o chart Helm
+helm lint helm/pvr
+
+# Dry-run do deploy
+helm upgrade --install pvr helm/pvr -f helm/pvr/values.yaml -f values-production.yaml --dry-run
+
+# Deploy real (requer aprovação)
+helm upgrade --install pvr helm/pvr -f helm/pvr/values.yaml -f values-production.yaml
+```
+
+#### Configuração para produção
+
+Crie um arquivo `values-production.yaml` com overrides específicos para o ambiente de produção:
+
+```yaml
+php:
+  appEnv: prod
+  appDebug: "0"
+  image:
+    repository: 298680963177.dkr.ecr.us-east-1.amazonaws.com/melhorias-habitacionais
+    tag: "latest"  # Em produção, use tags versionadas ou SHAs específicos
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+replicaCount: 3
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: app.cidades.gov.br
+      paths: ["/"]
+  tls:
+    - hosts:
+        - app.cidades.gov.br
+      secretName: app-tls
+
+# Use bancos de dados externos gerenciados
+postgres:
+  enabled: false
+  url: "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}"
+
+mongodb:
+  enabled: false
+  url: "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27017/${MONGO_DB}"
+```
+
+## ☕ Uso da Aplicação
+
+### Acesso via Web
+
+- **Local**: `http://localhost:8080`
+- **Staging**: `https://staging.app.cidades.gov.br`
+- **Produção**: `https://app.cidades.gov.br`
+
+### API Endpoints
+
+A API segue convenções RESTful e está documentada via OpenAPI. Para acessar a documentação:
+
+```bash
+# Localmente após subir a aplicação
+open http://localhost:8080/api/docs
+```
+
+### Usuários de teste (ambiente local)
+
+<table>
+<tr><th>Email</th><th>Senha</th></tr>
+<tr><td>mariadebetania@example.com</td><td>Aurora@2024</td></tr>
+<tr><td>saracamilo@example.com</td><td>Aurora@2024</td></tr>
+<tr><td>paulodetarso@example.com</td><td>Aurora@2024</td></tr>
+<tr><td>admin@regmel.com</td><td>Aurora@2024</td></tr>
+</table>
+
+## 🔧 Arquitetura Técnica
+
+### Stack Tecnológica
+
+- **PHP 8.4** com Symfony 7.2
+- **PostgreSQL 16** (dados relacionais)
+- **MongoDB 7** (timelines/auditoria via Doctrine ODM)
+- **FrankenPHP** (runtime PHP production)
+- **Bootstrap 5.3** (customizado para PVR)
+- **Kubernetes** (orquestração de containers)
+- **Helm** (gerenciamento de pacotes Kubernetes)
+- **Skaffold** (desenvolvimento com Kubernetes)
+
+### Diagrama de Arquitetura
+
+```
+Browser/HttpClient
+       ↓
+    Routes (config/routes/)
+       ↓
+   Controller (Web ou Api)
+       ↓
+    Service
+       ↓
+   Validator → (if invalid) → Exceptions/Violations
+       ↓
+   Repository
+       ↓
+   Database (PostgreSQL + MongoDB)
+```
+
+### Estrutura de Diretórios
+
+```
+src/
+├── Controller/     # Controladores Web e API
+├── Service/        # Lógica de negócio
+├── Repository/     # Camada de acesso a dados
+├── Entity/         # Entidades Doctrine ORM
+├── Document/       # Documentos Doctrine ODM
+├── DTO/           # Data Transfer Objects
+├── Enum/          # Enums da aplicação
+└── ...
+
+helm/pvr/          # Chart Helm para Kubernetes
+├── templates/     # Templates Kubernetes
+├── Chart.yaml    # Metadados do chart
+└── values.yaml   # Valores padrão
+```
+
+## 📫 Contribuindo para o Projeto
+
+Para contribuir com o projeto, siga estas etapas:
+
+1. Bifurque este repositório.
+2. Crie um branch: `git checkout -b <nome_branch>`.
+3. Faça suas alterações e confirme-as: `git commit -m '<mensagem_commit>'`
+4. Envie para o branch original: `git push origin pvr/<local>`
+5. Crie a solicitação de pull.
+
+Como alternativa, consulte a documentação do GitHub em [como criar uma solicitação pull](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
+
+### Convenções de Commit
+
+- Use o padrão Conventional Commits
+- Relacione issues com `#<número>` no corpo do commit
+- Execute `make style` antes de commitar para garantir padrões de código
+
+## 🤝 Colaboradores
+
+Agradecemos às seguintes pessoas que contribuíram para este projeto:
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/vitfera" title="vitfera">
+        <img src="https://github.com/vitfera.png" width="100px;" alt="Foto do vitfera no GitHub"/><br>
+        <sub>
+          <b>vitfera</b>
+        </sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/lpirola" title="lpirola">
+        <img src="https://github.com/lpirola.png" width="100px;" alt="Foto do lpirola no GitHub"/><br>
+        <sub>
+          <b>lpirola</b>
+        </sub>
+      </a>
+    </td>
+  </tr>
+</table>
+
+## 😄 Seja um dos contribuidores
+
+Quer fazer parte desse projeto? Clique [AQUI](CONTRIBUTING.md) e leia como contribuir.
+
+## 📝 Licença
+
+Esse projeto está sob licença. Veja o arquivo [LICENÇA](LICENSE.md) para mais detalhes.
+
+## 🔗 Links Rápidos
+
+- [Stack Tecnológica](./help/STACK.md)
+- [Decisões Técnicas de Backend](./help/TECHNICAL-DECISIONS.md)
 - [Esquema do Banco de Dados](./help/DIAGRAM.md)
 - [Como criar issues](./help/CREATE-ISSUES.md)
 - [Como abrir Pull Requests](./help/CREATE-PULL-REQUESTS.md)
-- [Nosso Fluxo de Desenvolvimento](./help/DEV-FLOW.md)
+- [Fluxo de Desenvolvimento](./help/DEV-FLOW.md)
 - [Enums](./help/ENUM.md)
 - [Arquitetura da Aplicação](./help/README.md)
 - [Comandos do terminal](./help/COMMANDS.md)
 - [Deploy](./help/DEPLOY.md)
-
-## Instalação 
-<details>
-<summary>Passo a passo</summary>
-
-### Clonar o Repositório
-
-Primeiro, clone o repositório usando SSH ou HTTPS:
-
-```bash
-git clone git@github.com:secultce/aurora.git
-```
-ou
-```bash
-git clone https://github.com/secultce/aurora.git
-```
-
-### Navegar para o Diretório do Projeto
-Mude para o diretório do projeto:
-
-```bash
-cd aurora
-```
-
----
->
-> O jeito mais fácil é rodar o comando `make setup`, isso já vai executar todos os passos necessários e deixar a aplicação rodando em <http://localhost:8080>
->
-```bash
-cp .env.example .env
-make setup
-```
-Mas se preferir, pode fazer o passo a passo abaixo, mas o compando de copiar o `.env` é obrigatório
-
----
-
-### Iniciar os Contêineres Docker
-Execute o Docker Compose para iniciar os contêineres:
-```bash
-docker compose up -d
-```
-
-### Instalar Dependências
-Para instalar as dependências do projeto, entre no contêiner PHP:
-```bash
-docker compose exec -it php bash
-```
-**Agora é necessário executar alguns passos, nessa ordem, dentro do contêiner:**
-
-1 - Instalação das dependências do PHP:
-```bash
-composer install
-```
-
-2 - Gerar os arquivos de Proxies do MongoDB:
-```bash
-php bin/console doctrine:mongodb:generate:proxie
-```
-
-3 - Executar as migrations do banco de dados
-```bash
-php bin/console doctrine:migrations:migrate -n
-```
-
-4 - Executar as fixtures (dados de teste) do banco de dados
-```bash
-php bin/console doctrine:fixtures:load -n
-```
-
-5 - Instalação das dependências do frontend:
-```bash
-php bin/console importmap:install
-```
-
-6 - Compilar os arquivos do frontend
-```bash
-php bin/console asset-map:compile
-```
-
-7 - Gerar as chaves de autenticação
-```bash
-php bin/console lexik:jwt:generate-keypair
-```
-
-### Uso
-
-Depois que tudo estiver configurado e as dependências instaladas, você pode acessar a sua aplicação Symfony em [http://localhost:8080](http://localhost:8080).
-
-Há também uma rota de teste para a API. Você pode acessá-la em [http://localhost:8080/api/example](http://localhost:8080/api/example). Esta rota está definida no controller `ExampleController` e retorna a mensagem de sucesso.
-
-#### Usuário padrão
-Há alguns usuários que você pode utilizar para fins de teste:
-
-<table>
-<tr>
-<th>email</th>
-<th>senha</th>
-</tr>
-<tr>
-<td>mariadebetania@example.com</td>
-<td>Aurora@2024</td>
-</tr>
-<tr>
-<td>saracamilo@example.com</td>
-<td>Aurora@2024</td>
-</tr>
-<tr>
-<td>paulodetarso@example.com</td>
-<td>Aurora@2024</td>
-</tr>
-</table>
-
-</details>
-
-
-## Desenvolvimento
-<details>
-<summary>Arquitetura e Decisões técnicas</summary>
-
-Estamos utilizando o Symfony e o seu ecossistema de bibliotecas, porém a arquitetura é baseada em camadas e trata-se de um monolítico com a metodologia API First
-
-```mermaid
-flowchart TD
-    style E fill:#e06666, color:white
-    style S fill:#3d85c6, color:white
-
-    HC((HttpClient)) --JsonRequest<--> R[Routes]
-    B((Browser)) --GET/POST--> Routes
-    R --> CA[[ControllerApi]]
-    Routes --> CW[[ControllerWeb]]
-    CA <--> S([Service])
-    CW <--> S
-    S <--> V{Validator}
-    V <--is invalid--> E{{Exceptions/Violations}}
-    V <--is valid--> RP[Repository]
-    RP <==ORM/Doctrine==> D[(Database)]
-    CA --JsonResponse--> HC
-    CW --HTML/CSS/JS--> B
-```
-
-- Para saber mais sobre as nossas decisões técnicas [acesse aqui](./help/TECHNICAL-DECISIONS.md)
-- Para entender o nosso fluxo de desenvolvimento decisões técnicas [clique aqui](./help/DEV-FLOW.md)
-</details>
-
-## Design UI/UX
-<details>
-<summary>Informações importantes</summary>
-
-### Prototipação das telas
-A prototipagem das telas é feita por outro time, do RedeMapas, e se encontra [neste link do Figma](https://www.figma.com/design/HkR1qdfHPn4riffcBBOQwR/Prot%C3%B3tipos-%7C-Prioriza%C3%A7%C3%B5es?node-id=0-1&t=n23kLvhTSbEMELhz-0) 
-
-### Componentes web
-Há um fork do Bootstrap (framework css) com a implementação dos protótipos acima, se encontra [neste repositório](https://github.com/secultce/aurora-ui)
-
-### Decisões de Design
-Alguns protótipos implementados não estão seguindo a risca o design sugerido, por decisões totalmente técnicas que estão [documentadas aqui](https://github.com/secultce/aurora-ui/blob/main/help/design-decisions.md)
-</details>
-
