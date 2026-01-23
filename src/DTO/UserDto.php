@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\DTO;
 
 use App\Validator\Constraints\NotNull;
+use App\Validator\Constraints\RegmelPasswordStrength;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\Image;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\PasswordStrength;
 use Symfony\Component\Validator\Constraints\Sequentially;
 use Symfony\Component\Validator\Constraints\Type;
 use Symfony\Component\Validator\Constraints\Uuid;
@@ -58,8 +58,7 @@ class UserDto
     #[Sequentially([
         new NotBlank(groups: [self::CREATE]),
         new NotNull(groups: [self::UPDATE]),
-        new PasswordStrength(
-            minScore: PasswordStrength::STRENGTH_WEAK,
+        new RegmelPasswordStrength(
             message: 'password.too_weak',
             groups: [self::CREATE, self::UPDATE]
         ),
