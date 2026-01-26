@@ -378,4 +378,27 @@ class ProposalAdminController extends AbstractAdminController
 
         return $this->redirectToRoute('admin_regmel_proposal_list');
     }
+
+    #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/propostas/{id}/remover', name: 'admin_regmel_proposal_remove', methods: ['GET'])]
+    public function remove(Uuid $id): Response
+    {
+        try {
+            $proposal = $this->initiativeService->get($id);
+            $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+
+            // Verificar se a proposta tem status "Anuída" ou "Selecionada"
+            if ($proposalStatus === StatusProposalEnum::ANUIDA->value || $proposalStatus === StatusProposalEnum::SELECIONADA->value) {
+                $this->addFlash('error', $this->translator->trans('view.proposal.error.cannot_delete_approved'));
+                return $this->redirectToRoute('admin_regmel_proposal_list');
+            }
+
+            $this->initiativeService->remove($id);
+            $this->addFlashSuccess($this->translator->trans('view.proposal.message.deleted'));
+        } catch (Exception $exception) {
+            $this->addFlash('error', $exception->getMessage());
+        }
+
+        return $this->redirectToRoute('admin_regmel_proposal_list');
+    }
 }

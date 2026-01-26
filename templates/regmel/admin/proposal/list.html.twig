@@ -7,6 +7,7 @@
 {% block content %}
 <section class="d-flex">
     {% include "_components/side-bar.html.twig" %}
+    {% include "_components/modal-confirm-remove.html.twig" %}
 
     <div class="my-3 container-fluid">
         <div class="row">
@@ -158,6 +159,22 @@
                                                 </a>
                                             </li>
                                             {% endif %}
+                                            {% if is_granted('ROLE_ADMIN') %}
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a
+                                                        href="#"
+                                                        class="dropdown-item text-danger"
+                                                        data-cy="remove-{{ proposal.id }}"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#modalRemoveConfirm"
+                                                        onclick="confirmRemove(this)"
+                                                        data-href="{{ path('admin_regmel_proposal_remove', {id: proposal.id}) }}"
+                                                >
+                                                    Excluir Proposta
+                                                </a>
+                                            </li>
+                                            {% endif %}
                                         </ul>
                                     </div>
                                 </td>
@@ -184,6 +201,7 @@
     <script src="https://unpkg.com/gridjs/plugins/selection/dist/selection.umd.js"></script>
     <script type="module" src="{{ asset('js/regmel/grid-init-proposals.js') }}"></script>
     <script src="{{ asset('js/modal-proposal-details.js') }}"></script>
+    <script src="{{ asset('js/modal-confirm-remove.js') }}"></script>
     <script type="module" src="{{ asset('js/load-filters.js') }}"></script>
 
     <script>
