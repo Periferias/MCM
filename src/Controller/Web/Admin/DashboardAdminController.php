@@ -83,14 +83,8 @@ class DashboardAdminController extends AbstractAdminController
             'type' => OrganizationTypeEnum::EMPRESA->value,
         ]));
         
-        // Propostas são iniciativas com campos específicos (map_file, project_file, etc)
-        $allInitiatives = $isAdminOrManagerOrSupport 
-            ? $this->initiativeService->findBy([], PHP_INT_MAX)
-            : $this->initiativeService->findBy(['createdBy' => $createdBy], PHP_INT_MAX);
-        $totalProposals = count(array_filter($allInitiatives, function($initiative) {
-            $extraFields = $initiative->getExtraFields();
-            return isset($extraFields['map_file']) || isset($extraFields['project_file']);
-        }));
+        // Propostas: usa query direta ao banco sem cache para contar em tempo real
+        $totalProposals = $this->initiativeService->countProposals($createdBy);
 
         $totals = [
             'totalUsers' => $totalUsers,

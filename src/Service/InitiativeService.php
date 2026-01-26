@@ -177,4 +177,9 @@ readonly class InitiativeService extends AbstractEntityService implements Initia
 
         return $this->repository->findByFilters($region, $state, $cityName, $status, $anticipation);
     }
+
+    public function countProposals(?Agent $createdBy = null): int
+    {
+        return $this->repository->countProposals($createdBy);
+    }
 }

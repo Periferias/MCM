@@ -17,6 +17,7 @@ use App\Service\Interface\InscriptionOpportunityServiceInterface;
 use App\Service\Interface\OrganizationServiceInterface;
 use App\Service\Interface\PhaseServiceInterface;
 use App\Service\Interface\StateServiceInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\ExpressionLanguage\Expression;
@@ -42,6 +43,7 @@ class ProposalAdminController extends AbstractAdminController
         private readonly ConfigEnvironment $configEnvironment,
         private readonly PhaseServiceInterface $phaseService,
         private readonly TranslatorInterface $translator,
+        private readonly EntityManagerInterface $entityManager,
         public readonly InscriptionOpportunityServiceInterface $inscriptionOpportunityService,
     ) {
     }
@@ -390,15 +392,19 @@ class ProposalAdminController extends AbstractAdminController
             // Verificar se a proposta tem status "Anuída" ou "Selecionada"
             if ($proposalStatus === StatusProposalEnum::ANUIDA->value || $proposalStatus === StatusProposalEnum::SELECIONADA->value) {
                 $this->addFlash('error', $this->translator->trans('view.proposal.error.cannot_delete_approved'));
-                return $this->redirectToRoute('admin_regmel_proposal_list');
+                return $this->redirectToRoute('admin_dashboard');
             }
 
             $this->initiativeService->remove($id);
+            
+            // Limpar cache do Doctrine para forçar recalcular no dashboard
+            $this->entityManager->clear();
+            
             $this->addFlashSuccess($this->translator->trans('view.proposal.message.deleted'));
         } catch (Exception $exception) {
             $this->addFlash('error', $exception->getMessage());
         }
 
-        return $this->redirectToRoute('admin_regmel_proposal_list');
+        return $this->redirectToRoute('admin_dashboard');
     }
 }

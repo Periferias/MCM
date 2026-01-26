@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\Agent;
 use App\Entity\Initiative;
 use App\Repository\Interface\InitiativeRepositoryInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -67,5 +68,22 @@ class InitiativeRepository extends AbstractRepository implements InitiativeRepos
             ['id' => $ids],
             ['createdAt' => 'DESC']
         );
+    }
+
+    public function countProposals(?Agent $createdBy = null): int
+    {
+        $connection = $this->getEntityManager()->getConnection();
+        $queryBuilder = $connection->createQueryBuilder()
+            ->select('COUNT(*) as total')
+            ->from('initiative', 'i')
+            ->where("(i.extra_fields->>'map_file' IS NOT NULL OR i.extra_fields->>'project_file' IS NOT NULL)")
+            ->andWhere('i.deleted_at IS NULL');
+
+        if ($createdBy) {
+            $queryBuilder->andWhere('i.created_by_id = :createdById')
+                ->setParameter('createdById', $createdBy->getId());
+        }
+
+        return (int) $queryBuilder->executeQuery()->fetchOne();
     }
 }
