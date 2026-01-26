@@ -229,9 +229,9 @@ class ProposalAdminController extends AbstractAdminController
         if ($isMunicipality) {
             $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
-            $initiatives = $this->initiativeService->list(params: ['organizationTo' => $municipality]);
+            $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
         } else {
-            $initiatives = $this->initiativeService->list();
+            $initiatives = $this->initiativeService->list(limit: 10000);
         }
 
         return $this->proposalService->generateSpreadSheet($initiatives, 'propostas', null);
@@ -252,9 +252,9 @@ class ProposalAdminController extends AbstractAdminController
         if ($isMunicipality) {
             $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
-            $initiatives = $this->initiativeService->list(params: ['organizationTo' => $municipality]);
+            $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
         } else {
-            $initiatives = $this->initiativeService->list();
+            $initiatives = $this->initiativeService->list(limit: 10000);
         }
 
         $zipFileName = sprintf('arquivos_geográficos_%s.zip', date('Y-m-d_H-i-s'));
@@ -283,9 +283,9 @@ class ProposalAdminController extends AbstractAdminController
         if ($isMunicipality) {
             $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
-            $initiatives = $this->initiativeService->list(params: ['organizationTo' => $municipality]);
+            $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
         } else {
-            $initiatives = $this->initiativeService->list();
+            $initiatives = $this->initiativeService->list(limit: 10000);
         }
 
         $zipFileName = sprintf('mapas_poligonais_%s.zip', date('Y-m-d_H-i-s'));
