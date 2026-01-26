@@ -1,139 +1,139 @@
 name: Docker Build and Push
 
 on:
-  push:
-    # branches:
-    #   - main
-    #   - feat/*
-    # Publish semver tags as releases.
-    tags: ["v*.*.*"]
+    push:
+        # branches:
+        #   - main
+        #   - feat/*
+        # Publish semver tags as releases.
+        tags: ["v*.*.*"]
 
 env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
-  AWS_REGION: us-east-1
-  ECR_REGISTRY: "298680963177.dkr.ecr.us-east-1.amazonaws.com"
-  # ECR_REPOSITORY: universidade-nos-perifericos
-  ECR_REPOSITORY: melhorias-habitacionais
-  AWS_ACCOUNT_ID: 298680963177
+    # Use docker.io for Docker Hub if empty
+    REGISTRY: ghcr.io
+    # github.repository as <account>/<repo>
+    IMAGE_NAME: ${{ github.repository }}
+    AWS_REGION: us-east-1
+    ECR_REGISTRY: "298680963177.dkr.ecr.us-east-1.amazonaws.com"
+    # ECR_REPOSITORY: universidade-nos-perifericos
+    ECR_REPOSITORY: melhorias-habitacionais
+    AWS_ACCOUNT_ID: 298680963177
 
 jobs:
-  build:
-    runs-on: gh-runners-poc-scale-set-2
-    permissions:
-      contents: read
-      packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
-      id-token: write
+    build:
+        runs-on: gh-runners-poc-scale-set-2
+        permissions:
+            contents: read
+            packages: write
+            # This is used to complete the identity challenge
+            # with sigstore/fulcio when running outside of PRs.
+            id-token: write
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      # Install the cosign tool except on PR
-      # https://github.com/sigstore/cosign-installer
-      - name: Install cosign
-        if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
-        with:
-          cosign-release: "v2.2.4"
+            # Install the cosign tool except on PR
+            # https://github.com/sigstore/cosign-installer
+            - name: Install cosign
+              if: github.event_name != 'pull_request'
+              uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
+              with:
+                  cosign-release: "v2.2.4"
 
-      - name: Login to ECR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.ECR_REGISTRY }}
-      # Set up BuildKit Docker container builder to be able to build
-      # multi-platform images and export cache
-      # https://github.com/docker/setup-buildx-action
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+            - name: Login to ECR
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.ECR_REGISTRY }}
+            # Set up BuildKit Docker container builder to be able to build
+            # multi-platform images and export cache
+            # https://github.com/docker/setup-buildx-action
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
 
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
-          tags: |
-            # Branch name with datetime (main-20260122-143000)
-            # type=ref,event=branch,suffix=-{{date 'YYYYMMDD-HHmmss'}}
-            # Semver tags for git tags (v1.0.0, v1.2.3)
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            # Latest only for main branch
-            type=raw,value=latest,enable={{is_default_branch}}
-            # Short SHA (abc1234)
-            # type=sha,format=short
-          labels: |
-            org.opencontainers.image.title=Periferia Viva Reformas (PVR)
-            org.opencontainers.image.description=FrankenPHP-based Symfony application for Periferia Viva Reformas program
-            org.opencontainers.image.vendor=Periferias
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.created={{date 'rfc3339'}}
+            # Extract metadata (tags, labels) for Docker
+            # https://github.com/docker/metadata-action
+            - name: Extract Docker metadata
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
+                  tags: |
+                      # Branch name with datetime (main-20260122-143000)
+                      # type=ref,event=branch,suffix=-{{date 'YYYYMMDD-HHmmss'}}
+                      # Semver tags for git tags (v1.0.0, v1.2.3)
+                      type=semver,pattern={{version}}
+                      # type=semver,pattern={{major}}.{{minor}}
+                      # Latest only for main branch
+                      # type=raw,value=latest,enable={{is_default_branch}}
+                      # Short SHA (abc1234)
+                      # type=sha,format=short
+                  labels: |
+                      org.opencontainers.image.title=Periferia Viva Reformas (PVR)
+                      org.opencontainers.image.description=FrankenPHP-based Symfony application for Periferia Viva Reformas program
+                      org.opencontainers.image.vendor=Periferias
+                      org.opencontainers.image.source=https://github.com/${{ github.repository }}
+                      org.opencontainers.image.created={{date 'rfc3339'}}
 
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
-        with:
-          context: .
-          file: ./Dockerfile
-          target: frankenphp_prod
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64
+            # Build and push Docker image with Buildx (don't push on PR)
+            # https://github.com/docker/build-push-action
+            - name: Build and push Docker image
+              id: build-and-push
+              uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
+              with:
+                  context: .
+                  file: ./Dockerfile
+                  target: frankenphp_prod
+                  push: ${{ github.event_name != 'pull_request' }}
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+                  platforms: linux/amd64
 
-      # Sign the resulting Docker image digest except on PRs.
-      # This will only write to the public Rekor transparency log when the Docker
-      # repository is public to avoid leaking data.  If you would like to publish
-      # transparency data even for private images, pass --force to cosign below.
-      # https://github.com/sigstore/cosign
-      # - name: Sign the published Docker image
-      #   if: ${{ github.event_name != 'pull_request' }}
-      #   env:
-      #     # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
-      #     TAGS: ${{ steps.meta.outputs.tags }}
-      #     DIGEST: ${{ steps.build-and-push.outputs.digest }}
-      #   # This step uses the identity token to provision an ephemeral certificate
-      #   # against the sigstore community Fulcio instance.
-      #   run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+            # Sign the resulting Docker image digest except on PRs.
+            # This will only write to the public Rekor transparency log when the Docker
+            # repository is public to avoid leaking data.  If you would like to publish
+            # transparency data even for private images, pass --force to cosign below.
+            # https://github.com/sigstore/cosign
+            # - name: Sign the published Docker image
+            #   if: ${{ github.event_name != 'pull_request' }}
+            #   env:
+            #     # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
+            #     TAGS: ${{ steps.meta.outputs.tags }}
+            #     DIGEST: ${{ steps.build-and-push.outputs.digest }}
+            #   # This step uses the identity token to provision an ephemeral certificate
+            #   # against the sigstore community Fulcio instance.
+            #   run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
-      # Output image details for visibility
-      - name: Output image details
-        if: ${{ github.event_name != 'pull_request' }}
-        run: |
-          echo "## 🐳 Docker Image Published" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Registry:** ${{ env.ECR_REGISTRY }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Repository:** ${{ env.ECR_REPOSITORY }}" >> $GITHUB_STEP_SUMMARY
-          echo "**AWS Account ID:** ${{ env.AWS_ACCOUNT_ID }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image Tags:**" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image Digest:**" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.build-and-push.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Configuration:**" >> $GITHUB_STEP_SUMMARY
-          echo "- **Docker Target:** \`frankenphp_prod\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platform:** \`linux/amd64\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Cache:** GitHub Actions" >> $GITHUB_STEP_SUMMARY
-          echo "- **Signing:** Cosign (Sigstore)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Source Context:**" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit SHA:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Workflow:** \`${{ github.workflow }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+            # Output image details for visibility
+            - name: Output image details
+              if: ${{ github.event_name != 'pull_request' }}
+              run: |
+                  echo "## 🐳 Docker Image Published" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Registry:** ${{ env.ECR_REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Repository:** ${{ env.ECR_REPOSITORY }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**AWS Account ID:** ${{ env.AWS_ACCOUNT_ID }}" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Image Tags:**" >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Image Digest:**" >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  echo "${{ steps.build-and-push.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Build Configuration:**" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Docker Target:** \`frankenphp_prod\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Platform:** \`linux/amd64\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Cache:** GitHub Actions" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Signing:** Cosign (Sigstore)" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Source Context:**" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Commit SHA:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Workflow:** \`${{ github.workflow }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Build Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
