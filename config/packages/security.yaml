@@ -24,6 +24,9 @@ security:
         api_users_email-exists:
             pattern: ^/api/users/exists
             security: false
+        api_info:
+            pattern: ^/api/info
+            security: false
         api:
             pattern: ^/api
             stateless: true

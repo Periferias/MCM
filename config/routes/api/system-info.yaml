@@ -1,0 +1,4 @@
+get:
+  path: /info
+  controller: App\Controller\Api\SystemInfoApiController::getInfo
+  methods: ['GET']
