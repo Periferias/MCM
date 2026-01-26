@@ -3,6 +3,11 @@ api_example:
   prefix: /api
   name_prefix: api_example_
 
+api_system_info:
+  resource: 'api/system-info.yaml'
+  prefix: /api
+  name_prefix: api_system_info_
+
 api_activity_area:
   resource: 'api/activity-area.yaml'
   prefix: /api/activity-areas
