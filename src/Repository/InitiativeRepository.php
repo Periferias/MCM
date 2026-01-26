@@ -56,6 +56,8 @@ class InitiativeRepository extends AbstractRepository implements InitiativeRepos
                 ->setParameter('anticipation', $anticipation);
         }
 
+        $queryBuilder->andWhere('i.deleted_at IS NULL');
+
         $ids = $queryBuilder->executeQuery()->fetchFirstColumn();
         if (empty($ids)) {
             return [];

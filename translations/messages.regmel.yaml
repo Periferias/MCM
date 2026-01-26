@@ -857,6 +857,12 @@ view:
     message:
       created: A Iniciativa foi criada com sucesso
       deleted: A Iniciativa foi excluída
+
+  proposal:
+    message:
+      deleted: A proposta foi excluída
+    error:
+      cannot_delete_approved: Não é possível excluir uma proposta que foi anuída ou selecionada
     project_linked_program: Este projeto está vinculado ao programa programa-nome e foi selecionado por meio da oportunidade oportunidade-nome.
     quantity:
       total: Iniciativas Encontradas
