@@ -228,6 +228,86 @@ class Initiative extends AbstractEntity
         $this->deletedAt = $deletedAt;
     }
 
+    public function isDeleted(): bool
+    {
+        $extraFields = $this->extraFields ?? [];
+        return $extraFields['is_deleted'] ?? false;
+    }
+
+    public function setIsDeleted(bool $isDeleted): void
+    {
+        if (!is_array($this->extraFields)) {
+            $this->extraFields = [];
+        }
+        $this->extraFields['is_deleted'] = $isDeleted;
+    }
+
+    public function getDeletedTime(): ?DateTime
+    {
+        $extraFields = $this->extraFields ?? [];
+        $deletedTime = $extraFields['deleted_time'] ?? null;
+        
+        if (empty($deletedTime)) {
+            return null;
+        }
+        
+        if ($deletedTime instanceof DateTime) {
+            return $deletedTime;
+        } elseif (is_string($deletedTime)) {
+            try {
+                return new DateTime($deletedTime);
+            } catch (\Exception $e) {
+                return null;
+            }
+        } elseif (is_array($deletedTime) && isset($deletedTime['date'])) {
+            // Caso seja serializado como array pelo Doctrine
+            try {
+                return new DateTime($deletedTime['date']);
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+        
+        return null;
+    }
+
+    public function setDeletedTime(?DateTime $deletedTime): void
+    {
+        if (!is_array($this->extraFields)) {
+            $this->extraFields = [];
+        }
+        // Converter DateTime para ISO 8601 string para armazenar em JSON
+        $this->extraFields['deleted_time'] = $deletedTime ? $deletedTime->format(DATE_ATOM) : null;
+    }
+
+    public function getDeletedBy(): ?string
+    {
+        $extraFields = $this->extraFields ?? [];
+        return $extraFields['deleted_by_name'] ?? null;
+    }
+
+    public function setDeletedBy(?string $deletedByName): void
+    {
+        if (!is_array($this->extraFields)) {
+            $this->extraFields = [];
+        }
+        $this->extraFields['deleted_by_name'] = $deletedByName;
+    }
+
+    public function getDeletionReason(): ?string
+    {
+        $extraFields = $this->extraFields ?? [];
+        return $extraFields['deletion_reason'] ?? null;
+    }
+
+    public function setDeletionReason(?string $deletionReason): void
+    {
+        if (!is_array($this->extraFields)) {
+            $this->extraFields = [];
+        }
+        $this->extraFields['deletion_reason'] = $deletionReason;
+    }
+
     public function toArray(): array
     {
         return [

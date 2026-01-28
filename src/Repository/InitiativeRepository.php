@@ -64,26 +64,66 @@ class InitiativeRepository extends AbstractRepository implements InitiativeRepos
             return [];
         }
 
-        return $this->findBy(
+        $initiatives = $this->findBy(
             ['id' => $ids],
             ['createdAt' => 'DESC']
         );
+
+        // Filtrar em memória as propostas deletadas (is_deleted = false)
+        return array_filter($initiatives, function(Initiative $initiative) {
+            return !$initiative->isDeleted();
+        });
     }
 
     public function countProposals(?Agent $createdBy = null): int
     {
         $connection = $this->getEntityManager()->getConnection();
         $queryBuilder = $connection->createQueryBuilder()
-            ->select('COUNT(*) as total')
+            ->select('i.id')
             ->from('initiative', 'i')
             ->where("(i.extra_fields->>'map_file' IS NOT NULL OR i.extra_fields->>'project_file' IS NOT NULL)")
-            ->andWhere('i.deleted_at IS NULL');
+            ->andWhere('i.deleted_at IS NULL')
+            ->orderBy('i.created_at', 'DESC');
 
         if ($createdBy) {
             $queryBuilder->andWhere('i.created_by_id = :createdById')
                 ->setParameter('createdById', $createdBy->getId());
         }
 
-        return (int) $queryBuilder->executeQuery()->fetchOne();
+        $ids = $queryBuilder->executeQuery()->fetchFirstColumn();
+        
+        if (empty($ids)) {
+            return 0;
+        }
+        
+        // Filtrar em memória as propostas deletadas
+        $proposals = $this->findBy(['id' => $ids]);
+        $notDeletedProposals = array_filter($proposals, function(Initiative $initiative) {
+            return !$initiative->isDeleted();
+        });
+        
+        return count($notDeletedProposals);
+    }
+
+    public function findAllIncludingDeleted(int $limit = 50, array $params = [], string $order = 'DESC'): array
+    {
+        $connection = $this->getEntityManager()->getConnection();
+        $queryBuilder = $connection->createQueryBuilder()
+            ->select('i.id')
+            ->from('initiative', 'i')
+            ->where("(i.extra_fields->>'map_file' IS NOT NULL OR i.extra_fields->>'project_file' IS NOT NULL)")
+            ->andWhere('i.deleted_at IS NULL')
+            ->orderBy('i.created_at', $order)
+            ->setMaxResults($limit);
+
+        $ids = $queryBuilder->executeQuery()->fetchFirstColumn();
+        if (empty($ids)) {
+            return [];
+        }
+
+        return $this->findBy(
+            ['id' => $ids],
+            ['createdAt' => $order]
+        );
     }
 }

@@ -861,8 +861,11 @@ view:
   proposal:
     message:
       deleted: A proposta foi excluída
+      soft_deleted: A proposta foi marcada como excluída com sucesso
     error:
       cannot_delete_approved: Não é possível excluir uma proposta que foi anuída ou selecionada
+      cannot_delete_anuida_selecionada: Não é possível excluir uma proposta com status Anuída ou Selecionada
+      deletion_reason_required: O motivo da exclusão é obrigatório e deve ter no mínimo 20 caracteres
     project_linked_program: Este projeto está vinculado ao programa programa-nome e foi selecionado por meio da oportunidade oportunidade-nome.
     quantity:
       total: Iniciativas Encontradas

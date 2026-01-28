@@ -233,7 +233,8 @@ class ProposalAdminController extends AbstractAdminController
             $municipality = $agent->getOrganizations()->first();
             $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
         } else {
-            $initiatives = $this->initiativeService->list(limit: 10000);
+            // Incluir propostas deletadas na exportação CSV
+            $initiatives = $this->initiativeService->listAllIncludingDeleted(limit: 10000);
         }
 
         return $this->proposalService->generateSpreadSheet($initiatives, 'propostas', null);
@@ -377,6 +378,38 @@ class ProposalAdminController extends AbstractAdminController
         $status = $body['status'] ?? '';
 
         $this->proposalService->bulkUpdateStatus($selectedRows, $status);
+
+        return $this->redirectToRoute('admin_regmel_proposal_list');
+    }
+
+    #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/propostas/{id}/deletar', name: 'admin_regmel_proposal_soft_delete', methods: ['POST'])]
+    public function softDelete(Uuid $id, Request $request): Response
+    {
+        try {
+            $proposal = $this->initiativeService->get($id);
+            $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+            $deletionReason = $request->request->get('deletion_reason');
+
+            // Validar se a proposta está anuída ou selecionada
+            if ($proposalStatus === StatusProposalEnum::ANUIDA->value || $proposalStatus === StatusProposalEnum::SELECIONADA->value) {
+                $this->addFlash('error', $this->translator->trans('view.proposal.error.cannot_delete_anuida_selecionada'));
+                return $this->redirectToRoute('admin_regmel_proposal_list');
+            }
+
+            // Validação do motivo
+            if (empty($deletionReason) || strlen($deletionReason) < 20) {
+                $this->addFlash('error', $this->translator->trans('view.proposal.error.deletion_reason_required'));
+                return $this->redirectToRoute('admin_regmel_proposal_list');
+            }
+
+            // Realizar soft delete
+            $this->proposalService->softDeleteProposal($id, $deletionReason);
+
+            $this->addFlashSuccess($this->translator->trans('view.proposal.message.soft_deleted'));
+        } catch (Exception $exception) {
+            $this->addFlash('error', $exception->getMessage());
+        }
 
         return $this->redirectToRoute('admin_regmel_proposal_list');
     }

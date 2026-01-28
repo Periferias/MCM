@@ -75,6 +75,38 @@
                         </div>
                     </div>
 
+                    <div class="modal fade" id="modalProposalDelete" tabindex="-1" aria-labelledby="modalProposalDeleteLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form id="proposalDeleteForm" method="post">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="modalProposalDeleteLabel">Excluir Proposta</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="alert alert-warning" role="alert">
+                                            <strong>Atenção!</strong> A exclusão de uma proposta não pode ser desfeita. A proposta será marcada como excluída mas permanecerá nos registros históricos.
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="deletionReasonText" class="form-label fw-bold">Motivo da Exclusão *</label>
+                                            <textarea name="deletion_reason" id="deletionReasonText" class="form-control" rows="4"
+                                                      placeholder="Descreva o motivo da exclusão (mínimo 20 caracteres)..." required
+                                                      minlength="20"
+                                                      maxlength="1000"></textarea>
+                                            <div class="form-text">Mínimo de 20 caracteres obrigatório</div>
+                                            <small class="d-block mt-2">Caracteres: <span id="charCount">0</span>/1000</small>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-danger" id="deletionSubmitBtn" disabled>Excluir Proposta</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                     <table class="js-grid table table-hover table-striped">
                         <thead class="table-dark">
                         <tr>
@@ -167,9 +199,8 @@
                                                         class="dropdown-item text-danger"
                                                         data-cy="remove-{{ proposal.id }}"
                                                         data-bs-toggle="modal"
-                                                        data-bs-target="#modalRemoveConfirm"
-                                                        onclick="confirmRemove(this)"
-                                                        data-href="{{ path('admin_regmel_proposal_remove', {id: proposal.id}) }}"
+                                                        data-bs-target="#modalProposalDelete"
+                                                        onclick="openProposalDeleteModal('{{ proposal.id }}', '{{ proposal.name }}')"
                                                 >
                                                     Excluir Proposta
                                                 </a>
@@ -209,5 +240,48 @@
             const form = document.getElementById('proposalStatusForm');
             form.action = `/painel/admin/propostas/${proposalId}/status`;
         }
+
+        function openProposalDeleteModal(proposalId, proposalName) {
+            const form = document.getElementById('proposalDeleteForm');
+            const textarea = document.getElementById('deletionReasonText');
+            const submitBtn = document.getElementById('deletionSubmitBtn');
+            
+            // Limpar valores anteriores
+            textarea.value = '';
+            submitBtn.disabled = true;
+            document.getElementById('charCount').textContent = '0';
+            
+            // Atualizar ação do form
+            form.action = `/painel/admin/propostas/${proposalId}/deletar`;
+            
+            // Atualizar título do modal
+            document.getElementById('modalProposalDeleteLabel').textContent = `Excluir Proposta: ${proposalName}`;
+        }
+
+        // Validação em tempo real do campo de motivo de exclusão
+        document.getElementById('deletionReasonText')?.addEventListener('input', function() {
+            const submitBtn = document.getElementById('deletionSubmitBtn');
+            const charCount = document.getElementById('charCount');
+            
+            charCount.textContent = this.value.length;
+            
+            // Habilitar botão apenas se tiver pelo menos 20 caracteres
+            if (this.value.length >= 20) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        });
+
+        // Validar envio do formulário de exclusão
+        document.getElementById('proposalDeleteForm')?.addEventListener('submit', function(e) {
+            const textarea = document.getElementById('deletionReasonText');
+            
+            if (textarea.value.length < 20) {
+                e.preventDefault();
+                alert('O motivo da exclusão deve ter no mínimo 20 caracteres.');
+                return false;
+            }
+        });
     </script>
 {% endblock %}

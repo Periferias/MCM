@@ -178,6 +178,11 @@ readonly class InitiativeService extends AbstractEntityService implements Initia
         return $this->repository->findByFilters($region, $state, $cityName, $status, $anticipation);
     }
 
+    public function listAllIncludingDeleted(int $limit = 50, array $params = [], string $order = 'DESC'): array
+    {
+        return $this->repository->findAllIncludingDeleted($limit, $params, $order);
+    }
+
     public function countProposals(?Agent $createdBy = null): int
     {
         return $this->repository->countProposals($createdBy);
