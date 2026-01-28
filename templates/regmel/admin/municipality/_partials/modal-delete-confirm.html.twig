@@ -1,0 +1,143 @@
+{# Modal de confirmação para exclusão permanente de município #}
+<div class="modal fade" id="modalDeleteMunicipality" tabindex="-1" aria-labelledby="modalDeleteMunicipalityLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalDeleteMunicipalityLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Confirmar Exclusão Permanente
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger mb-3" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-exclamation-circle me-2"></i>
+                        <strong>ATENÇÃO: Esta ação é IRREVERSÍVEL!</strong>
+                    </h6>
+                    <hr>
+                    <p class="mb-0">
+                        Você está prestes a excluir <strong>PERMANENTEMENTE</strong> o cadastro do município 
+                        <strong id="municipalityNameToDelete" class="text-decoration-underline"></strong>.
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="mb-2"><strong>O que será excluído:</strong></p>
+                    <ul class="text-muted">
+                        <li>Cadastro do município</li>
+                        <li>Inscrições do município em oportunidades</li>
+                        <li>Vinculação com agentes</li>
+                        <li>Documentos (termos de adesão)</li>
+                        <li>Imagem do perfil</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info mb-3" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Importante:</strong> As propostas associadas a este município <strong>NÃO serão excluídas</strong> e permanecerão no sistema.
+                </div>
+
+                <div class="alert alert-warning mb-0" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Esta operação <strong>NÃO PODE SER DESFEITA</strong>. O cadastro do município será perdido permanentemente.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancelar
+                </button>
+                <form method="POST" id="deleteMunicipalityForm" action="" style="display: inline;">
+                    <input type="hidden" name="_token" id="deleteCsrfToken" value="">
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="bi bi-trash me-1"></i>
+                        Sim, Excluir Permanentemente
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modalDeleteMunicipality = document.getElementById('modalDeleteMunicipality');
+    
+    if (modalDeleteMunicipality) {
+        modalDeleteMunicipality.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            
+            if (!button) {
+                console.error('No button found for modal trigger');
+                return;
+            }
+            
+            const municipalityId = button.getAttribute('data-municipality-id');
+            const municipalityName = button.getAttribute('data-municipality-name');
+            const deleteUrl = button.getAttribute('data-delete-url');
+            const csrfToken = button.getAttribute('data-token');
+            
+            console.log('Modal opened with:', {
+                municipalityId,
+                municipalityName,
+                deleteUrl,
+                csrfToken
+            });
+            
+            // Atualizar o nome do município no modal
+            const municipalityNameElement = modalDeleteMunicipality.querySelector('#municipalityNameToDelete');
+            if (municipalityNameElement) {
+                municipalityNameElement.textContent = municipalityName;
+            }
+            
+            // Atualizar o formulário com a ação correta
+            const form = modalDeleteMunicipality.querySelector('#deleteMunicipalityForm');
+            if (form && deleteUrl) {
+                form.setAttribute('action', deleteUrl);
+                form.setAttribute('method', 'POST');
+                console.log('Form action set to:', form.action);
+            } else {
+                console.error('Form or deleteUrl not found', { form, deleteUrl });
+            }
+            
+            // Atualizar o token CSRF
+            const csrfInput = modalDeleteMunicipality.querySelector('#deleteCsrfToken');
+            if (csrfInput && csrfToken) {
+                csrfInput.value = csrfToken;
+            } else {
+                console.error('CSRF input or token not found', { csrfInput, csrfToken });
+            }
+        });
+        
+        // Debug quando o formulário for submetido
+        const form = modalDeleteMunicipality.querySelector('#deleteMunicipalityForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                console.log('Form submitting to:', this.action, 'Method:', this.method);
+                const formData = new FormData(this);
+                console.log('CSRF Token:', formData.get('_token'));
+                
+                // Não prevenir o submit - deixar o formulário ser submetido normalmente
+                // O log acima é apenas para debug
+            });
+        }
+        
+        // Adicionar listener no botão também para debug
+        const submitBtn = modalDeleteMunicipality.querySelector('#confirmDeleteBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function(e) {
+                console.log('Delete button clicked!');
+                const form = this.closest('form');
+                console.log('Form found:', form);
+                console.log('Form action:', form?.action);
+                console.log('Form method:', form?.method);
+                console.log('CSRF token value:', document.getElementById('deleteCsrfToken')?.value);
+                
+                // NÃO prevenir - permitir submit normal
+                // e.preventDefault();
+            });
+        }
+    }
+});
+</script>

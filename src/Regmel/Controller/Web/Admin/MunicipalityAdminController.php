@@ -246,6 +246,47 @@ class MunicipalityAdminController extends AbstractAdminController
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/municipios/{id}/delete-permanently', name: 'admin_regmel_municipality_delete_permanently', methods: ['POST'])]
+    public function deletePermanently(Uuid $id, Request $request): Response
+    {
+        // Validar CSRF token
+        $submittedToken = $request->request->get('_token');
+        if (false === $this->isCsrfTokenValid('delete-municipality', $submittedToken)) {
+            $this->addFlash('error', 'Token de segurança inválido.');
+            return $this->redirectToRoute('admin_regmel_municipality_list');
+        }
+
+        try {
+            $municipality = $this->organizationService->get($id);
+            
+            // Verificar se é realmente um município
+            if ($municipality->getType() !== OrganizationTypeEnum::MUNICIPIO->value) {
+                throw new \InvalidArgumentException('Esta organização não é um município.');
+            }
+
+            $municipalityName = $municipality->getName();
+            
+            error_log('DEBUG: Tentando excluir município: ' . $municipalityName . ' (ID: ' . $id->toRfc4122() . ')');
+            
+            // Excluir permanentemente
+            $this->organizationService->hardDelete($id);
+            
+            error_log('DEBUG: Município excluído com sucesso!');
+
+            $this->addFlash('success', sprintf('Município "%s" excluído permanentemente com sucesso.', $municipalityName));
+        } catch (\Exception $e) {
+            error_log('DEBUG ERROR: ' . $e->getMessage());
+            error_log('DEBUG STACK: ' . $e->getTraceAsString());
+            $this->addFlash('error', 'Erro ao excluir município: ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('admin_regmel_municipality_list');
+    }
+
+    #[IsGranted(new Expression('
+        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+    '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/municipios/list/download', name: 'admin_regmel_municipality_list_download', methods: ['GET'])]
     public function exportMunicipalitiesCsv(Request $request): Response
     {

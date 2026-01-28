@@ -6,6 +6,7 @@
 
 {% block content %}
     {% include 'regmel/admin/municipality/_partials/modal-edit.html.twig' %}
+    {% include 'regmel/admin/municipality/_partials/modal-delete-confirm.html.twig' %}
 
     <section class="d-flex">
         {% include "_components/side-bar.html.twig" %}
@@ -118,6 +119,21 @@
                                                                 {{ 'edit'|trans }}
                                                             </a>
                                                         </li>
+                                                        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li>
+                                                                <a href="#"
+                                                                   class="dropdown-item text-danger btn-delete-municipality"
+                                                                   data-bs-toggle="modal"
+                                                                   data-bs-target="#modalDeleteMunicipality"
+                                                                   data-municipality-id="{{ municipality.id }}"
+                                                                   data-municipality-name="{{ municipality.name }}"
+                                                                   data-delete-url="{{ path('admin_regmel_municipality_delete_permanently', {id: municipality.id}) }}"
+                                                                   data-token="{{ csrf_token('delete-municipality') }}">
+                                                                    <i class="bi bi-trash"></i> Excluir Permanentemente
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
                                                     </ul>
                                                 </div>
                                             {% else %}

@@ -37,4 +37,12 @@ interface OrganizationServiceInterface
     public function getCsvRow(object $entity, ?string $type): array;
 
     public function findByCnpj(string $cnpj, ?string $excludeId = null): ?Organization;
+
+    public function getMunicipalitiesByAgents(iterable $agents): array;
+
+    public function getCompaniesByAgents(iterable $agents): array;
+
+    public function removeAgent(Uuid $agentId, Uuid $organizationId): void;
+
+    public function hardDelete(Uuid $id): void;
 }
