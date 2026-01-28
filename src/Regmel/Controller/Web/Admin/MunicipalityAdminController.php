@@ -249,7 +249,12 @@ class MunicipalityAdminController extends AbstractAdminController
     #[Route('/painel/admin/municipios/{id}/delete-permanently', name: 'admin_regmel_municipality_delete_permanently', methods: ['POST'])]
     public function deletePermanently(Uuid $id, Request $request): Response
     {
-        $this->validCsrfToken('delete-municipality', $request);
+        // Validar CSRF token
+        $submittedToken = $request->request->get('_token');
+        if (false === $this->isCsrfTokenValid('delete-municipality', $submittedToken)) {
+            $this->addFlash('error', 'Token de segurança inválido.');
+            return $this->redirectToRoute('admin_regmel_municipality_list');
+        }
 
         try {
             $municipality = $this->organizationService->get($id);
@@ -261,11 +266,17 @@ class MunicipalityAdminController extends AbstractAdminController
 
             $municipalityName = $municipality->getName();
             
+            error_log('DEBUG: Tentando excluir município: ' . $municipalityName . ' (ID: ' . $id->toRfc4122() . ')');
+            
             // Excluir permanentemente
             $this->organizationService->hardDelete($id);
+            
+            error_log('DEBUG: Município excluído com sucesso!');
 
             $this->addFlash('success', sprintf('Município "%s" excluído permanentemente com sucesso.', $municipalityName));
         } catch (\Exception $e) {
+            error_log('DEBUG ERROR: ' . $e->getMessage());
+            error_log('DEBUG STACK: ' . $e->getTraceAsString());
             $this->addFlash('error', 'Erro ao excluir município: ' . $e->getMessage());
         }
 
