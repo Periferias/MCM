@@ -244,6 +244,28 @@ php.image.repository: "{{.IMAGE_REPO_pvr_php}}"
 php.image.tag: "{{.IMAGE_TAG_pvr_php}}@{{.IMAGE_DIGEST_pvr_php}}"
 ```
 
+**Git Information in Production Build:**
+
+The production image includes Git commit and branch information via build arguments. These are used by the `/api/info` endpoint to display deployment metadata.
+
+The following build arguments are passed during the Docker build:
+- `GIT_COMMIT` - The Git commit SHA
+- `GIT_BRANCH` - The Git branch name
+
+These are automatically injected:
+- In **Skaffold**: Via environment variables `GIT_COMMIT` and `GIT_BRANCH` (set them before running `skaffold dev/run`)
+- In **GitHub Actions**: Via `${{ github.sha }}` and `${{ github.ref_name }}` in workflows
+- For **local builds**: Pass manually via `--build-arg`:
+  ```bash
+  docker build \
+    --target frankenphp_prod \
+    --build-arg GIT_COMMIT=$(git rev-parse HEAD) \
+    --build-arg GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) \
+    -t pvr-php:latest .
+  ```
+
+**Note**: The `.git/` folder is excluded via `.dockerignore`, so Git information must be passed as build arguments for the `/api/info` endpoint to return complete data in containerized environments.
+
 #### Customizing Helm Values
 
 To customize the deployment, modify the appropriate values file for your environment:

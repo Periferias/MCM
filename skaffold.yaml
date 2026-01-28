@@ -8,6 +8,9 @@ build:
       context: .
       docker:
         target: frankenphp_prod
+        buildArgs:
+          GIT_COMMIT: '{{.GIT_COMMIT}}'
+          GIT_BRANCH: '{{.GIT_BRANCH}}'
 
 deploy:
   helm:
@@ -20,3 +23,4 @@ deploy:
         php.image.tag: "{{.IMAGE_TAG_pvr_php}}@{{.IMAGE_DIGEST_pvr_php}}"
       valuesFiles:
         - skaffold-values.yaml
+
