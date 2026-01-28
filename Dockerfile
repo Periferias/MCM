@@ -86,6 +86,14 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 COPY frankenphp/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/
 
+# Git information as build args
+ARG GIT_COMMIT
+ARG GIT_BRANCH
+
+# Set Git information as environment variables
+ENV GIT_COMMIT=${GIT_COMMIT}
+ENV GIT_BRANCH=${GIT_BRANCH}
+
 # prevent the reinstallation of vendors at every changes in the source code
 COPY composer.* symfony.* ./
 RUN set -eux; \

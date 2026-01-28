@@ -90,6 +90,9 @@ jobs:
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
                   platforms: linux/amd64
+                  build-args: |
+                      GIT_COMMIT=${{ github.sha }}
+                      GIT_BRANCH=${{ github.ref_name }}
 
             # Sign the resulting Docker image digest except on PRs.
             # This will only write to the public Rekor transparency log when the Docker

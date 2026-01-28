@@ -75,6 +75,8 @@ jobs:
 
       - name: Build and deploy with Skaffold
         run: |
+          export GIT_COMMIT=${{ github.sha }}
+          export GIT_BRANCH=${GITHUB_REF#refs/heads/}
           skaffold run --tail=false --wait-for-connection=true
         timeout-minutes: 15
 

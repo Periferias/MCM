@@ -46,6 +46,12 @@ class SystemInfoApiController extends AbstractApiController
 
     private function getGitCommit(string $projectDir): ?string
     {
+        // Try to get from environment variable first (for Docker/Kubernetes)
+        $envCommit = getenv('GIT_COMMIT');
+        if ($envCommit !== false && !empty($envCommit)) {
+            return $envCommit;
+        }
+
         $headFile = $projectDir . '/.git/HEAD';
         
         if (!file_exists($headFile)) {
@@ -70,6 +76,12 @@ class SystemInfoApiController extends AbstractApiController
 
     private function getGitBranch(string $projectDir): ?string
     {
+        // Try to get from environment variable first (for Docker/Kubernetes)
+        $envBranch = getenv('GIT_BRANCH');
+        if ($envBranch !== false && !empty($envBranch)) {
+            return $envBranch;
+        }
+
         $headFile = $projectDir . '/.git/HEAD';
         
         if (!file_exists($headFile)) {
