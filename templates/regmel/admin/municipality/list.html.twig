@@ -118,6 +118,19 @@
                                                                 {{ 'edit'|trans }}
                                                             </a>
                                                         </li>
+                                                        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li>
+                                                                <form method="post" 
+                                                                      action="{{ path('admin_regmel_municipality_delete_permanently', {id: municipality.id}) }}"
+                                                                      onsubmit="return confirm('ATENÇÃO: Esta ação irá excluir PERMANENTEMENTE o município \"{{ municipality.name }}\" e todos os dados relacionados. Esta operação NÃO PODE SER DESFEITA!\n\nTem certeza que deseja continuar?');">
+                                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-municipality') }}">
+                                                                    <button type="submit" class="dropdown-item text-danger">
+                                                                        <i class="bi bi-trash"></i> Excluir Permanentemente
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                        {% endif %}
                                                     </ul>
                                                 </div>
                                             {% else %}

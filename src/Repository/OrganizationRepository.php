@@ -176,4 +176,14 @@ class OrganizationRepository extends AbstractRepository implements OrganizationR
 
         return $query->getOneOrNullResult();
     }
+
+    public function hardDelete(\Symfony\Component\Uid\Uuid $id): void
+    {
+        $organization = $this->find($id);
+
+        if ($organization !== null) {
+            $this->getEntityManager()->remove($organization);
+            $this->getEntityManager()->flush();
+        }
+    }
 }

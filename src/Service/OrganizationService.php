@@ -203,6 +203,19 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
         return $this->repository->findOrganizationByCompanyFilters($tipo);
     }
 
+    public function hardDelete(Uuid $id): void
+    {
+        $organization = $this->get($id);
+
+        // Remove a imagem se existir
+        if ($organization->getImage()) {
+            $this->fileService->deleteFileByUrl($organization->getImage());
+        }
+
+        // Deleta permanentemente do banco de dados
+        $this->repository->hardDelete($id);
+    }
+
     public function getCsvHeaders(?string $type): array
     {
         if ($type === OrganizationTypeEnum::MUNICIPIO->value) {
