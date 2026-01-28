@@ -146,6 +146,7 @@
                                         (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
                                         (statusEnum.SELECIONADA.value): 'bg-success text-white',
                                         (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
+                                        (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
                                     }[status] ?? 'bg-dark') %}
                                     <span class="badge {{ badgeClass }} text-dark">
                                         {{ status }}
@@ -333,6 +334,7 @@
                                 <option value="Não Anuída">Não Anuída</option>
                                 <option value="Selecionada">Selecionada</option>
                                 <option value="Não Selecionada">Não Selecionada</option>
+                                <option value="Classificada">Classificada</option>
                             </select>
                             <div class="form-text">Selecione uma opção obrigatória</div>
                         </div>

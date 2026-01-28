@@ -17,4 +17,5 @@ enum StatusProposalEnum: string
     case NAO_ANUIDA = 'Não Anuída';
     case SELECIONADA = 'Selecionada';
     case NAO_SELECIONADA = 'Não Selecionada';
+    case CLASSIFICADA = 'Classificada';
 }
