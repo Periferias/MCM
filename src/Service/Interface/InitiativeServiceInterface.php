@@ -24,6 +24,8 @@ interface InitiativeServiceInterface
 
     public function list(int $limit = 50, array $params = [], string $order = 'DESC'): array;
 
+    public function listAllIncludingDeleted(int $limit = 50, array $params = [], string $order = 'DESC'): array;
+
     public function count(?Agent $createdBy = null): int;
 
     public function remove(Uuid $id): void;

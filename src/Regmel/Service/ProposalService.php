@@ -276,6 +276,10 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $this->translator->trans('csv.header.created_by'),
             $this->translator->trans('csv.header.proposal_date'),
             $this->translator->trans('csv.header.proposal_update_date'),
+            'Status de Exclusão',
+            'Motivo da Exclusão',
+            'Excluída por',
+            'Data/Hora de Exclusão',
         ];
     }
 
@@ -349,6 +353,11 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $entity->getCreatedBy()?->getName() ?? '',
             $entity->getCreatedAt()->format('d/m/Y H:i:s'),
             $modificationDate,
+            // Dados de exclusão
+            $entity->isDeleted() ? 'Sim' : 'Não',
+            $entity->getDeletionReason() ?? '',
+            $entity->getDeletedBy() ?? '',
+            $entity->getDeletedTime()?->format('d/m/Y H:i:s') ?? '',
         ];
     }
 
@@ -491,5 +500,31 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $user = $this->security->getUser();
         $userName = $user ? $user->getName() : 'Usuário Desconhecido';
         $this->proposalRepository->bulkUpdateStatus($proposals, $status, $userName);
+    }
+
+    public function softDeleteProposal(Uuid $id, string $deletionReason): void
+    {
+        $proposal = $this->entityManager->getRepository(Initiative::class)->find($id);
+
+        if (!$proposal) {
+            throw new InvalidArgumentException($this->translator->trans('error.invalid_entity'));
+        }
+
+        $user = $this->security->getUser();
+
+        // Marcar como excluída usando extraFields
+        $proposal->setIsDeleted(true);
+        $proposal->setDeletedTime(new DateTime());
+        $proposal->setDeletedBy($user->getName());
+        $proposal->setDeletionReason($deletionReason);
+
+        // Atualizar status da proposta para "Excluída"
+        $extraFields = $proposal->getExtraFields() ?? [];
+        $extraFields['status'] = 'Excluída';
+        $proposal->setExtraFields($extraFields);
+
+        // Persistir as mudanças
+        $this->entityManager->persist($proposal);
+        $this->entityManager->flush();
     }
 }

@@ -24,6 +24,8 @@ interface ProposalServiceInterface
 
     public function updateStatusProposal(Uuid $id, StatusProposalEnum $status, string $reason): void;
 
+    public function softDeleteProposal(Uuid $id, string $deletionReason): void;
+
     public function exportProjectFiles(array $proposals): string;
 
     public function exportMapFiles(array $proposals): string;
