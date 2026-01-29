@@ -6,6 +6,7 @@ namespace App\Regmel\Controller\Web\Admin;
 
 use App\Controller\Web\Admin\AbstractAdminController;
 use App\DocumentService\OrganizationTimelineDocumentService;
+use App\Entity\Initiative;
 use App\Enum\OrganizationTypeEnum;
 use App\Enum\UserRolesEnum;
 use App\Repository\Interface\InitiativeRepositoryInterface;
@@ -133,6 +134,11 @@ class CompanyAdminController extends AbstractAdminController
         $proposals = $this->initiativeRepository->findBy([
             'organizationFrom' => $id->toRfc4122(),
         ]);
+
+        // Filtrar propostas excluídas (soft deleted)
+        $proposals = array_filter($proposals, function (Initiative $proposal) {
+            return !$proposal->isDeleted();
+        });
 
         $opportunity = $this->inscriptionOpportunityService->findOpportunityByOrganization($company->getId());
 
