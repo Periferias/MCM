@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     "Pernambuco": ["Abreu e Lima","Araçoiaba","Araripina","Arcoverde","Belo Jardim","Bezerros","Brejo da Madre de Deus","Buíque",
                    "Cabo de Santo Agostinho","Camaragibe","Carpina","Caruaru","Escada","Garanhuns",
                    "Goiana","Gravatá","Igarassu","Ipojuca","Ilha de Itamaracá","Itapissuma",
-                   "Jabboatão dos Guararapes","Limoeiro","Moreno","Olinda","Ouricuri","Palmares",
+                   "Jaboatão dos Guararapes","Limoeiro","Moreno","Olinda","Ouricuri","Palmares",
                    "Paudalho","Paulista","Pesqueira","Petrolina","Recife","Salgueiro",
                    "Santa Cruz do Capibaribe","São Bento do Una","São Lourenço da Mata","Serra Talhada","Surubim",
                    "Vitória de Santo Antão"],
