@@ -77,7 +77,10 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         unset($extraFields['agreement_reason']);
 
         $proposal->setExtraFields($extraFields);
-        $this->initiativeService->save($proposal);
+        $this->initiativeService->update(
+            $proposalId,
+            ['extra_fields' => $extraFields]
+        );
     }
 
     public function validateAgreement(Uuid $proposalId, bool $approved, string $reason): void
@@ -105,7 +108,10 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $extraFields['agreement_reason'] = $reason;
 
         $proposal->setExtraFields($extraFields);
-        $this->initiativeService->save($proposal);
+        $this->initiativeService->update(
+            $proposalId,
+            ['extra_fields' => $extraFields]
+        );
     }
 
     public function getProposalsAwaitingValidation(?string $region = null, ?string $state = null, ?string $status = null): array
@@ -202,9 +208,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $message = "O município {$municipalityName} enviou o documento de anuência para a proposta '{$proposalName}' da empresa {$companyName}.\n\n";
         $message .= "Acesse o painel administrativo para validar o documento.";
 
-        foreach ($adminEmails as $email) {
-            $this->emailService->send($email, $subject, $message);
-        }
+        $this->emailService->send($adminEmails, $subject, $message);
     }
 
     public function sendEmailOnValidation(Uuid $proposalId, bool $approved, string $reason): void
@@ -248,8 +252,9 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
             $message .= "O município pode reenviar o documento corrigido.";
         }
 
-        foreach (array_merge($municipalityEmails, $companyEmails) as $email) {
-            $this->emailService->send($email, $subject, $message);
+        $allEmails = array_merge($municipalityEmails, $companyEmails);
+        if (!empty($allEmails)) {
+            $this->emailService->send($allEmails, $subject, $message);
         }
     }
 }
