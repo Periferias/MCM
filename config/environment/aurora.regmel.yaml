@@ -269,6 +269,11 @@ sidebar:
         icon: description
         text: Termos de Adesão
 
+      admin_regmel_proposal_agreement_list:
+        acl: ['ROLE_ADMIN']
+        icon: verified
+        text: Validar Anuências
+
       admin_regmel_proposal_list:
         acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SUPPORT']
         icon: cases

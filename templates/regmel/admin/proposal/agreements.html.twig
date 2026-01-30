@@ -1,0 +1,236 @@
+{% extends "_layouts/blank.html.twig" %}
+
+{% block title %}
+    {{ 'control_panel'|trans }} - Validação de Anuências
+{% endblock %}
+
+{% block content %}
+    <section class="d-flex">
+        {% include "_components/side-bar.html.twig" %}
+
+        <div class="management-content w-100 p-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-body shadow">
+                        <div class="row justify-content-between">
+                            <div class="col">
+                                <h2>
+                                    Propostas - Validação de Anuências
+                                </h2>
+                            </div>
+
+                            <div class="col text-end">
+                                <a href="{{ path('admin_regmel_proposal_agreement_download_all') }}"
+                                   class="btn btn-secondary">
+                                    <i class="bi bi-download me-2"></i>Download Todos Documentos
+                                </a>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        {# Filtros #}
+                        <form method="get" class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label for="region" class="form-label">{{ 'region'|trans }}</label>
+                                <select name="region" id="region" class="form-select">
+                                    <option value="">{{ 'all'|trans }}</option>
+                                    {% for region in regions %}
+                                        <option value="{{ region.value }}">{{ region.value }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="state" class="form-label">{{ 'state'|trans }}</label>
+                                <select name="state" id="state" class="form-select">
+                                    <option value="">{{ 'all'|trans }}</option>
+                                    {% for state in states %}
+                                        <option value="{{ state.acronym }}">{{ state.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select name="status" id="status" class="form-select">
+                                    <option value="">Todos</option>
+                                    {% for statusItem in statuses %}
+                                        <option value="{{ statusItem.value }}">{{ statusItem.label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-funnel me-2"></i>Filtrar
+                                </button>
+                            </div>
+                        </form>
+
+                        {# Tabela de propostas #}
+                        <table class="js-grid table table-hover table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Empresa</th>
+                                    <th>Município</th>
+                                    <th>Proposta</th>
+                                    <th>Documento</th>
+                                    <th>Enviado em</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for proposal in proposals %}
+                                <tr>
+                                    <td>{{ proposal.company }}</td>
+                                    <td>{{ proposal.municipality }} - {{ proposal.state }}</td>
+                                    <td>{{ proposal.name }}</td>
+                                    <td>
+                                        {% if proposal.agreement_file %}
+                                            <a href="{{ path('admin_regmel_proposal_agreement_file', {id: proposal.id}) }}" 
+                                               target="_blank" 
+                                               class="btn btn-link btn-sm">
+                                                <i class="bi bi-file-pdf me-1"></i>{{ proposal.agreement_file }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Nenhum arquivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ proposal.agreement_uploaded_at ? proposal.agreement_uploaded_at|date('d/m/Y H:i') : '-' }}<br>
+                                        <small class="text-muted">{{ proposal.agreement_uploaded_by_name }}</small>
+                                    </td>
+                                    <td>
+                                        {% set status = proposal.agreement_status %}
+                                        {% set badgeClass = {
+                                            'submitted': 'bg-warning',
+                                            'approved': 'bg-success text-white',
+                                            'rejected': 'bg-danger text-white'
+                                        }[status] %}
+                                        <span class="badge {{ badgeClass }} text-dark text-uppercase">
+                                            {% if status == 'submitted' %}
+                                                Aguardando Validação
+                                            {% elseif status == 'approved' %}
+                                                Aprovada
+                                            {% elseif status == 'rejected' %}
+                                                Rejeitada
+                                            {% endif %}
+                                        </span>
+                                        
+                                        {% if proposal.agreement_validated_at %}
+                                            <br><small class="text-muted">
+                                                {{ proposal.agreement_validated_at|date('d/m/Y H:i') }}<br>
+                                                {{ proposal.agreement_validated_by_name }}
+                                            </small>
+                                        {% endif %}
+                                        
+                                        {% if proposal.agreement_reason %}
+                                            <br><small class="text-muted fst-italic">
+                                                Motivo: {{ proposal.agreement_reason }}
+                                            </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if status == 'submitted' %}
+                                            <button onclick="openValidationModal('{{ proposal.id }}', '{{ proposal.name }}', '{{ proposal.municipality }}')"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#modalValidateAgreement" 
+                                                    class="btn btn-primary btn-sm">
+                                                <i class="bi bi-check-circle me-1"></i>Validar
+                                            </button>
+                                        {% elseif status == 'rejected' %}
+                                            <button onclick="openValidationModal('{{ proposal.id }}', '{{ proposal.name }}', '{{ proposal.municipality }}')"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#modalValidateAgreement" 
+                                                    class="btn btn-outline-primary btn-sm">
+                                                    Reavaliar
+                                            </button>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">Nenhuma proposta encontrada</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# Modal de Validação #}
+    <div class="modal fade" id="modalValidateAgreement" tabindex="-1" aria-labelledby="validateAgreementLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="validateAgreementLabel">Validar Anuência</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="validationForm" method="post">
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <strong>Proposta:</strong> <span id="proposalName"></span><br>
+                            <strong>Município:</strong> <span id="municipalityName"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Decisão *</label>
+                            <div class="d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="decision" id="decisionApprove" value="approved" required>
+                                    <label class="form-check-label" for="decisionApprove">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>Aprovar Anuência
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="decision" id="decisionReject" value="rejected" required>
+                                    <label class="form-check-label" for="decisionReject">
+                                        <i class="bi bi-x-circle-fill text-danger me-2"></i>Rejeitar Anuência
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="reason" class="form-label fw-bold">Motivo *</label>
+                            <textarea name="reason" 
+                                      id="reason" 
+                                      class="form-control" 
+                                      rows="4"
+                                      placeholder="Descreva o motivo da sua decisão..."
+                                      required
+                                      minlength="10"></textarea>
+                            <div class="form-text">Mínimo de 10 caracteres</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Submeter Decisão</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openValidationModal(proposalId, proposalName, municipalityName) {
+            const form = document.getElementById('validationForm');
+            const proposalNameEl = document.getElementById('proposalName');
+            const municipalityNameEl = document.getElementById('municipalityName');
+
+            form.action = `/painel/admin/propostas/${proposalId}/agreement/validate`;
+            proposalNameEl.textContent = proposalName;
+            municipalityNameEl.textContent = municipalityName;
+            
+            // Limpar formulário
+            form.reset();
+        }
+    </script>
+{% endblock %}
