@@ -545,7 +545,24 @@
         // Função para abrir modal de anuência
         function openAgreementModal(proposalId) {
             const form = document.getElementById('proposalStatusForm');
-            form.action = `/painel/admin/municipios/{{ municipality.id }}/propostas/${proposalId}/status`;
+            
+            // Configurar submit handler
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const statusAgreement = document.getElementById('statusAgreement');
+                const statusNotAgreement = document.getElementById('statusNotAgreement');
+                
+                if (statusAgreement.checked) {
+                    // Se escolheu "Anuir", usar rota de upload (que só salva agreement_status=submitted)
+                    form.action = `/painel/admin/propostas/${proposalId}/upload-agreement`;
+                } else if (statusNotAgreement.checked) {
+                    // Se escolheu "Não Anuir", usar rota antiga (salva status=Não Anuída)
+                    form.action = `/painel/admin/municipios/{{ municipality.id }}/propostas/${proposalId}/status`;
+                }
+                
+                form.submit();
+            };
         }
 
         // Função para abrir modal de upload de anuência (apenas para reenvios)
