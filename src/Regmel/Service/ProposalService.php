@@ -240,6 +240,15 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         return substr($proposal->getId()->toRfc4122(), 0, 8);
     }
 
+    {
+        return match ($status) {
+            'submitted' => 'Aguardando Validação',
+            'approved' => 'Aprovado',
+            'rejected' => 'Rejeitado',
+            default => '',
+        };
+    }
+
     private function generateUrlForField(Initiative $entity, string $fieldName, string $routeName): string
     {
         $extraFields = $entity->getExtraFields();
@@ -277,6 +286,14 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $this->translator->trans('csv.header.created_by'),
             $this->translator->trans('csv.header.proposal_date'),
             $this->translator->trans('csv.header.proposal_update_date'),
+            // Dados de anuência
+            'Status Anuência',
+            'Anuência Enviada Em',
+            'Anuência Enviada Por',
+            'Anuência Validada Em',
+            'Anuência Validada Por',
+            'Motivo da Validação',
+            // Dados de exclusão
             'Status de Exclusão',
             'Motivo da Exclusão',
             'Excluída por',
@@ -355,6 +372,13 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $entity->getCreatedBy()?->getName() ?? '',
             $entity->getCreatedAt()->format('d/m/Y H:i:s'),
             $modificationDate,
+            // Dados de anuência
+            $this->getAgreementStatusLabel($extraFields['agreement_status'] ?? null),
+            isset($extraFields['agreement_uploaded_at']) ? (new \DateTime($extraFields['agreement_uploaded_at']))->format('d/m/Y H:i:s') : '',
+            $extraFields['agreement_uploaded_by_name'] ?? '',
+            isset($extraFields['agreement_validated_at']) ? (new \DateTime($extraFields['agreement_validated_at']))->format('d/m/Y H:i:s') : '',
+            $extraFields['agreement_validated_by_name'] ?? '',
+            $extraFields['agreement_reason'] ?? '',
             // Dados de exclusão
             $entity->isDeleted() ? 'Sim' : 'Não',
             $entity->getDeletionReason() ?? '',
