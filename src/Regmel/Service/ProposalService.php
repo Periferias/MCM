@@ -240,6 +240,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         return substr($proposal->getId()->toRfc4122(), 0, 8);
     }
 
+    private function getAgreementStatusLabel(?string $status): string
     {
         return match ($status) {
             'submitted' => 'Aguardando Validação',
