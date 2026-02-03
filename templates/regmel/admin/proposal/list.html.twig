@@ -149,7 +149,7 @@
                                         {{ status }}
                                     </span>
                                 </td>
-                                <td>{{ proposal.agreement_validated_by_name != 'Não informado' ? proposal.agreement_validated_by_name : proposal.status_updated_by_name }}</td>
+                                <td>{{ proposal.agreement_uploaded_by_name != 'Não informado' ? proposal.agreement_uploaded_by_name : proposal.status_updated_by_name }}</td>
                                 <td>{{ proposal.quantity_houses }}</td>
                                 <td>{{ proposal.area_size }}</td>
                                 <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>

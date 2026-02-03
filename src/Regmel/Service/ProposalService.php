@@ -381,7 +381,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             isset($extraFields['agreement_validated_at']) ? (new \DateTime($extraFields['agreement_validated_at']))->format('d/m/Y H:i:s') : '',
             $extraFields['agreement_validated_by_name'] ?? '',
             $extraFields['agreement_reason'] ?? '',
-            $extraFields['agreement_validated_by_name'] ?? '---',
+            $extraFields['agreement_uploaded_by_name'] ?? '---',
             // Dados de exclusão
             $entity->isDeleted() ? 'Sim' : 'Não',
             $entity->getDeletionReason() ?? '',

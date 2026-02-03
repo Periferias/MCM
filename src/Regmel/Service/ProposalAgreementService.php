@@ -89,7 +89,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $extraFields = $proposal->getExtraFields();
 
         if (($extraFields['agreement_status'] ?? null) !== 'submitted') {
-            throw new \InvalidArgumentException('Apenas anuências com status "submitted" podem ser validadas');
+            throw new \InvalidArgumentException('Apenas anuências com documentação reenviada podem ser reavaliadas');
         }
 
         $user = $this->security->getUser();
