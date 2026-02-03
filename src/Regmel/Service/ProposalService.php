@@ -259,7 +259,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             : '';
     }
 
-    public function getCsvHeaders(): array
+    public function getCsvHeaders(?string $type = null): array
     {
         return [
             $this->translator->trans('csv.header.id'),
@@ -272,7 +272,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $this->translator->trans('csv.header.houses_quantity'),
             $this->translator->trans('csv.header.total_area'),
             $this->translator->trans('csv.header.total_value'),
-            $this->translator->trans('csv.header.consented_by'),
             $this->translator->trans('csv.header.proposal_status'),
             'Motivo da Alteração de Status',
             $this->translator->trans('csv.header.status_reason'),
@@ -294,7 +293,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             'Anuência Validada Em',
             'Anuência Validada Por',
             'Motivo da Validação',
-            'Usuário Anuência',
             // Dados de exclusão
             'Status de Exclusão',
             'Motivo da Exclusão',
@@ -303,7 +301,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         ];
     }
 
-    public function getCsvRow(object $entity): array
+    public function getCsvRow(object $entity, ?string $type = null): array
     {
         if (!$entity instanceof Initiative) {
             throw new InvalidArgumentException($this->translator->trans('error.invalid_entity'));
@@ -359,7 +357,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $housesQuantity,
             $extraFields['area_size'] ?? 0,
             number_format($totalValue, 2, ',', '.'),
-            $extraFields['status_updated_by_name'] ?? '---',
             $extraFields['status'] ?? '',
             $extraFields['status_reason'] ?? '',
             $statusReason,
@@ -377,11 +374,10 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             // Dados de anuência
             $this->getAgreementStatusLabel($extraFields['agreement_status'] ?? null),
             isset($extraFields['agreement_uploaded_at']) ? (new \DateTime($extraFields['agreement_uploaded_at']))->format('d/m/Y H:i:s') : '',
-            $extraFields['agreement_uploaded_by_name'] ?? '',
+            $extraFields['agreement_uploaded_by_name'] ?? '---',
             isset($extraFields['agreement_validated_at']) ? (new \DateTime($extraFields['agreement_validated_at']))->format('d/m/Y H:i:s') : '',
             $extraFields['agreement_validated_by_name'] ?? '',
             $extraFields['agreement_reason'] ?? '',
-            $extraFields['agreement_uploaded_by_name'] ?? '---',
             // Dados de exclusão
             $entity->isDeleted() ? 'Sim' : 'Não',
             $entity->getDeletionReason() ?? '',

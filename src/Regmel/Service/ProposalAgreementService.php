@@ -72,7 +72,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $extraFields['agreement_uploaded_at'] = (new DateTime())->format('Y-m-d H:i:s');
         $extraFields['agreement_uploaded_by'] = $user?->getId()->toRfc4122();
         $extraFields['agreement_uploaded_by_name'] = $user?->getName();
-        
+
         // Limpar motivo anterior se houver
         unset($extraFields['agreement_reason']);
 
