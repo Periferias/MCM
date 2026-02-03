@@ -294,6 +294,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             'Anuência Validada Em',
             'Anuência Validada Por',
             'Motivo da Validação',
+            'Usuário Anuência',
             // Dados de exclusão
             'Status de Exclusão',
             'Motivo da Exclusão',
@@ -380,6 +381,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             isset($extraFields['agreement_validated_at']) ? (new \DateTime($extraFields['agreement_validated_at']))->format('d/m/Y H:i:s') : '',
             $extraFields['agreement_validated_by_name'] ?? '',
             $extraFields['agreement_reason'] ?? '',
+            $extraFields['agreement_validated_by_name'] ?? '---',
             // Dados de exclusão
             $entity->isDeleted() ? 'Sim' : 'Não',
             $entity->getDeletionReason() ?? '',

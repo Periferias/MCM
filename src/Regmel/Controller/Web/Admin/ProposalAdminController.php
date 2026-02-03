@@ -111,6 +111,7 @@ class ProposalAdminController extends AbstractAdminController
                 'address' => $extraFields['address'] ?? 'Não Informado',
                 // O novo campo que você queria:
                 'status_updated_by_name' => $extraFields['status_updated_by_name'] ?? 'Não informado',
+                'agreement_validated_by_name' => $extraFields['agreement_validated_by_name'] ?? 'Não informado',
             ];
         }, $filtered);
 
