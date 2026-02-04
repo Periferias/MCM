@@ -409,7 +409,68 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         return $zipFilePath;
     }
 
+    public function exportMapFilesAsync(array $proposals, string $userId): array
+    {
+        // Cria diretório de exports se não existe
+        $exportsDir = sprintf(
+            '%s/storage/regmel/exports',
+            $this->parameterBag->get('kernel.project_dir')
+        );
+        
+        if (!is_dir($exportsDir)) {
+            mkdir($exportsDir, 0755, true);
+        }
+        
+        // Limpa ZIPs antigos antes de criar novo (mais de 48h)
+        $this->cleanOldExports($exportsDir, 48 * 3600);
+        
+        // Gera nome único do arquivo
+        $timestamp = date('Y-m-d_H-i-s');
+        $zipFileName = sprintf('mapas_poligonais_%s_%s.zip', substr($userId, 0, 8), $timestamp);
+        $zipFilePath = sprintf('%s/%s', $exportsDir, $zipFileName);
+        
+        $zip = new ZipArchive();
+        if (true !== $zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+            throw new UnableCreateFileException();
+        }
+
+        $fileCount = 0;
+        foreach ($proposals as $proposal) {
+            if (empty($proposal->getExtraFields()['map_file'])) {
+                continue;
+            }
+            $filePath = $this->getDocumentPath($proposal->getExtraFields()['map_file']);
+            if (file_exists($filePath)) {
+                $zip->addFile($filePath, basename($filePath));
+                $fileCount++;
+            }
+        }
+        
+        $zip->close();
+
+        return [
+            'path' => $zipFilePath,
+            'filename' => $zipFileName,
+            'fileCount' => $fileCount,
+        ];
+    }
+
+    private function cleanOldExports(string $dir, int $maxAge): void
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+        
+        $now = time();
+        foreach (glob($dir . '/mapas_poligonais_*.zip') as $file) {
+            if (is_file($file) && ($now - filemtime($file)) > $maxAge) {
+                unlink($file);
+            }
+        }
+    }
+
     public function exportAnticipationFiles(array $proposals): string
+
     {
         $zipFilePath = sprintf('%s/storage/regmel/company/documents/anticipation_export.zip', $this->parameterBag->get('kernel.project_dir'));
         $zip = new ZipArchive();

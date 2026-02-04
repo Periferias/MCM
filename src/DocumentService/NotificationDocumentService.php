@@ -87,4 +87,13 @@ final class NotificationDocumentService
 
         $this->documentManager->flush();
     }
+
+    /**
+     * Cria uma nova notificação
+     */
+    public function create(NotificationDocument $notification): void
+    {
+        $this->documentManager->persist($notification);
+        $this->documentManager->flush();
+    }
 }
