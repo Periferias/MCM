@@ -283,6 +283,7 @@ class ProposalAdminController extends AbstractAdminController
     #[Route('/painel/admin/propostas/list/download-map-files', name: 'admin_regmel_proposal_map_file_download', methods: ['GET'])]
     public function exportMapFiles(): Response
     {
+        $user = $this->security->getUser();
         
         // Verifica se é admin ou manager
         if (!$this->security->isGranted(UserRolesEnum::ROLE_ADMIN->value) && 
@@ -311,8 +312,7 @@ class ProposalAdminController extends AbstractAdminController
             'Exportação iniciada! Você será notificado quando o arquivo estiver pronto.'
         );
 
-        return $this->redirectToRoute('admin_dashboard')
-        return $response;
+        return $this->redirectToRoute('admin_dashboard');
     }
 
     #[IsGranted(new Expression('
