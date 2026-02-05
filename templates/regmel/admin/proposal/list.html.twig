@@ -119,8 +119,8 @@
                             <th>{{ 'status' | trans }}</th>
                             <th>Usuário Anuência</th>
                             <th>Qtd. Domicílios</th>
-                            <th>Área Total</th>
                             <th>Valor Global da Proposta</th>
+                            <th>Motivo da Não Anuência</th>
                             <th>{{ 'actions' | trans }}</th>
                         </tr>
                         </thead>
@@ -151,8 +151,14 @@
                                 </td>
                                 <td>{{ proposal.agreement_uploaded_by_name != 'Não informado' ? proposal.agreement_uploaded_by_name : proposal.status_updated_by_name }}</td>
                                 <td>{{ proposal.quantity_houses }}</td>
-                                <td>{{ proposal.area_size }}</td>
                                 <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
+                                <td>
+                                    {% if status == 'Não Anuída' %}
+                                        {{ proposal.status_reason ?? '-' }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
                                 <td style="position: relative;">
                                     <div class="dropdown">
                                         <button
