@@ -36,53 +36,55 @@
 
                 {% if app.user %}
                 <div class="d-flex align-items-center gap-3">
-                    {# <div class="dropdown dropdown-notification">
-                        <button class="btn btn-light d-flex align-items-center position-relative gap-2" id="notificationDropdown">
-                            <span class="fw-semibold text-dark small">{{ 'notifications' | trans }}</span>
-                            <span class="d-flex align-items-center position-relative">
-                                <span class="material-icons">notifications</span>
-                                {% set notificationCount = navbar_notifications_count() %}
-                                {% if notificationCount > 0 %}
-                                    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle p-1" style="font-size: 0.7rem;">{{ notificationCount }}</span>
-                                {% endif %}
-                            </span>
-                        </button>
-
-                        <ul class="dropdown-menu dropdown-menu-end shadow mt-2" aria-labelledby="notificationDropdown" style="min-width: 400px;">
-                            <li>
-                                <div class="dropdown-header">
-                                    <strong>{{ 'your_notifications' | trans }}</strong>
-                                </div>
-                            </li>
-                            {% set notifications = navbar_notifications() %}
-                            {% if notifications|length > 0 %}
-                                {% for notification in notifications %}
-                                    <li>
-                                        <div class="px-3 py-2">
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span>{{ notification.content }}</span>
-                                            </div>
-                                            {% if notification.context %}
-                                                <div class="mb-1">
-                                                    <small class="text-muted">{{ notification.context }}</small>
-                                                </div>
-                                            {% endif %}
-                                            <small class="text-muted">{{ notification.createdAt|date('d/m/Y H:i') }}</small>
-                                        </div>
-                                    </li>
-                                    {% if not loop.last %}
-                                        <li><hr class="dropdown-divider"></li>
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <div class="dropdown dropdown-notification">
+                            <button class="btn btn-light d-flex align-items-center position-relative gap-2" id="notificationDropdown">
+                                <span class="fw-semibold text-dark small">{{ 'notifications' | trans }}</span>
+                                <span class="d-flex align-items-center position-relative">
+                                    <span class="material-icons">notifications</span>
+                                    {% set notificationCount = navbar_notifications_count() %}
+                                    {% if notificationCount > 0 %}
+                                        <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle p-1" style="font-size: 0.7rem;">{{ notificationCount }}</span>
                                     {% endif %}
-                                {% endfor %}
-                            {% else %}
+                                </span>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow mt-2" aria-labelledby="notificationDropdown" style="min-width: 400px;">
                                 <li>
-                                    <div class="px-3 py-2 text-center">
-                                        <small class="text-muted">{{ 'no_new_notifications' | trans }}</small>
+                                    <div class="dropdown-header">
+                                        <strong>{{ 'your_notifications' | trans }}</strong>
                                     </div>
                                 </li>
-                            {% endif %}
-                        </ul>
-                    </div> #}
+                                {% set notifications = navbar_notifications() %}
+                                {% if notifications|length > 0 %}
+                                    {% for notification in notifications %}
+                                        <li>
+                                            <div class="px-3 py-2">
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <span>{{ notification.content }}</span>
+                                                </div>
+                                                {% if notification.context %}
+                                                    <div class="mb-1">
+                                                        <small class="text-muted">{{ notification.context|raw }}</small>
+                                                    </div>
+                                                {% endif %}
+                                                <small class="text-muted">{{ notification.createdAt|date('d/m/Y H:i') }}</small>
+                                            </div>
+                                        </li>
+                                        {% if not loop.last %}
+                                            <li><hr class="dropdown-divider"></li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <li>
+                                        <div class="px-3 py-2 text-center">
+                                            <small class="text-muted">{{ 'no_new_notifications' | trans }}</small>
+                                        </div>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% endif %}
                 </div>
                 {% endif %}
 
