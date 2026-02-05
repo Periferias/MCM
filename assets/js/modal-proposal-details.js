@@ -100,6 +100,11 @@ function modalProposalDetails(event) {
                     </button>
                 `;
             }
+        } else if (proposalStatus === 'Aguardando Avaliação da Anuência') {
+            agreementStatusDisplay.innerHTML = '<span class="badge bg-warning text-dark">Aguardando Avaliação da Anuência</span>';
+            if (proposal.status_reason) {
+                agreementStatusDisplay.innerHTML += `<small class="d-block text-muted mt-2">Observação: ${proposal.status_reason}</small>`;
+            }
         } else if (proposalStatus === 'Não Anuída') {
             agreementStatusDisplay.innerHTML = '<span class="badge bg-danger">Não Anuída</span>';
             if (proposal.status_reason) {

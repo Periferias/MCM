@@ -316,9 +316,14 @@ class MunicipalityAdminController extends AbstractAdminController
         $municipality = $this->organizationService->get(Uuid::fromString($municipalityId));
         $termStatus = $municipality->getExtraFields()['term_status'] ?? null;
 
-        if ($termStatus !== 'approved' && in_array($status, [StatusProposalEnum::ANUIDA, StatusProposalEnum::NAO_ANUIDA, StatusProposalEnum::SELECIONADA])) {
+        if ($termStatus !== 'approved' && in_array($status, [StatusProposalEnum::ANUIDA, StatusProposalEnum::NAO_ANUIDA, StatusProposalEnum::SELECIONADA, StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA])) {
             $this->addFlash('error', 'Não é possível anuir ou selecionar proposta sem termo de adesão aprovado');
             return $this->redirectToRoute('admin_regmel_municipality_details', ['id' => $municipalityId]);
+        }
+
+        // Se município está anuindo, mudar status para "Aguardando Avaliação da Anuência"
+        if ($status === StatusProposalEnum::ANUIDA) {
+            $status = StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA;
         }
 
         if (true === empty(trim($reason))) {
