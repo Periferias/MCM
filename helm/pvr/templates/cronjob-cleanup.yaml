@@ -1,0 +1,73 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pvr-cleanup-export-files
+  namespace: default
+  labels:
+    app: pvr
+    component: cleanup
+spec:
+  # Executa a cada 2 horas (no minuto 0)
+  schedule: "0 */2 * * *"
+  
+  # Manter histórico dos últimos 3 jobs
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  
+  # Política de concorrência: não permitir múltiplas execuções simultâneas
+  concurrencyPolicy: Forbid
+  
+  jobTemplate:
+    metadata:
+      labels:
+        app: pvr
+        component: cleanup-job
+    spec:
+      # Manter pod por 1 hora após conclusão para análise de logs
+      ttlSecondsAfterFinished: 3600
+      
+      template:
+        metadata:
+          labels:
+            app: pvr
+            component: cleanup-job
+        spec:
+          restartPolicy: Never
+          
+          containers:
+          - name: cleanup
+            # Usar a mesma imagem do PHP da aplicação
+            image: pvr-php:latest
+            imagePullPolicy: IfNotPresent
+            
+            command:
+            - php
+            - bin/console
+            - app:cleanup-export-files
+            - --max-age=2
+            
+            # Variáveis de ambiente (mesmas da aplicação)
+            envFrom:
+            - configMapRef:
+                name: pvr-config
+            - secretRef:
+                name: pvr-secrets
+            
+            # Montagem do volume de exportação
+            volumeMounts:
+            - name: exports-volume
+              mountPath: /app/var/exports
+            
+            # Recursos limitados (job leve)
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "50m"
+              limits:
+                memory: "128Mi"
+                cpu: "100m"
+          
+          volumes:
+          - name: exports-volume
+            persistentVolumeClaim:
+              claimName: pvr-exports-pvc

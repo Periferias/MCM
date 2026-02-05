@@ -60,17 +60,22 @@ final readonly class GenerateMapFilesZipMessageHandler
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
 
+            // Calcula timestamp de expiração (2 horas)
+            $createdAt = new DateTime();
+            $expiresAt = (clone $createdAt)->modify('+2 hours');
+
             // Cria notificação no sistema
             $notification = new NotificationDocument();
             $notification->setSender('system');
             $notification->setTarget($message->userId);
             $notification->setContent('Exportação de Mapas Poligonais concluída');
             $notification->setContext(sprintf(
-                '%d arquivos | <a href="%s" class="btn btn-sm btn-primary">Baixar ZIP</a>',
+                '%d arquivos | <a href="%s" class="btn btn-sm btn-primary" data-expires-at="%s">Baixar ZIP</a> <small class="text-muted">(expira em 2h)</small>',
                 $zipData['fileCount'],
-                $downloadUrl
+                $downloadUrl,
+                $expiresAt->format('Y-m-d H:i:s')
             ));
-            $notification->setCreatedAt(new DateTime());
+            $notification->setCreatedAt($createdAt);
             $notification->setVisited(false);
 
             // Salva notificação
