@@ -66,62 +66,60 @@ function modalProposalDetails(event) {
     // Só exibe a seção de anuência se o termo de adesão estiver aprovado
     if (termStatus === 'approved') {
         agreementSection.style.display = 'block';
-    } else {
-        agreementSection.style.display = 'none';
-        modal.show();
-        return;
-    }
+        
+        // Limpar ações anteriores
+        agreementActions.innerHTML = '';
     
-    // Limpar ações anteriores
-    agreementActions.innerHTML = '';
-    
-    if (agreementStatus === 'submitted') {
-        agreementStatusDisplay.innerHTML = '<span class="badge bg-warning text-dark">Aguardando Validação</span>';
-    } else if (agreementStatus === 'approved') {
-        agreementStatusDisplay.innerHTML = '<span class="badge bg-success">Anuência Aprovada</span>';
-        agreementActions.innerHTML = `<a href="/painel/admin/propostas/${proposal.id}/agreement-file" target="_blank" class="btn btn-link btn-sm">Ver Documento</a>`;
-    } else if (agreementStatus === 'rejected') {
-        agreementStatusDisplay.innerHTML = `
-            <span class="badge bg-danger">Anuência Rejeitada</span>
-            <small class="d-block text-muted mt-2">Motivo: ${proposal.agreement_reason || ''}</small>
-        `;
-        agreementActions.innerHTML = `
-            <button onclick="openUploadAgreementModal('${proposal.id}')" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#modalUploadAgreement" 
-                    class="btn btn-outline-warning btn-sm mt-2">
-                Reenviar Documento
-            </button>
-        `;
-    } else if (proposalStatus === 'Anuída') {
-        agreementStatusDisplay.innerHTML = '<span class="badge bg-success">Anuída</span>';
-        if (!agreementStatus) {
+        if (agreementStatus === 'submitted') {
+            agreementStatusDisplay.innerHTML = '<span class="badge bg-warning text-dark">Aguardando Validação</span>';
+        } else if (agreementStatus === 'approved') {
+            agreementStatusDisplay.innerHTML = '<span class="badge bg-success">Anuência Aprovada</span>';
+            agreementActions.innerHTML = `<a href="/painel/admin/propostas/${proposal.id}/agreement-file" target="_blank" class="btn btn-link btn-sm">Ver Documento</a>`;
+        } else if (agreementStatus === 'rejected') {
+            agreementStatusDisplay.innerHTML = `
+                <span class="badge bg-danger">Anuência Rejeitada</span>
+                <small class="d-block text-muted mt-2">Motivo: ${proposal.agreement_reason || ''}</small>
+            `;
             agreementActions.innerHTML = `
                 <button onclick="openUploadAgreementModal('${proposal.id}')" 
                         data-bs-toggle="modal" 
                         data-bs-target="#modalUploadAgreement" 
-                        class="btn btn-outline-primary btn-sm mt-2">
-                    Enviar Documento
+                        class="btn btn-outline-warning btn-sm mt-2">
+                    Reenviar Documento
                 </button>
             `;
+        } else if (proposalStatus === 'Anuída') {
+            agreementStatusDisplay.innerHTML = '<span class="badge bg-success">Anuída</span>';
+            if (!agreementStatus) {
+                agreementActions.innerHTML = `
+                    <button onclick="openUploadAgreementModal('${proposal.id}')" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalUploadAgreement" 
+                            class="btn btn-outline-primary btn-sm mt-2">
+                        Enviar Documento
+                    </button>
+                `;
+            }
+        } else if (proposalStatus === 'Não Anuída') {
+            agreementStatusDisplay.innerHTML = '<span class="badge bg-danger">Não Anuída</span>';
+            if (proposal.agreement_reason) {
+                agreementStatusDisplay.innerHTML += `<small class="d-block text-muted mt-2">Motivo: ${proposal.agreement_reason}</small>`;
+            }
+        } else if (proposalStatus === 'Recebida') {
+            agreementStatusDisplay.innerHTML = '<span class="badge bg-secondary">Pendente</span>';
+            agreementActions.innerHTML = `
+                <button onclick="openAgreementModal('${proposal.id}')" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalAgreement" 
+                        class="btn btn-success btn-sm mt-2">
+                    Anuir Proposta
+                </button>
+            `;
+        } else {
+            agreementStatusDisplay.innerHTML = '<span class="badge bg-secondary">-</span>';
         }
-    } else if (proposalStatus === 'Não Anuída') {
-        agreementStatusDisplay.innerHTML = '<span class="badge bg-danger">Não Anuída</span>';
-        if (proposal.agreement_reason) {
-            agreementStatusDisplay.innerHTML += `<small class="d-block text-muted mt-2">Motivo: ${proposal.agreement_reason}</small>`;
-        }
-    } else if (proposalStatus === 'Recebida') {
-        agreementStatusDisplay.innerHTML = '<span class="badge bg-secondary">Pendente</span>';
-        agreementActions.innerHTML = `
-            <button onclick="openAgreementModal('${proposal.id}')" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#modalAgreement" 
-                    class="btn btn-success btn-sm mt-2">
-                Anuir Proposta
-            </button>
-        `;
     } else {
-        agreementStatusDisplay.innerHTML = '<span class="badge bg-secondary">-</span>';
+        agreementSection.style.display = 'none';
     }
 
     modal.show();
