@@ -58,8 +58,19 @@ function modalProposalDetails(event) {
     // Lógica de Anuência
     const agreementStatus = proposal.agreement_status;
     const proposalStatus = proposal.status;
+    const termStatus = proposal.term_status;
+    const agreementSection = document.querySelector('#agreement-section');
     const agreementStatusDisplay = document.querySelector('#agreement-status-display');
     const agreementActions = document.querySelector('#agreement-actions');
+    
+    // Só exibe a seção de anuência se o termo de adesão estiver aprovado
+    if (termStatus === 'approved') {
+        agreementSection.style.display = 'block';
+    } else {
+        agreementSection.style.display = 'none';
+        modal.show();
+        return;
+    }
     
     // Limpar ações anteriores
     agreementActions.innerHTML = '';

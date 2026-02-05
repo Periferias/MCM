@@ -302,6 +302,7 @@
                                                             zipcode: proposal.extraFields.zipcode ?? 'Não informado',
                                                             snpr_affiliation: proposal.extraFields.snpr_affiliation ?? 'Não',
                                                             snpr_affiliation_details: proposal.extraFields.snpr_affiliation_details ?? '',
+                                                            term_status: municipality.extraFields.term_status ?? null,
                                                             ...proposal.extraFields
                                                         }|json_encode|e('html_attr') }}'
                                                         onClick="modalProposalDetails(this)"
