@@ -328,6 +328,17 @@
                                                 >
                                                     Ver Proposta
                                                 </button>
+                                                
+                                                {% if municipality.extraFields.term_status == 'approved' and proposal.extraFields.status == 'Recebida' %}
+                                                    <button
+                                                            class="btn btn-success btn-sm ms-1"
+                                                            onclick="openAgreementModal('{{ municipality.id }}', '{{ proposal.id }}')"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#modalAgreement"
+                                                    >
+                                                        Anuir Proposta
+                                                    </button>
+                                                {% endif %}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -506,7 +517,6 @@
             const hiddenReason = document.getElementById('hiddenReason');
             const agreementFields = document.getElementById('agreementFields');
             const notAgreementFields = document.getElementById('notAgreementFields');
-            const confirmAgreement = document.getElementById('confirmAgreement');
             const declineReasonText = document.getElementById('declineReasonText');
             const agreementFile = document.getElementById('agreementFile');
 
@@ -515,19 +525,16 @@
                     agreementFields.classList.remove('d-none');
                     notAgreementFields.classList.add('d-none');
 
-                    confirmAgreement.setAttribute('required', '');
                     agreementFile.setAttribute('required', '');
                     declineReasonText.removeAttribute('required');
 
-                    const declarationLabel = document.querySelector('#agreementFields .form-check-label');
-                    hiddenReason.value = declarationLabel.textContent.trim();
+                    hiddenReason.value = 'Anuência aprovada';
                 }
 
                 if (statusNotAgreement.checked) {
                     agreementFields.classList.add('d-none');
                     notAgreementFields.classList.remove('d-none');
 
-                    confirmAgreement.removeAttribute('required');
                     agreementFile.removeAttribute('required');
                     declineReasonText.setAttribute('required', '');
 
