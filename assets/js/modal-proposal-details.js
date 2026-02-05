@@ -102,8 +102,8 @@ function modalProposalDetails(event) {
             }
         } else if (proposalStatus === 'Não Anuída') {
             agreementStatusDisplay.innerHTML = '<span class="badge bg-danger">Não Anuída</span>';
-            if (proposal.agreement_reason) {
-                agreementStatusDisplay.innerHTML += `<small class="d-block text-muted mt-2">Motivo: ${proposal.agreement_reason}</small>`;
+            if (proposal.status_reason) {
+                agreementStatusDisplay.innerHTML += `<small class="d-block text-muted mt-2">Motivo: ${proposal.status_reason}</small>`;
             }
         } else if (proposalStatus === 'Recebida') {
             agreementStatusDisplay.innerHTML = '<span class="badge bg-secondary">Pendente</span>';
