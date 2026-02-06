@@ -140,13 +140,29 @@
                                         (statusEnum.ENVIADA.value): 'bg-warning',
                                         (statusEnum.RECEBIDA.value): 'bg-info',
                                         (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'bg-warning',
+                                        'Aguardando Avaliação da Anuência': 'bg-warning',
                                         (statusEnum.ANUIDA.value): 'bg-success text-white',
                                         (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
                                         (statusEnum.SELECIONADA.value): 'bg-success text-white',
                                         (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
                                         (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
                                     }[status] ?? 'bg-dark') %}
-                                    <span class="badge {{ badgeClass }} text-dark text-wrap" style="max-width: 150px;">
+                                    {% set statusDescriptions = {
+                                        (statusEnum.ENVIADA.value): 'Proposta enviada pela empresa/osc e aguardando recebimento pelo município',
+                                        (statusEnum.RECEBIDA.value): 'Proposta recebida pelo município e aguardando anuência',
+                                        (statusEnum.SEM_ADESAO.value): 'Município ainda não possui termo de adesão aprovado',
+                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'Documento de anuência enviado pelo município e aguardando validação pela SNP',
+                                        (statusEnum.ANUIDA.value): 'Proposta anuída pelo município e aprovada pela SNP',
+                                        (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
+                                        (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
+                                        (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
+                                        (statusEnum.CLASSIFICADA.value): 'Proposta classificada'
+                                    } %}
+                                    <span class="badge {{ badgeClass }} text-wrap" 
+                                          style="max-width: 150px;" 
+                                          data-bs-toggle="tooltip" 
+                                          data-bs-placement="top" 
+                                          title="{{ statusDescriptions[status] ?? '' }}">
                                         {{ status }}
                                     </span>
                                 </td>
@@ -291,6 +307,14 @@
                 alert('O motivo da exclusão deve ter no mínimo 20 caracteres.');
                 return false;
             }
+        });
+
+        // Inicializar tooltips do Bootstrap
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         });
     </script>
 {% endblock %}
