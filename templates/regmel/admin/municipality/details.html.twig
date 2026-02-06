@@ -278,7 +278,7 @@
                                                     (statusEnum.SELECIONADA.value): 'bg-success text-white',
                                                     (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
                                                 }[status] ?? 'bg-dark') %}
-                                                <span class="badge {{ badgeClass }} text-dark">
+                                                <span class="badge {{ badgeClass }} text-dark text-wrap" style="max-width: 150px;">
                                                     {{ status }}
                                                 </span>
                                             </td>
@@ -507,11 +507,6 @@
     <script type="module" src="{{ asset('js/grid-init.js') }}"></script>
 
     <script>
-        function openAgreementModal(municipalityId, proposalId) {
-            const form = document.getElementById('proposalStatusForm');
-            form.action = `/painel/admin/municipios/${municipalityId}/propostas/${proposalId}/status`;
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             const statusAgreement = document.getElementById('statusAgreement');
             const statusNotAgreement = document.getElementById('statusNotAgreement');
@@ -556,7 +551,7 @@
         });
 
         // Função para abrir modal de anuência
-        function openAgreementModal(proposalId) {
+        function openAgreementModal(municipalityId, proposalId) {
             const form = document.getElementById('proposalStatusForm');
             
             // Configurar submit handler
@@ -571,7 +566,7 @@
                     form.action = `/painel/admin/propostas/${proposalId}/upload-agreement`;
                 } else if (statusNotAgreement.checked) {
                     // Se escolheu "Não Anuir", usar rota antiga (salva status=Não Anuída)
-                    form.action = `/painel/admin/municipios/{{ municipality.id }}/propostas/${proposalId}/status`;
+                    form.action = `/painel/admin/municipios/${municipalityId}/propostas/${proposalId}/status`;
                 }
                 
                 form.submit();

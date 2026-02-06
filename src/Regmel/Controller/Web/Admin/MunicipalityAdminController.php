@@ -321,11 +321,6 @@ class MunicipalityAdminController extends AbstractAdminController
             return $this->redirectToRoute('admin_regmel_municipality_details', ['id' => $municipalityId]);
         }
 
-        // Se município está anuindo, mudar status para "Aguardando Avaliação da Anuência"
-        if ($status === StatusProposalEnum::ANUIDA) {
-            $status = StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA;
-        }
-
         if (true === empty(trim($reason))) {
             $this->addFlash('error', 'O motivo é obrigatório');
         } else {

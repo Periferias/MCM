@@ -146,7 +146,7 @@
                                         (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
                                         (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
                                     }[status] ?? 'bg-dark') %}
-                                    <span class="badge {{ badgeClass }} text-dark">
+                                    <span class="badge {{ badgeClass }} text-dark text-wrap" style="max-width: 150px;">
                                         {{ status }}
                                     </span>
                                 </td>

@@ -72,6 +72,12 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $extraFields['agreement_uploaded_at'] = (new DateTime())->format('Y-m-d H:i:s');
         $extraFields['agreement_uploaded_by'] = $user?->getId()->toRfc4122();
         $extraFields['agreement_uploaded_by_name'] = $user?->getName();
+        
+        // Mudar status da proposta para "Aguardando Avaliação da Anuência"
+        $extraFields['status'] = StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA->value;
+        $extraFields['status_updated_by'] = $user?->getId()->toRfc4122();
+        $extraFields['status_updated_at'] = (new DateTime())->format('Y-m-d H:i:s');
+        $extraFields['status_updated_by_name'] = $user?->getName();
 
         // Limpar motivo anterior se houver
         unset($extraFields['agreement_reason']);
