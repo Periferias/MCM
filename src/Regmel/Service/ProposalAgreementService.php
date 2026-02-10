@@ -38,9 +38,15 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
             throw new \InvalidArgumentException('Município deve ter termo de adesão aprovado para enviar anuência');
         }
 
-        // Verificar se proposta está com status "Recebida"
-        if (($extraFields['status'] ?? null) !== StatusProposalEnum::RECEBIDA->value) {
-            throw new \InvalidArgumentException('Proposta deve estar com status "Recebida" para enviar anuência');
+        // Verificar se proposta está com status "Recebida" ou se o documento foi rejeitado
+        $currentStatus = $extraFields['status'] ?? null;
+        $agreementStatus = $extraFields['agreement_status'] ?? null;
+        
+        $canUpload = $currentStatus === StatusProposalEnum::RECEBIDA->value 
+            || ($currentStatus === StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA->value && $agreementStatus === 'rejected');
+        
+        if (!$canUpload) {
+            throw new \InvalidArgumentException('Proposta deve estar com status "Recebida" ou com documento de anuência rejeitado para enviar/reenviar anuência');
         }
 
         // Incrementar versão se for reenvio
