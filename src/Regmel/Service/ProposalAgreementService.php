@@ -260,7 +260,18 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
             : $municipalityEmails;
             
         if (empty($allEmails)) {
-            return;
+            // Log de erro para debug
+            error_log(sprintf(
+                '[ProposalAgreementService] Nenhum email encontrado para enviar notificação de %s da proposta %s. Município ID: %s, Empresa ID: %s',
+                $approved ? 'aprovação' : 'rejeição',
+                $proposalId->toRfc4122(),
+                $municipality?->getId()->toRfc4122() ?? 'N/A',
+                $company?->getId()->toRfc4122() ?? 'N/A'
+            ));
+            throw new \RuntimeException(
+                'Não foi possível enviar o email: nenhum destinatário válido encontrado. ' .
+                'Verifique se o município possui agentes com emails cadastrados.'
+            );
         }
 
         $template = $approved 
