@@ -70,6 +70,7 @@ class ProposalAgreementAdminController extends AbstractAdminController
                 'agreement_validated_at' => $extraFields['agreement_validated_at'] ?? null,
                 'agreement_validated_by_name' => $extraFields['agreement_validated_by_name'] ?? null,
                 'agreement_reason' => $extraFields['agreement_reason'] ?? null,
+                'status_reason' => $extraFields['status_reason'] ?? null,
             ];
         }, $proposals);
 

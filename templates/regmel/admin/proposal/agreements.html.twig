@@ -126,9 +126,9 @@
                                             </small>
                                         {% endif %}
                                         
-                                        {% if proposal.agreement_reason %}
+                                        {% if proposal.agreement_reason or proposal.status_reason %}
                                             <br><small class="text-muted fst-italic">
-                                                Motivo: {{ proposal.agreement_reason }}
+                                                Motivo: {{ proposal.agreement_reason ?? proposal.status_reason }}
                                             </small>
                                         {% endif %}
                                     </td>
