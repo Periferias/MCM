@@ -226,9 +226,6 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $proposalName = $proposal->getName();
         $companyName = $proposal->getOrganizationFrom()?->getName() ?? 'Empresa';
         
-        $status = $approved ? 'aprovada' : 'rejeitada';
-        $subject = "Anuência {$status} - {$proposalName}";
-        
         // Email para município
         $municipalityEmails = [];
         $municipality = $proposal->getOrganizationTo();
@@ -251,16 +248,32 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
             }
         }
 
-        $message = "A anuência do município {$municipalityName} para a proposta '{$proposalName}' foi {$status}.\n\n";
-        $message .= "Motivo: {$reason}\n\n";
-        
-        if (!$approved) {
-            $message .= "O município pode reenviar o documento corrigido.";
+        $allEmails = array_merge($municipalityEmails, $companyEmails);
+        if (empty($allEmails)) {
+            return;
         }
 
-        $allEmails = array_merge($municipalityEmails, $companyEmails);
-        if (!empty($allEmails)) {
-            $this->emailService->send($allEmails, $subject, $message);
-        }
+        $template = $approved 
+            ? '_emails/notifications/proposal/agreement-approved.html.twig'
+            : '_emails/notifications/proposal/agreement-rejected.html.twig';
+
+        $subject = $approved 
+            ? "Documento de Anuência Aprovado - {$proposalName}"
+            : "Documento de Anuência Rejeitado - {$proposalName}";
+
+        $loginPage = $this->parameterBag->get('app.url') ?? 'https://localhost';
+
+        $this->emailService->sendTemplatedEmail(
+            $allEmails,
+            $subject,
+            $template,
+            [
+                'municipalityName' => $municipalityName,
+                'proposalName' => $proposalName,
+                'companyName' => $companyName,
+                'reason' => $reason,
+                'loginPage' => $loginPage,
+            ]
+        );
     }
 }

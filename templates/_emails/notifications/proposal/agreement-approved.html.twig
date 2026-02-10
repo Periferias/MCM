@@ -1,0 +1,11 @@
+{% block content %}
+    <h1>Documento de Anuência Aprovado</h1>
+
+    <h1>Olá!</h1>
+
+    <p>O documento de anuência do município <strong>{{ municipalityName }}</strong> para a proposta <strong>"{{ proposalName }}"</strong> da empresa/osc <strong>{{ companyName }}</strong> foi <span style="font-weight: bold; color: green;">aprovado</span>.</p>
+
+    <p><strong>Motivo:</strong> {{ reason }}</p>
+
+    <p>Acesse o sistema <a href="{{ loginPage }}">Periferia Viva Reformas</a> para acompanhar o andamento da proposta.</p>
+{% endblock %}
