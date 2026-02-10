@@ -232,14 +232,21 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $proposalName = $proposal->getName();
         $companyName = $proposal->getOrganizationFrom()?->getName() ?? 'Empresa';
         
-        // Email para município
+        // Email para município (agentes + email do município nos extra_fields)
         $municipalityEmails = [];
         $municipality = $proposal->getOrganizationTo();
-        if ($municipality && $municipality->getAgents()) {
-            foreach ($municipality->getAgents() as $agent) {
-                if ($agent->getUser()) {
-                    $municipalityEmails[] = $agent->getUser()->getEmail();
+        if ($municipality) {
+            if ($municipality->getAgents()) {
+                foreach ($municipality->getAgents() as $agent) {
+                    if ($agent->getUser()) {
+                        $municipalityEmails[] = $agent->getUser()->getEmail();
+                    }
                 }
+            }
+            // Adiciona o email do município cadastrado nos extra_fields (pode ser o principal)
+            $municipalityEmail = $municipality->getExtraFields()['email'] ?? null;
+            if ($municipalityEmail) {
+                $municipalityEmails[] = $municipalityEmail;
             }
         }
 
@@ -256,8 +263,8 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
 
         // Se rejeitado, enviar apenas para município. Se aprovado, enviar para ambos
         $allEmails = $approved 
-            ? array_merge($municipalityEmails, $companyEmails)
-            : $municipalityEmails;
+            ? array_unique(array_filter(array_merge($municipalityEmails, $companyEmails)))
+            : array_unique(array_filter($municipalityEmails));
             
         if (empty($allEmails)) {
             // Log de erro para debug
