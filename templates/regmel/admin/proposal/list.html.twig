@@ -170,8 +170,8 @@
                                 <td>{{ proposal.quantity_houses }}</td>
                                 <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
                                 <td>
-                                    {% if status == 'Não Anuída' %}
-                                        {{ proposal.status_reason ?? '-' }}
+                                    {% if status == statusEnum.NAO_ANUIDA.value %}
+                                        {{ proposal.status_reason ?? proposal.agreement_reason ?? '-' }}
                                     {% else %}
                                         -
                                     {% endif %}
