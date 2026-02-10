@@ -248,7 +248,11 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
             }
         }
 
-        $allEmails = array_merge($municipalityEmails, $companyEmails);
+        // Se rejeitado, enviar apenas para município. Se aprovado, enviar para ambos
+        $allEmails = $approved 
+            ? array_merge($municipalityEmails, $companyEmails)
+            : $municipalityEmails;
+            
         if (empty($allEmails)) {
             return;
         }
