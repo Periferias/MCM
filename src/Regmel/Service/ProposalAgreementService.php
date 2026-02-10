@@ -250,14 +250,21 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
             }
         }
 
-        // Email para empresa
+        // Email para empresa (agentes + email da empresa nos extra_fields)
         $companyEmails = [];
         $company = $proposal->getOrganizationFrom();
-        if ($company && $company->getAgents()) {
-            foreach ($company->getAgents() as $agent) {
-                if ($agent->getUser()) {
-                    $companyEmails[] = $agent->getUser()->getEmail();
+        if ($company) {
+            if ($company->getAgents()) {
+                foreach ($company->getAgents() as $agent) {
+                    if ($agent->getUser()) {
+                        $companyEmails[] = $agent->getUser()->getEmail();
+                    }
                 }
+            }
+            // Adiciona o email da empresa cadastrado nos extra_fields
+            $companyEmail = $company->getExtraFields()['email'] ?? null;
+            if ($companyEmail) {
+                $companyEmails[] = $companyEmail;
             }
         }
 
