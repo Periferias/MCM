@@ -142,7 +142,9 @@
                                         (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'bg-warning',
                                         'Aguardando Avaliação da Anuência': 'bg-warning',
                                         (statusEnum.ANUIDA.value): 'bg-success text-white',
+                                        'Anuída': 'bg-success text-white',
                                         (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
+                                        'Não Anuída': 'bg-danger text-white',
                                         (statusEnum.SELECIONADA.value): 'bg-success text-white',
                                         (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
                                         (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
@@ -153,7 +155,9 @@
                                         (statusEnum.SEM_ADESAO.value): 'Município ainda não possui termo de adesão aprovado',
                                         (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'Documento de anuência enviado pelo município e aguardando validação pela SNP',
                                         (statusEnum.ANUIDA.value): 'Proposta anuída pelo município e aprovada pela SNP',
+                                        'Anuída': 'Proposta anuída pelo município e aprovada pela SNP',
                                         (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
+                                        'Não Anuída': 'Proposta não anuída pelo município',
                                         (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
                                         (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
                                         (statusEnum.CLASSIFICADA.value): 'Proposta classificada'
@@ -170,7 +174,7 @@
                                 <td>{{ proposal.quantity_houses }}</td>
                                 <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
                                 <td>
-                                    {% if status == statusEnum.NAO_ANUIDA.value %}
+                                    {% if status == statusEnum.NAO_ANUIDA.value or status == 'Não Anuída' %}
                                         {{ proposal.status_reason ?? proposal.agreement_reason ?? '-' }}
                                     {% else %}
                                         -
