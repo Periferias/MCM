@@ -13,6 +13,7 @@ use DateTime;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Uid\Uuid;
 use ZipArchive;
 
@@ -24,6 +25,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         private EmailServiceInterface $emailService,
         private Security $security,
         private ParameterBagInterface $parameterBag,
+        private UrlGeneratorInterface $urlGenerator,
     ) {
     }
 
@@ -296,7 +298,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
             ? "Documento de Anuência Aprovado - {$proposalName}"
             : "Documento de Anuência Rejeitado - {$proposalName}";
 
-        $loginPage = $this->parameterBag->get('app.url') ?? 'https://localhost';
+        $loginPage = $this->urlGenerator->generate('web_auth_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $this->emailService->sendTemplatedEmail(
             $allEmails,
