@@ -165,12 +165,14 @@
                                         (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
                                         (statusEnum.CLASSIFICADA.value): 'Proposta classificada'
                                     } %}
+                                    {# Mapeia valores antigos para novos textos #}
+                                    {% set displayStatus = status == 'Anuída' ? statusEnum.ANUIDA.value : (status == 'Não Anuída' ? statusEnum.NAO_ANUIDA.value : status) %}
                                     <span class="badge {{ badgeClass }} text-wrap" 
                                           style="max-width: 150px;" 
                                           data-bs-toggle="tooltip" 
                                           data-bs-placement="top" 
                                           title="{{ statusDescriptions[status] ?? '' }}">
-                                        {{ status }}
+                                        {{ displayStatus }}
                                     </span>
                                 </td>
                                 <td>
