@@ -485,27 +485,45 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $this->initiativeRepository->save($initiative);
         $this->entityManager->flush();
 
+        // Enviar email de notificação
         $municipalityEmails = [];
         $organizationTo = $initiative->getOrganizationTo();
-        if ($organizationTo && $organizationTo->getAgents()) {
-            foreach ($organizationTo->getAgents() as $agent) {
-                if ($agent->getUser()) {
-                    $municipalityEmails[] = $agent->getUser()->getEmail();
+        if ($organizationTo) {
+            if ($organizationTo->getAgents()) {
+                foreach ($organizationTo->getAgents() as $agent) {
+                    if ($agent->getUser()) {
+                        $municipalityEmails[] = $agent->getUser()->getEmail();
+                    }
                 }
+            }
+            // Adiciona email do município dos extra_fields
+            $municipalityEmail = $organizationTo->getExtraFields()['email'] ?? null;
+            if ($municipalityEmail) {
+                $municipalityEmails[] = $municipalityEmail;
             }
         }
 
         $companyEmails = [];
         $organizationFrom = $initiative->getOrganizationFrom();
-        if ($organizationFrom && $organizationFrom->getAgents()) {
-            foreach ($organizationFrom->getAgents() as $agent) {
-                if ($agent->getUser()) {
-                    $companyEmails[] = $agent->getUser()->getEmail();
+        if ($organizationFrom) {
+            if ($organizationFrom->getAgents()) {
+                foreach ($organizationFrom->getAgents() as $agent) {
+                    if ($agent->getUser()) {
+                        $companyEmails[] = $agent->getUser()->getEmail();
+                    }
                 }
+            }
+            // Adiciona email da empresa dos extra_fields
+            $companyEmail = $organizationFrom->getExtraFields()['email'] ?? null;
+            if ($companyEmail) {
+                $companyEmails[] = $companyEmail;
             }
         }
 
-        $allEmails = array_unique(array_filter([...$municipalityEmails, ...$companyEmails]));
+        // Se for NAO_ANUIDA, enviar apenas para empresa/OSC. Caso contrário, enviar para ambos
+        $allEmails = $status === StatusProposalEnum::NAO_ANUIDA
+            ? array_unique(array_filter($companyEmails))
+            : array_unique(array_filter([...$municipalityEmails, ...$companyEmails]));
 
         if (!empty($allEmails)) {
             $this->emailService->sendTemplatedEmail(
@@ -515,6 +533,9 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
                 [
                     'municipalityName' => $organizationTo ? $organizationTo->getName() : ($extraFields['city_name'] ?? 'Município'),
                     'companyName' => $organizationFrom ? $organizationFrom->getName() : 'Empresa',
+                    'proposalName' => $initiative->getName(),
+                    'status' => $status->value,
+                    'reason' => $reason,
                 ]
             );
         }

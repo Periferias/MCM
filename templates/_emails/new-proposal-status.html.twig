@@ -1,5 +1,15 @@
 {% block content %}
-    <h1>Olá, o status da proposta foi alterado</h1>
+    <h1>Status da Proposta Atualizado</h1>
 
-    <p>O município {{ municipalityName }} teve uma proposta da empresa {{ companyName }} com status atualizado.</p>
+    <h2>Olá!</h2>
+
+    <p>A proposta <strong>"{{ proposalName }}"</strong> da empresa/osc <strong>{{ companyName }}</strong> para o município <strong>{{ municipalityName }}</strong> teve seu status atualizado.</p>
+
+    <p><strong>Novo Status:</strong> {{ status }}</p>
+
+    {% if reason %}
+        <p><strong>Motivo:</strong> {{ reason }}</p>
+    {% endif %}
+
+    <p>Acesse o sistema para mais informações.</p>
 {% endblock %}
