@@ -143,13 +143,13 @@
                                                         <label class="form-label fw-bold">Status *</label>
                                                         <div class="d-flex gap-4">
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="status" id="statusAgreement" value="Anuída" required>
+                                                                <input class="form-check-input" type="radio" name="status" id="statusAgreement" value="{{ statusEnum.ANUIDA.value }}" required>
                                                                 <label class="form-check-label" for="statusAgreement">
                                                                     <i class="bi bi-check-circle-fill text-success me-2"></i>Anuir Proposta
                                                                 </label>
                                                             </div>
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="status" id="statusNotAgreement" value="Não Anuída" required>
+                                                                <input class="form-check-input" type="radio" name="status" id="statusNotAgreement" value="{{ statusEnum.NAO_ANUIDA.value }}" required>
                                                                 <label class="form-check-label" for="statusNotAgreement">
                                                                     <i class="bi bi-x-circle-fill text-danger me-2"></i>Não Anuir
                                                                 </label>

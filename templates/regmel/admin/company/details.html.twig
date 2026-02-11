@@ -353,11 +353,11 @@
                             <label class="form-label fw-bold">Status *</label>
                             <select class="form-select" name="status" required>
                                 <option value="" selected disabled>Selecione o status</option>
-                                <option value="Anuída">Anuída</option>
-                                <option value="Não Anuída">Não Anuída</option>
-                                <option value="Selecionada">Selecionada</option>
-                                <option value="Não Selecionada">Não Selecionada</option>
-                                <option value="Classificada">Classificada</option>
+                                <option value="{{ statusEnum.ANUIDA.value }}">{{ statusEnum.ANUIDA.value }}</option>
+                                <option value="{{ statusEnum.NAO_ANUIDA.value }}">{{ statusEnum.NAO_ANUIDA.value }}</option>
+                                <option value="{{ statusEnum.SELECIONADA.value }}">{{ statusEnum.SELECIONADA.value }}</option>
+                                <option value="{{ statusEnum.NAO_SELECIONADA.value }}">{{ statusEnum.NAO_SELECIONADA.value }}</option>
+                                <option value="{{ statusEnum.CLASSIFICADA.value }}">{{ statusEnum.CLASSIFICADA.value }}</option>
                             </select>
                             <div class="form-text">Selecione uma opção obrigatória</div>
                         </div>
