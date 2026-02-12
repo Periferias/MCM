@@ -13,8 +13,9 @@ enum StatusProposalEnum: string
     case ENVIADA = 'Enviada';
     case RECEBIDA = 'Recebida';
     case SEM_ADESAO = 'Sem Adesão do Município';
-    case ANUIDA = 'Anuída';
-    case NAO_ANUIDA = 'Não Anuída';
+    case AGUARDANDO_AVALIACAO_ANUENCIA = 'Aguardando Validação da Anuência';
+    case ANUIDA = 'Anuída pelo Município';
+    case NAO_ANUIDA = 'Não Anuída pelo Município';
     case SELECIONADA = 'Selecionada';
     case NAO_SELECIONADA = 'Não Selecionada';
     case CLASSIFICADA = 'Classificada';

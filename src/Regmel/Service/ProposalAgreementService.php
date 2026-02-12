@@ -13,6 +13,7 @@ use DateTime;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Uid\Uuid;
 use ZipArchive;
 
@@ -24,6 +25,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         private EmailServiceInterface $emailService,
         private Security $security,
         private ParameterBagInterface $parameterBag,
+        private UrlGeneratorInterface $urlGenerator,
     ) {
     }
 
@@ -38,9 +40,15 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
             throw new \InvalidArgumentException('Município deve ter termo de adesão aprovado para enviar anuência');
         }
 
-        // Verificar se proposta está com status "Recebida"
-        if (($extraFields['status'] ?? null) !== StatusProposalEnum::RECEBIDA->value) {
-            throw new \InvalidArgumentException('Proposta deve estar com status "Recebida" para enviar anuência');
+        // Verificar se proposta está com status "Recebida" ou se o documento foi rejeitado
+        $currentStatus = $extraFields['status'] ?? null;
+        $agreementStatus = $extraFields['agreement_status'] ?? null;
+        
+        $canUpload = $currentStatus === StatusProposalEnum::RECEBIDA->value 
+            || ($currentStatus === StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA->value && $agreementStatus === 'rejected');
+        
+        if (!$canUpload) {
+            throw new \InvalidArgumentException('Proposta deve estar com status "Recebida" ou com documento de anuência rejeitado para enviar/reenviar anuência');
         }
 
         // Incrementar versão se for reenvio
@@ -73,6 +81,12 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $extraFields['agreement_uploaded_by'] = $user?->getId()->toRfc4122();
         $extraFields['agreement_uploaded_by_name'] = $user?->getName();
         
+        // Mudar status da proposta para "Aguardando Avaliação da Anuência"
+        $extraFields['status'] = StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA->value;
+        $extraFields['status_updated_by'] = $user?->getId()->toRfc4122();
+        $extraFields['status_updated_at'] = (new DateTime())->format('Y-m-d H:i:s');
+        $extraFields['status_updated_by_name'] = $user?->getName();
+
         // Limpar motivo anterior se houver
         unset($extraFields['agreement_reason']);
 
@@ -89,7 +103,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $extraFields = $proposal->getExtraFields();
 
         if (($extraFields['agreement_status'] ?? null) !== 'submitted') {
-            throw new \InvalidArgumentException('Apenas anuências com status "submitted" podem ser validadas');
+            throw new \InvalidArgumentException('Apenas anuências com documentação reenviada podem ser reavaliadas');
         }
 
         $user = $this->security->getUser();
@@ -220,41 +234,83 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $proposalName = $proposal->getName();
         $companyName = $proposal->getOrganizationFrom()?->getName() ?? 'Empresa';
         
-        $status = $approved ? 'aprovada' : 'rejeitada';
-        $subject = "Anuência {$status} - {$proposalName}";
-        
-        // Email para município
+        // Email para município (agentes + email do município nos extra_fields)
         $municipalityEmails = [];
         $municipality = $proposal->getOrganizationTo();
-        if ($municipality && $municipality->getAgents()) {
-            foreach ($municipality->getAgents() as $agent) {
-                if ($agent->getUser()) {
-                    $municipalityEmails[] = $agent->getUser()->getEmail();
+        if ($municipality) {
+            if ($municipality->getAgents()) {
+                foreach ($municipality->getAgents() as $agent) {
+                    if ($agent->getUser()) {
+                        $municipalityEmails[] = $agent->getUser()->getEmail();
+                    }
                 }
+            }
+            // Adiciona o email do município cadastrado nos extra_fields (pode ser o principal)
+            $municipalityEmail = $municipality->getExtraFields()['email'] ?? null;
+            if ($municipalityEmail) {
+                $municipalityEmails[] = $municipalityEmail;
             }
         }
 
-        // Email para empresa
+        // Email para empresa (agentes + email da empresa nos extra_fields)
         $companyEmails = [];
         $company = $proposal->getOrganizationFrom();
-        if ($company && $company->getAgents()) {
-            foreach ($company->getAgents() as $agent) {
-                if ($agent->getUser()) {
-                    $companyEmails[] = $agent->getUser()->getEmail();
+        if ($company) {
+            if ($company->getAgents()) {
+                foreach ($company->getAgents() as $agent) {
+                    if ($agent->getUser()) {
+                        $companyEmails[] = $agent->getUser()->getEmail();
+                    }
                 }
+            }
+            // Adiciona o email da empresa cadastrado nos extra_fields
+            $companyEmail = $company->getExtraFields()['email'] ?? null;
+            if ($companyEmail) {
+                $companyEmails[] = $companyEmail;
             }
         }
 
-        $message = "A anuência do município {$municipalityName} para a proposta '{$proposalName}' foi {$status}.\n\n";
-        $message .= "Motivo: {$reason}\n\n";
-        
-        if (!$approved) {
-            $message .= "O município pode reenviar o documento corrigido.";
+        // Se rejeitado, enviar apenas para município. Se aprovado, enviar para ambos
+        $allEmails = $approved 
+            ? array_unique(array_filter(array_merge($municipalityEmails, $companyEmails)))
+            : array_unique(array_filter($municipalityEmails));
+            
+        if (empty($allEmails)) {
+            // Log de erro para debug
+            error_log(sprintf(
+                '[ProposalAgreementService] Nenhum email encontrado para enviar notificação de %s da proposta %s. Município ID: %s, Empresa ID: %s',
+                $approved ? 'aprovação' : 'rejeição',
+                $proposalId->toRfc4122(),
+                $municipality?->getId()->toRfc4122() ?? 'N/A',
+                $company?->getId()->toRfc4122() ?? 'N/A'
+            ));
+            throw new \RuntimeException(
+                'Não foi possível enviar o email: nenhum destinatário válido encontrado. ' .
+                'Verifique se o município possui agentes com emails cadastrados.'
+            );
         }
 
-        $allEmails = array_merge($municipalityEmails, $companyEmails);
-        if (!empty($allEmails)) {
-            $this->emailService->send($allEmails, $subject, $message);
-        }
+        $template = $approved 
+            ? '_emails/notifications/proposal/agreement-approved.html.twig'
+            : '_emails/notifications/proposal/agreement-rejected.html.twig';
+
+        $subject = $approved 
+            ? "Documento de Anuência Aprovado - {$proposalName}"
+            : "Documento de Anuência Rejeitado - {$proposalName}";
+
+        $loginPage = $this->urlGenerator->generate('web_auth_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $this->emailService->sendTemplatedEmail(
+            $allEmails,
+            $subject,
+            $template,
+            [
+                'municipalityName' => $municipalityName,
+                'proposalName' => $proposalName,
+                'companyName' => $companyName,
+                'reason' => $reason,
+                'loginPage' => $loginPage,
+            ]
+        );
     }
 }

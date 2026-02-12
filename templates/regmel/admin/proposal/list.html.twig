@@ -1,5 +1,7 @@
 {% extends "_layouts/blank.html.twig" %}
 
+{% set statusEnum = enum('App\\Enum\\StatusProposalEnum') %}
+
 {% block title %}
     {{ 'control_panel'|trans }} - {{ 'proposals'|trans }}
 {% endblock %}
@@ -51,11 +53,11 @@
                                             <label class="form-label fw-bold">Status *</label>
                                             <select class="form-select" name="status" required>
                                                 <option value="" selected disabled>Selecione o status</option>
-                                                <option value="Anuída">Anuída</option>
-                                                <option value="Não Anuída">Não Anuída</option>
-                                                <option value="Selecionada">Selecionada</option>
-                                                <option value="Não Selecionada">Não Selecionada</option>
-                                                <option value="Classificada">Classificada</option>
+                                                <option value="{{ statusEnum.ANUIDA.value }}">{{ statusEnum.ANUIDA.value }}</option>
+                                                <option value="{{ statusEnum.NAO_ANUIDA.value }}">{{ statusEnum.NAO_ANUIDA.value }}</option>
+                                                <option value="{{ statusEnum.SELECIONADA.value }}">{{ statusEnum.SELECIONADA.value }}</option>
+                                                <option value="{{ statusEnum.NAO_SELECIONADA.value }}">{{ statusEnum.NAO_SELECIONADA.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA.value }}">{{ statusEnum.CLASSIFICADA.value }}</option>
                                             </select>
                                             <div class="form-text">Selecione uma opção obrigatória</div>
                                         </div>
@@ -119,8 +121,8 @@
                             <th>{{ 'status' | trans }}</th>
                             <th>Usuário Anuência</th>
                             <th>Qtd. Domicílios</th>
-                            <th>Área Total</th>
                             <th>Valor Global da Proposta</th>
+                            <th>Motivo da Não Anuência</th>
                             <th>{{ 'actions' | trans }}</th>
                         </tr>
                         </thead>
@@ -134,25 +136,53 @@
                                 <td>{{ proposal.city_name }}</td>
                                 <td>
                                     {% set status = proposal.status ?? '' %}
-                                    {% set statusEnum = enum('App\\Enum\\StatusProposalEnum') %}
                                     {% set badgeClass = ({
                                         (statusEnum.SEM_ADESAO.value): 'bg-dark text-white',
                                         (statusEnum.ENVIADA.value): 'bg-warning',
                                         (statusEnum.RECEBIDA.value): 'bg-info',
+                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'bg-warning',
+                                        'Aguardando Avaliação da Anuência': 'bg-warning',
                                         (statusEnum.ANUIDA.value): 'bg-success text-white',
+                                        'Anuída': 'bg-success text-white',
                                         (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
+                                        'Não Anuída': 'bg-danger text-white',
                                         (statusEnum.SELECIONADA.value): 'bg-success text-white',
                                         (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
                                         (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
                                     }[status] ?? 'bg-dark') %}
-                                    <span class="badge {{ badgeClass }} text-dark">
-                                        {{ status }}
+                                    {% set statusDescriptions = {
+                                        (statusEnum.ENVIADA.value): 'Proposta enviada pela empresa/osc e aguardando recebimento pelo município',
+                                        (statusEnum.RECEBIDA.value): 'Proposta recebida pelo município e aguardando anuência',
+                                        (statusEnum.SEM_ADESAO.value): 'Município ainda não possui termo de adesão aprovado',
+                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'Documento de anuência enviado pelo município e aguardando validação pela SNP',
+                                        (statusEnum.ANUIDA.value): 'Proposta anuída pelo município e aprovada pela SNP',
+                                        'Anuída': 'Proposta anuída pelo município e aprovada pela SNP',
+                                        (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
+                                        'Não Anuída': 'Proposta não anuída pelo município',
+                                        (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
+                                        (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
+                                        (statusEnum.CLASSIFICADA.value): 'Proposta classificada'
+                                    } %}
+                                    {# Mapeia valores antigos para novos textos #}
+                                    {% set displayStatus = status == 'Anuída' ? statusEnum.ANUIDA.value : (status == 'Não Anuída' ? statusEnum.NAO_ANUIDA.value : status) %}
+                                    <span class="badge {{ badgeClass }} text-wrap" 
+                                          style="max-width: 150px;" 
+                                          data-bs-toggle="tooltip" 
+                                          data-bs-placement="top" 
+                                          title="{{ statusDescriptions[status] ?? '' }}">
+                                        {{ displayStatus }}
                                     </span>
                                 </td>
-                                <td>{{ proposal.status_updated_by_name }}</td>
+                                <td>{{ proposal.agreement_uploaded_by_name != 'Não informado' ? proposal.agreement_uploaded_by_name : proposal.status_updated_by_name }}</td>
                                 <td>{{ proposal.quantity_houses }}</td>
-                                <td>{{ proposal.area_size }}</td>
                                 <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
+                                <td>
+                                    {% if status == statusEnum.NAO_ANUIDA.value or status == 'Não Anuída' %}
+                                        {{ proposal.status_reason ?? proposal.agreement_reason ?? '-' }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
                                 <td style="position: relative;">
                                     <div class="dropdown">
                                         <button
@@ -284,6 +314,14 @@
                 alert('O motivo da exclusão deve ter no mínimo 20 caracteres.');
                 return false;
             }
+        });
+
+        // Inicializar tooltips do Bootstrap
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         });
     </script>
 {% endblock %}

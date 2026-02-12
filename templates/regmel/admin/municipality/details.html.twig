@@ -1,5 +1,7 @@
 {% extends "_layouts/blank.html.twig" %}
 
+{% set statusEnum = enum('App\\Enum\\StatusProposalEnum') %}
+
 {% block title %}{{ 'control_panel'|trans }} - {{ 'organizations'|trans }} - {{ 'municipality'|trans }}{% endblock %}
 
 {% block content %}
@@ -129,6 +131,74 @@
                                 </div>
                             </div>
                             <div class="tab-pane" id="pills-proposal" role="tabpanel" aria-labelledby="pills-proposal-tab" tabindex="0">
+                                {# Modal de Anuência - Único modal com tudo #}
+                                <div class="modal fade" id="modalAgreement" tabindex="-1" aria-labelledby="agreementModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form id="proposalStatusForm" method="post" enctype="multipart/form-data">
+                                                <div class="modal-header">
+                                                    <h1 class="modal-title fs-5" id="agreementModalLabel">Anuência</h1>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-4">
+                                                        <label class="form-label fw-bold">Status *</label>
+                                                        <div class="d-flex gap-4">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="status" id="statusAgreement" value="{{ statusEnum.ANUIDA.value }}" required>
+                                                                <label class="form-check-label" for="statusAgreement">
+                                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>Anuir Proposta
+                                                                </label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="status" id="statusNotAgreement" value="{{ statusEnum.NAO_ANUIDA.value }}" required>
+                                                                <label class="form-check-label" for="statusNotAgreement">
+                                                                    <i class="bi bi-x-circle-fill text-danger me-2"></i>Não Anuir
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-text">Selecione uma opção obrigatória</div>
+                                                    </div>
+
+                                                    <input type="hidden" name="reason" id="hiddenReason">
+
+                                                    <div class="mb-3 d-none" id="agreementFields">
+                                                        <div class="alert alert-info">
+                                                            <i class="bi bi-info-circle me-2"></i>
+                                                            <strong>Importante:</strong> O documento deve estar assinado pelo Prefeito(a) municipal ou Governador do DF.
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="agreementFile" class="form-label fw-bold">Documento de Anuência (PDF) *</label>
+                                                            <input class="form-control" type="file" id="agreementFile" name="agreementFile" accept="application/pdf" required>
+                                                            <div class="form-text">
+                                                                Apenas arquivos PDF são aceitos (máximo 40MB)
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="mt-2">
+                                                            <a class="btn btn-link btn-sm" href="/files/manifestacao_de_anuencia.pdf" download>
+                                                                <i class="bi bi-download me-2"></i>Baixar Modelo de Manifestação de Anuência
+                                                            </a>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3 d-none" id="notAgreementFields">
+                                                        <label for="declineReasonText" class="form-label fw-bold">Motivo *</label>
+                                                        <textarea name="declineReason" id="declineReasonText" class="form-control" rows="4"
+                                                                  placeholder="Descreva o motivo da sua decisão..." required></textarea>
+                                                        <div class="form-text">Mínimo de 20 caracteres</div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                                    <button type="submit" class="btn btn-primary">Submeter</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {# Modal para Upload de Documento de Anuência #}
                                 <div class="modal fade" id="modalUploadAgreement" tabindex="-1" aria-labelledby="uploadAgreementLabel" aria-hidden="true">
                                     <div class="modal-dialog">
@@ -153,7 +223,7 @@
                                                     </div>
                                                     
                                                     <div class="mt-3">
-                                                        <a class="btn btn-link" href="/files/manifestracao_de_anuencia.pdf" download>
+                                                        <a class="btn btn-link" href="/files/manifestacao_de_anuencia.pdf" download>
                                                             <i class="bi bi-download me-2"></i>Baixar Modelo de Manifestação de Anuência
                                                         </a>
                                                     </div>
@@ -186,8 +256,9 @@
                                         <tr>
                                             <th>Titulo</th>
                                             <th>Empresa/OSC</th>
-                                            <th>Status</th>
-                                            <th>Motivo da Anuência</th>
+                                            <th>Status da Proposta</th>
+                                            <th>Status da Anuência</th>
+                                            <th>Motivo da Não Anuência</th>
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
@@ -198,22 +269,61 @@
                                             <td>{{ proposal.organizationFrom.name }}</td>
                                             <td>
                                                 {% set status = proposal.extraFields.status ?? ''  %}
-                                                {% set statusEnum = enum('App\\Enum\\StatusProposalEnum') %}
                                                 {% set badgeClass = ({
                                                     (statusEnum.SEM_ADESAO.value): 'bg-dark text-white',
                                                     (statusEnum.ENVIADA.value): 'bg-warning',
                                                     (statusEnum.RECEBIDA.value): 'bg-info',
+                                                    (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'bg-warning',
+                                                    'Aguardando Avaliação da Anuência': 'bg-warning',
                                                     (statusEnum.ANUIDA.value): 'bg-success text-white',
+                                                    'Anuída': 'bg-success text-white',
                                                     (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
+                                                    'Não Anuída': 'bg-danger text-white',
                                                     (statusEnum.SELECIONADA.value): 'bg-success text-white',
                                                     (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
                                                 }[status] ?? 'bg-dark') %}
-                                                <span class="badge {{ badgeClass }} text-dark">
-                                                    {{ status }}
+                                                {% set statusDescriptions = {
+                                                    (statusEnum.ENVIADA.value): 'Proposta enviada pela empresa/osc e aguardando recebimento pelo município',
+                                                    (statusEnum.RECEBIDA.value): 'Proposta recebida pelo município e aguardando anuência',
+                                                    (statusEnum.SEM_ADESAO.value): 'Município ainda não possui termo de adesão aprovado',
+                                                    (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'Documento de anuência enviado pelo município e aguardando validação pela SNP',
+                                                    (statusEnum.ANUIDA.value): 'Proposta anuída pelo município e aprovada pela SNP',
+                                                    'Anuída': 'Proposta anuída pelo município e aprovada pela SNP',
+                                                    (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
+                                                    'Não Anuída': 'Proposta não anuída pelo município',
+                                                    (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
+                                                    (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada'
+                                                } %}
+                                                {# Mapeia valores antigos para novos textos #}
+                                                {% set displayStatus = status == 'Anuída' ? statusEnum.ANUIDA.value : (status == 'Não Anuída' ? statusEnum.NAO_ANUIDA.value : status) %}
+                                                <span class="badge {{ badgeClass }} text-wrap" 
+                                                      style="max-width: 150px;" 
+                                                      data-bs-toggle="tooltip" 
+                                                      data-bs-placement="top" 
+                                                      title="{{ statusDescriptions[status] ?? '' }}">
+                                                    {{ displayStatus }}
                                                 </span>
                                             </td>
                                             <td>
-                                                {% if status == 'Não Anuída' %}
+                                                {% set agreementStatus = proposal.extraFields.agreement_status ?? null %}
+                                                {% if agreementStatus == 'submitted' %}
+                                                    <span class="badge bg-warning text-dark">
+                                                        Aguardando Validação
+                                                    </span>
+                                                {% elseif agreementStatus == 'approved' %}
+                                                    <span class="badge bg-success text-white">
+                                                        Documento Aprovado
+                                                    </span>
+                                                {% elseif agreementStatus == 'rejected' %}
+                                                    <span class="badge bg-danger text-white">
+                                                        Documento Rejeitado
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if status == 'Não Anuída' or status == statusEnum.NAO_ANUIDA.value %}
                                                     {{ proposal.extraFields.status_reason ?? '-' }}
                                                 {% else %}
                                                     -
@@ -234,6 +344,7 @@
                                                             zipcode: proposal.extraFields.zipcode ?? 'Não informado',
                                                             snpr_affiliation: proposal.extraFields.snpr_affiliation ?? 'Não',
                                                             snpr_affiliation_details: proposal.extraFields.snpr_affiliation_details ?? '',
+                                                            term_status: municipality.extraFields.term_status ?? null,
                                                             ...proposal.extraFields
                                                         }|json_encode|e('html_attr') }}'
                                                         onClick="modalProposalDetails(this)"
@@ -241,41 +352,15 @@
                                                     Ver Proposta
                                                 </button>
                                                 
-                                                {# Novo fluxo: Upload de documento de anuência #}
-                                                {% set agreementStatus = proposal.extraFields.agreement_status ?? null %}
-                                                
-                                                {% if agreementStatus == 'submitted' %}
-                                                    <span class="badge bg-warning text-dark">Aguardando Validação</span>
-                                                {% elseif agreementStatus == 'approved' %}
-                                                    <span class="badge bg-success">Anuência Aprovada</span>
-                                                    <a href="{{ path('admin_regmel_proposal_agreement_file', {id: proposal.id}) }}" target="_blank" class="btn btn-link btn-sm">Ver documento</a>
-                                                {% elseif agreementStatus == 'rejected' %}
-                                                    <span class="badge bg-danger">Anuência Rejeitada</span>
-                                                    <small class="d-block text-muted">Motivo: {{ proposal.extraFields.agreement_reason ?? '' }}</small>
-                                                    {% if (is_granted('ROLE_MUNICIPALITY') or is_granted('ROLE_ADMIN')) and municipality.extraFields.term_status == 'approved' %}
-                                                        <a onclick="openUploadAgreementModal('{{ proposal.id }}')" 
-                                                           data-bs-toggle="modal" 
-                                                           data-bs-target="#modalUploadAgreement" 
-                                                           href="#" 
-                                                           class="btn btn-outline-warning btn-sm mt-1">
-                                                            Reenviar Documento
-                                                        </a>
-                                                    {% endif %}
-                                                {% else %}
-                                                    {# Primeiro envio #}
-                                                    {% if (is_granted('ROLE_MUNICIPALITY') or is_granted('ROLE_ADMIN')) and proposal.extraFields.status == 'Recebida' and municipality.extraFields.term_status == 'approved' %}
-                                                        <a onclick="openUploadAgreementModal('{{ proposal.id }}')" 
-                                                           data-bs-toggle="modal" 
-                                                           data-bs-target="#modalUploadAgreement" 
-                                                           href="#" 
-                                                           class="btn btn-outline-success btn-sm">
-                                                            Enviar Documento de Anuência
-                                                        </a>
-                                                    {% elseif (is_granted('ROLE_MUNICIPALITY') or is_granted('ROLE_ADMIN')) and proposal.extraFields.status == 'Recebida' %}
-                                                        <button class="btn btn-outline-secondary btn-sm" disabled title="Termo de adesão não aprovado">
-                                                            Enviar Documento de Anuência
-                                                        </button>
-                                                    {% endif %}
+                                                {% if municipality.extraFields.term_status == 'approved' and proposal.extraFields.status == 'Recebida' %}
+                                                    <button
+                                                            class="btn btn-success btn-sm ms-1"
+                                                            onclick="openAgreementModal('{{ municipality.id }}', '{{ proposal.id }}')"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#modalAgreement"
+                                                    >
+                                                        Anuir Proposta
+                                                    </button>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -444,42 +529,34 @@
     <script type="module" src="{{ asset('js/grid-init.js') }}"></script>
 
     <script>
-        function openAgreementModal(municipalityId, proposalId) {
-            const form = document.getElementById('proposalStatusForm');
-            form.action = `/painel/admin/municipios/${municipalityId}/propostas/${proposalId}/status`;
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             const statusAgreement = document.getElementById('statusAgreement');
             const statusNotAgreement = document.getElementById('statusNotAgreement');
             const hiddenReason = document.getElementById('hiddenReason');
             const agreementFields = document.getElementById('agreementFields');
             const notAgreementFields = document.getElementById('notAgreementFields');
-            const reasonText = document.getElementById('reasonText');
-            const confirmAgreement = document.getElementById('confirmAgreement');
             const declineReasonText = document.getElementById('declineReasonText');
-
+            const agreementFile = document.getElementById('agreementFile');
 
             function toggleFields() {
                 if (statusAgreement.checked) {
                     agreementFields.classList.remove('d-none');
                     notAgreementFields.classList.add('d-none');
 
-                    confirmAgreement.setAttribute('required', '');
+                    agreementFile.setAttribute('required', '');
                     declineReasonText.removeAttribute('required');
 
-                    const declarationLabel = document.querySelector('#agreementFields .form-check-label');
-                    hiddenReason.value = declarationLabel.textContent.trim();
+                    hiddenReason.value = 'Anuência aprovada';
                 }
 
                 if (statusNotAgreement.checked) {
                     agreementFields.classList.add('d-none');
                     notAgreementFields.classList.remove('d-none');
 
-                    confirmAgreement.removeAttribute('required');
+                    agreementFile.removeAttribute('required');
                     declineReasonText.setAttribute('required', '');
 
-                    hiddenReason.value = declineReasonText.textContent.trim();
+                    hiddenReason.value = '';
                 }
             }
 
@@ -495,10 +572,41 @@
             toggleFields();
         });
 
-        // Função para abrir modal de upload de anuência
+        // Função para abrir modal de anuência
+        function openAgreementModal(municipalityId, proposalId) {
+            const form = document.getElementById('proposalStatusForm');
+            
+            // Configurar submit handler
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const statusAgreement = document.getElementById('statusAgreement');
+                const statusNotAgreement = document.getElementById('statusNotAgreement');
+                
+                if (statusAgreement.checked) {
+                    // Se escolheu "Anuir", usar rota de upload (que só salva agreement_status=submitted)
+                    form.action = `/painel/admin/propostas/${proposalId}/upload-agreement`;
+                } else if (statusNotAgreement.checked) {
+                    // Se escolheu "Não Anuir", usar rota antiga (salva status=Não Anuída)
+                    form.action = `/painel/admin/municipios/${municipalityId}/propostas/${proposalId}/status`;
+                }
+                
+                form.submit();
+            };
+        }
+
+        // Função para abrir modal de upload de anuência (apenas para reenvios)
         function openUploadAgreementModal(proposalId) {
             const form = document.getElementById('uploadAgreementForm');
             form.action = `/painel/admin/propostas/${proposalId}/upload-agreement`;
         }
+
+        // Inicializar tooltips do Bootstrap
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
     </script>
 {% endblock %}

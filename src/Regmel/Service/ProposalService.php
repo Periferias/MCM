@@ -240,6 +240,16 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         return substr($proposal->getId()->toRfc4122(), 0, 8);
     }
 
+    private function getAgreementStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'submitted' => 'Aguardando Validação',
+            'approved' => 'Aprovado',
+            'rejected' => 'Rejeitado',
+            default => '',
+        };
+    }
+
     private function generateUrlForField(Initiative $entity, string $fieldName, string $routeName): string
     {
         $extraFields = $entity->getExtraFields();
@@ -249,7 +259,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             : '';
     }
 
-    public function getCsvHeaders(): array
+    public function getCsvHeaders(?string $type = null): array
     {
         return [
             $this->translator->trans('csv.header.id'),
@@ -262,7 +272,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $this->translator->trans('csv.header.houses_quantity'),
             $this->translator->trans('csv.header.total_area'),
             $this->translator->trans('csv.header.total_value'),
-            $this->translator->trans('csv.header.consented_by'),
             $this->translator->trans('csv.header.proposal_status'),
             'Motivo da Alteração de Status',
             $this->translator->trans('csv.header.status_reason'),
@@ -277,6 +286,14 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $this->translator->trans('csv.header.created_by'),
             $this->translator->trans('csv.header.proposal_date'),
             $this->translator->trans('csv.header.proposal_update_date'),
+            // Dados de anuência
+            'Status Anuência',
+            'Anuência Enviada Em',
+            'Anuência Enviada Por',
+            'Anuência Validada Em',
+            'Anuência Validada Por',
+            'Motivo da Validação',
+            // Dados de exclusão
             'Status de Exclusão',
             'Motivo da Exclusão',
             'Excluída por',
@@ -284,7 +301,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         ];
     }
 
-    public function getCsvRow(object $entity): array
+    public function getCsvRow(object $entity, ?string $type = null): array
     {
         if (!$entity instanceof Initiative) {
             throw new InvalidArgumentException($this->translator->trans('error.invalid_entity'));
@@ -340,7 +357,6 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $housesQuantity,
             $extraFields['area_size'] ?? 0,
             number_format($totalValue, 2, ',', '.'),
-            $extraFields['status_updated_by_name'] ?? '---',
             $extraFields['status'] ?? '',
             $extraFields['status_reason'] ?? '',
             $statusReason,
@@ -355,6 +371,13 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $entity->getCreatedBy()?->getName() ?? '',
             $entity->getCreatedAt()->format('d/m/Y H:i:s'),
             $modificationDate,
+            // Dados de anuência
+            $this->getAgreementStatusLabel($extraFields['agreement_status'] ?? null),
+            isset($extraFields['agreement_uploaded_at']) ? (new \DateTime($extraFields['agreement_uploaded_at']))->format('d/m/Y H:i:s') : '',
+            $extraFields['agreement_uploaded_by_name'] ?? '---',
+            isset($extraFields['agreement_validated_at']) ? (new \DateTime($extraFields['agreement_validated_at']))->format('d/m/Y H:i:s') : '',
+            $extraFields['agreement_validated_by_name'] ?? '',
+            $extraFields['agreement_reason'] ?? '',
             // Dados de exclusão
             $entity->isDeleted() ? 'Sim' : 'Não',
             $entity->getDeletionReason() ?? '',
@@ -462,27 +485,45 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $this->initiativeRepository->save($initiative);
         $this->entityManager->flush();
 
+        // Enviar email de notificação
         $municipalityEmails = [];
         $organizationTo = $initiative->getOrganizationTo();
-        if ($organizationTo && $organizationTo->getAgents()) {
-            foreach ($organizationTo->getAgents() as $agent) {
-                if ($agent->getUser()) {
-                    $municipalityEmails[] = $agent->getUser()->getEmail();
+        if ($organizationTo) {
+            if ($organizationTo->getAgents()) {
+                foreach ($organizationTo->getAgents() as $agent) {
+                    if ($agent->getUser()) {
+                        $municipalityEmails[] = $agent->getUser()->getEmail();
+                    }
                 }
+            }
+            // Adiciona email do município dos extra_fields
+            $municipalityEmail = $organizationTo->getExtraFields()['email'] ?? null;
+            if ($municipalityEmail) {
+                $municipalityEmails[] = $municipalityEmail;
             }
         }
 
         $companyEmails = [];
         $organizationFrom = $initiative->getOrganizationFrom();
-        if ($organizationFrom && $organizationFrom->getAgents()) {
-            foreach ($organizationFrom->getAgents() as $agent) {
-                if ($agent->getUser()) {
-                    $companyEmails[] = $agent->getUser()->getEmail();
+        if ($organizationFrom) {
+            if ($organizationFrom->getAgents()) {
+                foreach ($organizationFrom->getAgents() as $agent) {
+                    if ($agent->getUser()) {
+                        $companyEmails[] = $agent->getUser()->getEmail();
+                    }
                 }
+            }
+            // Adiciona email da empresa dos extra_fields
+            $companyEmail = $organizationFrom->getExtraFields()['email'] ?? null;
+            if ($companyEmail) {
+                $companyEmails[] = $companyEmail;
             }
         }
 
-        $allEmails = array_unique(array_filter([...$municipalityEmails, ...$companyEmails]));
+        // Se for NAO_ANUIDA, enviar apenas para empresa/OSC. Caso contrário, enviar para ambos
+        $allEmails = $status === StatusProposalEnum::NAO_ANUIDA
+            ? array_unique(array_filter($companyEmails))
+            : array_unique(array_filter([...$municipalityEmails, ...$companyEmails]));
 
         if (!empty($allEmails)) {
             $this->emailService->sendTemplatedEmail(
@@ -492,6 +533,9 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
                 [
                     'municipalityName' => $organizationTo ? $organizationTo->getName() : ($extraFields['city_name'] ?? 'Município'),
                     'companyName' => $organizationFrom ? $organizationFrom->getName() : 'Empresa',
+                    'proposalName' => $initiative->getName(),
+                    'status' => $status->value,
+                    'reason' => $reason,
                 ]
             );
         }
