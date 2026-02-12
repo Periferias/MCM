@@ -1,5 +1,7 @@
 {% extends "_layouts/blank.html.twig" %}
 
+{% set statusEnum = enum('App\\Enum\\StatusProposalEnum') %}
+
 {% block title %}
     {{ 'control_panel'|trans }} - {{ 'proposals'|trans }}
 {% endblock %}
@@ -134,7 +136,6 @@
                                 <td>{{ proposal.city_name }}</td>
                                 <td>
                                     {% set status = proposal.status ?? '' %}
-                                    {% set statusEnum = enum('App\\Enum\\StatusProposalEnum') %}
                                     {% set badgeClass = ({
                                         (statusEnum.SEM_ADESAO.value): 'bg-dark text-white',
                                         (statusEnum.ENVIADA.value): 'bg-warning',
