@@ -7,6 +7,7 @@ namespace App\Service;
 use App\DTO\OrganizationDto;
 use App\Entity\Organization;
 use App\Enum\OrganizationTypeEnum;
+use App\Enum\StatusProposalEnum;
 use App\Exception\Organization\OrganizationResourceNotFoundException;
 use App\Exception\ValidatorException;
 use App\Repository\Interface\OrganizationRepositoryInterface;
@@ -62,11 +63,40 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
 
     public function create(array $organization): Organization
     {
+        error_log('OrganizationService::create chamado com: ' . json_encode($organization));
+        
+        // Se não informar owner ou createdBy, usar o primeiro usuário disponível
+        if (empty($organization['owner'])) {
+            $firstUser = $this->entityManager->getRepository('App\Entity\Agent')->findOneBy([]);
+            if ($firstUser) {
+                $organization['owner'] = $firstUser->getId()->toRfc4122();
+            }
+        }
+        
+        if (empty($organization['createdBy'])) {
+            $firstUser = $this->entityManager->getRepository('App\Entity\Agent')->findOneBy([]);
+            if ($firstUser) {
+                $organization['createdBy'] = $firstUser->getId()->toRfc4122();
+            }
+        }
+        
         $organization = $this->validateInput($organization, OrganizationDto::class, OrganizationDto::CREATE);
 
         $organizationObj = $this->serializer->denormalize($organization, Organization::class);
 
-        return $this->repository->save($organizationObj);
+        $savedOrganization = $this->repository->save($organizationObj);
+
+        error_log('Organização salva: ' . $savedOrganization->getName() . ' (tipo: ' . $savedOrganization->getType() . ')');
+
+        // Se é um município (MUNICIPIO), associar propostas órfãs com o mesmo nome
+        if ($savedOrganization->getType() === OrganizationTypeEnum::MUNICIPIO->value) {
+            error_log('Tipo é MUNICIPIO, chamando reassociateProposalsForMunicipality');
+            $this->reassociateProposalsForMunicipality($savedOrganization);
+        } else {
+            error_log('Tipo NÃO é MUNICIPIO: ' . $savedOrganization->getType());
+        }
+
+        return $savedOrganization;
     }
 
     public function findBy(array $params = [], int $limit = 4000): array
@@ -207,10 +237,26 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
     {
         $organization = $this->get($id);
 
+        // Salvar o owner_id ANTES de deletar a organização
+        $ownerId = $organization->getOwner()?->getId();
+
         // Remove a imagem se existir
         if ($organization->getImage()) {
             $this->fileService->deleteFileByUrl($organization->getImage());
         }
+
+        // Desassocia as propostas (initiatives) do município e volta para estado de proposta criada
+        // (como se fosse uma proposta para um município ainda não cadastrado)
+        $sql = "UPDATE initiative 
+                SET organization_to_id = NULL, 
+                    extra_fields = jsonb_set(extra_fields::jsonb, '{status}', :statusValue)::json
+                WHERE organization_to_id = :organization_id";
+        $affectedRows = $this->entityManager->getConnection()->executeStatement($sql, [
+            'organization_id' => $id->toRfc4122(),
+            'statusValue' => json_encode(StatusProposalEnum::SEM_ADESAO->value),
+        ]);
+        
+        error_log("🗑️ HARDDELETE: {$affectedRows} propostas desassociadas do município e voltadas para 'Sem Adesão do Município'");
 
         // Remove todas as inscrições de fases (inscription_phase) vinculadas a esta organização
         $sql = 'DELETE FROM inscription_phase WHERE organization_id = :organization_id';
@@ -224,8 +270,107 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
             'organization_id' => $id->toRfc4122(),
         ]);
 
-        // Deleta permanentemente do banco de dados
+        // Remove associações entre agentes e a organização (para quem tiver múltiplas organizações)
+        $sql = 'DELETE FROM organizations_agents WHERE organization_id = :organization_id';
+        $this->entityManager->getConnection()->executeStatement($sql, [
+            'organization_id' => $id->toRfc4122(),
+        ]);
+
+        // DELETA A ORGANIZAÇÃO PRIMEIRO (antes de deletar agentes)
         $this->repository->hardDelete($id);
+
+        // DEPOIS deleta o owner (administrador) da organização deletada
+        if ($ownerId) {
+            // Primeiro busca o agent para obter o user_id
+            $agentWithUser = $this->entityManager->getConnection()->fetchAssociative(
+                'SELECT user_id FROM agent WHERE id = ?',
+                [$ownerId->toRfc4122()]
+            );
+            
+            // Deleta o agent
+            $this->entityManager->getConnection()->executeStatement(
+                'DELETE FROM agent WHERE id = ?',
+                [$ownerId->toRfc4122()]
+            );
+            
+            // Deleta o user associado ao agent (se existir)
+            if ($agentWithUser && $agentWithUser['user_id']) {
+                $this->entityManager->getConnection()->executeStatement(
+                    'DELETE FROM app_user WHERE id = ?',
+                    [$agentWithUser['user_id']]
+                );
+            }
+        }
+
+        // Deleta os agentes (usuários) que estavam vinculados APENAS a esta organização
+        $sql = '
+            DELETE FROM agent 
+            WHERE id NOT IN (
+                SELECT DISTINCT agent_id FROM organizations_agents
+            )
+            AND id IN (
+                SELECT DISTINCT agent_id FROM organizations_agents 
+                WHERE organization_id = :organization_id
+            )
+        ';
+        $this->entityManager->getConnection()->executeStatement($sql, [
+            'organization_id' => $id->toRfc4122(),
+        ]);
+    }
+
+    /**
+     * Reassocia propostas órfãs para o município quando ele é recriado.
+     * Procura por propostas órfãs que tinham um nome de município armazenado em extraFields['city_name']
+     * e as associa ao novo município baseado no match do nome.
+     */
+    private function reassociateProposalsForMunicipality(Organization $municipality): void
+    {
+        if ($municipality->getType() !== OrganizationTypeEnum::MUNICIPIO->value) {
+            return;
+        }
+
+        try {
+            $municipalityId = $municipality->getId()->toRfc4122();
+            $municipalityName = $municipality->getName();
+
+            error_log("🔍 REASSOCIAR: Procurando propostas órfãs para município '{$municipalityName}' (ID: {$municipalityId})");
+
+            // Busca o termo_status do novo município criado
+            $municipalityTermStatus = $municipality->getExtraFields()['term_status'] ?? null;
+            $newStatus = match ($municipalityTermStatus) {
+                'approved' => StatusProposalEnum::RECEBIDA->value,
+                'rejected', 'awaiting' => StatusProposalEnum::ENVIADA->value,
+                default => StatusProposalEnum::SEM_ADESAO->value,
+            };
+
+            // SQL para reassociar propostas órfãs que têm um nome de município matching
+            // Apenas reassocia propostas que estão em SEM_ADESAO (estado de proposta criada sem município)
+            // Isso garante que propostas em outros estados não sejam alteradas
+            $sql = "
+                UPDATE initiative 
+                SET organization_to_id = :municipalityId,
+                    extra_fields = jsonb_set(extra_fields::jsonb, '{status}', :newStatus)::json
+                WHERE organization_to_id IS NULL
+                AND extra_fields::jsonb ->> 'status' = :statusFilter
+                AND (
+                    extra_fields::jsonb ->> 'city_name' LIKE :pattern
+                    OR extra_fields::jsonb ->> 'city_name' = :exactName
+                )
+            ";
+
+            $affectedRows = $this->entityManager->getConnection()->executeStatement($sql, [
+                'municipalityId' => $municipalityId,
+                'newStatus' => json_encode($newStatus),
+                'statusFilter' => StatusProposalEnum::SEM_ADESAO->value,
+                'pattern' => $municipalityName . '-%',  // São Paulo-SP, São Paulo-RJ, etc
+                'exactName' => $municipalityName,       // Ou match exato
+            ]);
+            
+            error_log("✅ REASSOCIAR: {$affectedRows} propostas órfãs foram reassociadas para '{$municipalityName}' com status '{$newStatus}'");
+        } catch (\Exception $e) {
+            error_log("❌ ERRO ao reassociar propostas: " . $e->getMessage());
+            return;
+        }
     }
 
     public function getCsvHeaders(?string $type): array
