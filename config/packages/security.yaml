@@ -27,6 +27,9 @@ security:
         api_info:
             pattern: ^/api/info
             security: false
+        api_health:
+            pattern: ^/api/health
+            security: false
         api:
             pattern: ^/api
             stateless: true
