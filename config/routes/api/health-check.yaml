@@ -1,0 +1,14 @@
+health_check:
+  path: /health
+  controller: App\Controller\Api\HealthCheckApiController::check
+  methods: ['GET']
+
+health_liveness:
+  path: /health/liveness
+  controller: App\Controller\Api\HealthCheckApiController::liveness
+  methods: ['GET']
+
+health_readiness:
+  path: /health/readiness
+  controller: App\Controller\Api\HealthCheckApiController::readiness
+  methods: ['GET']
