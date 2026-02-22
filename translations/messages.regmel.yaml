@@ -1155,7 +1155,7 @@ view:
     image: Erro
 
   phase:
-    out_of_period: Fora do prazo de inscrição
+    out_of_period: Prazo de inscrição encerrado às 23:59h de 22/02/2026.
     text_out_of_period: Infelizmente, o período de inscrição não está disponível no momento. Por favor, aguarde o próximo oficio.
 
 proposal:
