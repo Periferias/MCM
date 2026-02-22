@@ -3,11 +3,6 @@ api_example:
   prefix: /api
   name_prefix: api_example_
 
-api_health_check:
-  resource: 'api/health-check.yaml'
-  prefix: /api
-  name_prefix: api_health_check_
-
 api_system_info:
   resource: 'api/system-info.yaml'
   prefix: /api
