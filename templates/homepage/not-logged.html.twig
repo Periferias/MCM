@@ -100,6 +100,10 @@
                             <h1 class="fw-bold mt-4">{{ 'view.phase.out_of_period'|trans }}</h1>
                         {% else %}
                             <h1 class="fw-bold mt-4">{{ 'create_account'|trans }}</h1>
+                            <div class="alert alert-warning d-flex align-items-start gap-2 mt-3" role="alert">
+                                <i class="material-icons mt-1">warning_amber</i>
+                                <span><strong>Atenção:</strong> prazo para Submissão de propostas pelos agentes promotores e Adesão pelos municípios até 22/02/2026 às 23:59h.</span>
+                            </div>
                         {% endif %}
 
                         <p class="lead mt-3">{{ 'view.homepage.registration_info'|trans }}</p>
@@ -138,12 +142,6 @@
 {% endif %}
 
 {% if env.aurora.homepage.sections.opportunities.enabled == "true" %}
-    <div class="container pt-4">
-        <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
-            <i class="material-icons mt-1">warning_amber</i>
-            <span><strong>Atenção:</strong> prazo para Submissão de propostas pelos agentes promotores e Adesão pelos municípios até 22/02/2026 às 23:59h.</span>
-        </div>
-    </div>
     <section class="bg-rose text-dark py-5">
         <div class="container pb-5">
             <div class="row text-start">
