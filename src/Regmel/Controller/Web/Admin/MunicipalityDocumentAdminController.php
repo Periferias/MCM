@@ -11,6 +11,7 @@ use App\Enum\RegionEnum;
 use App\Enum\UserRolesEnum;
 use App\Exception\UnableCreateFileException;
 use App\Regmel\Service\Interface\MunicipalityDocumentServiceInterface;
+use App\Regmel\Service\Interface\MunicipalityServiceInterface;
 use App\Service\Interface\OrganizationServiceInterface;
 use App\Service\Interface\StateServiceInterface;
 use Exception;
@@ -37,6 +38,7 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
         private readonly Security $security,
         private readonly StateServiceInterface $stateService,
         private readonly MunicipalityDocumentServiceInterface $municipalityDocumentService,
+        private readonly MunicipalityServiceInterface $municipalityService,
         private readonly TranslatorInterface $translator,
     ) {
     }
@@ -218,10 +220,11 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
         $sheet->setCellValue('C1', 'Email Institucional');
         $sheet->setCellValue('D1', 'Município');
         $sheet->setCellValue('E1', 'CNPJ');
-        $sheet->setCellValue('F1', 'Status do Termo');
+        $sheet->setCellValue('F1', 'Quantidade de Propostas');
+        $sheet->setCellValue('G1', 'Status do Termo');
 
         // Estilizar cabeçalho
-        $headerStyle = $sheet->getStyle('A1:F1');
+        $headerStyle = $sheet->getStyle('A1:G1');
         $headerStyle->getFont()->setBold(true);
         $headerStyle->getFill()->setFillType('solid')->getStartColor()->setARGB('FFD3D3D3');
 
@@ -245,12 +248,16 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
                 foreach ($agents as $agent) {
                     $user = $agent->getUser();
                     if ($user) {
+                        // Contar propostas do município
+                        $proposalsCount = count($this->municipalityService->getProposals($municipality));
+                        
                         $sheet->setCellValue('A' . $row, $agent->getName() ?? '');
                         $sheet->setCellValue('B' . $row, $user->getEmail());
                         $sheet->setCellValue('C' . $row, $municipality->getExtraFields()['email'] ?? '');
                         $sheet->setCellValue('D' . $row, $municipality->getName());
                         $sheet->setCellValue('E' . $row, $municipality->getExtraFields()['cnpj'] ?? '');
-                        $sheet->setCellValue('F' . $row, $this->getStatusLabel($termStatus));
+                        $sheet->setCellValue('F' . $row, $proposalsCount);
+                        $sheet->setCellValue('G' . $row, $this->getStatusLabel($termStatus));
                         $row++;
                     }
                 }
@@ -269,6 +276,7 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
         $sheet->getColumnDimension('D')->setAutoSize(true);
         $sheet->getColumnDimension('E')->setAutoSize(true);
         $sheet->getColumnDimension('F')->setAutoSize(true);
+        $sheet->getColumnDimension('G')->setAutoSize(true);
 
         // Criar arquivo temporário
         $fileName = sprintf('usuarios_termos_adesao_%s.xlsx', date('Y-m-d_H-i-s'));
