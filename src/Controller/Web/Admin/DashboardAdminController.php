@@ -82,6 +82,7 @@ class DashboardAdminController extends AbstractAdminController
         $totalCompanies = count($this->organizationService->findBy([
             'type' => OrganizationTypeEnum::EMPRESA->value,
         ]));
+        $totalCitiesAwaitingTermApproval = $this->organizationService->countMunicipalitiesAwaitingTermApproval();
         
         // Propostas: usa query direta ao banco sem cache para contar em tempo real
         $totalProposals = $this->initiativeService->countProposals($createdBy);
@@ -97,6 +98,7 @@ class DashboardAdminController extends AbstractAdminController
             'totalCompanies' => $totalCompanies,
             'totalOrganizations' => $totalOrganizations,
             'totalProposals' => $totalProposals,
+            'totalCitiesAwaitingTermApproval' => $totalCitiesAwaitingTermApproval,
         ];
 
         // Busca notificações do usuário logado

@@ -162,7 +162,7 @@ dashboard:
       action:
         text: search
         route: admin_regmel_municipality_document_list
-      total_key: totalCities
+      total_key: totalCitiesAwaitingTermApproval
     proposals:
       csv: true
       acl: ['ROLE_MUNICIPALITY']
