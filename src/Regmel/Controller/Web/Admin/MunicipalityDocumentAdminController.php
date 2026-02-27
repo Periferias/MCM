@@ -11,10 +11,13 @@ use App\Enum\RegionEnum;
 use App\Enum\UserRolesEnum;
 use App\Exception\UnableCreateFileException;
 use App\Regmel\Service\Interface\MunicipalityDocumentServiceInterface;
+use App\Regmel\Service\Interface\MunicipalityServiceInterface;
 use App\Service\Interface\OrganizationServiceInterface;
 use App\Service\Interface\StateServiceInterface;
 use Exception;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -35,6 +38,7 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
         private readonly Security $security,
         private readonly StateServiceInterface $stateService,
         private readonly MunicipalityDocumentServiceInterface $municipalityDocumentService,
+        private readonly MunicipalityServiceInterface $municipalityService,
         private readonly TranslatorInterface $translator,
     ) {
     }
@@ -117,6 +121,16 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
         return "{$path}/storage/regmel/municipality/documents/{$file}";
     }
 
+    private function getStatusLabel(string $status): string
+    {
+        return match($status) {
+            'approved' => 'Aprovado',
+            'rejected' => 'Rejeitado',
+            'awaiting' => 'Aguardando',
+            default => $status,
+        };
+    }
+
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
@@ -184,6 +198,102 @@ class MunicipalityDocumentAdminController extends AbstractAdminController
 
         $response = new BinaryFileResponse($zipFilePath, headers: ['Content-Type' => 'application/zip']);
         $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $zipFileName);
+        $response->deleteFileAfterSend(true);
+
+        return $response;
+    }
+
+    #[IsGranted(new Expression('
+        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
+    '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/municipios-documentos/export-users', name: 'admin_regmel_municipality_document_export_users', methods: ['GET'])]
+    public function exportUsers(): Response
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Definir cabeçalhos
+        $sheet->setCellValue('A1', 'Nome do Usuário');
+        $sheet->setCellValue('B1', 'Email do Usuário');
+        $sheet->setCellValue('C1', 'Email Institucional');
+        $sheet->setCellValue('D1', 'Município');
+        $sheet->setCellValue('E1', 'CNPJ');
+        $sheet->setCellValue('F1', 'Quantidade de Propostas');
+        $sheet->setCellValue('G1', 'Status do Termo');
+
+        // Estilizar cabeçalho
+        $headerStyle = $sheet->getStyle('A1:G1');
+        $headerStyle->getFont()->setBold(true);
+        $headerStyle->getFill()->setFillType('solid')->getStartColor()->setARGB('FFD3D3D3');
+
+        $row = 2;
+        $municipalities = $this->organizationService->findBy([
+            'type' => OrganizationTypeEnum::MUNICIPIO->value,
+        ]);
+
+        foreach ($municipalities as $municipality) {
+            // Recuperar status do termo
+            $termStatus = $municipality->getExtraFields()['term_status'] ?? 'awaiting';
+            
+            // Pular municípios que não têm termo enviado
+            if (empty($municipality->getExtraFields()['form'] ?? null)) {
+                continue;
+            }
+
+            // Recuperar usuários (agents) associados ao município
+            $agents = $municipality->getAgents();
+            if ($agents && count($agents) > 0) {
+                foreach ($agents as $agent) {
+                    $user = $agent->getUser();
+                    if ($user) {
+                        // Contar propostas do município
+                        $proposalsCount = count($this->municipalityService->getProposals($municipality));
+                        
+                        $sheet->setCellValue('A' . $row, $agent->getName() ?? '');
+                        $sheet->setCellValue('B' . $row, $user->getEmail());
+                        $sheet->setCellValue('C' . $row, $municipality->getExtraFields()['email'] ?? '');
+                        $sheet->setCellValue('D' . $row, $municipality->getName());
+                        $sheet->setCellValue('E' . $row, $municipality->getExtraFields()['cnpj'] ?? '');
+                        $sheet->setCellValue('F' . $row, $proposalsCount);
+                        $sheet->setCellValue('G' . $row, $this->getStatusLabel($termStatus));
+                        $row++;
+                    }
+                }
+            }
+        }
+
+        // Adicionar linha de informação se não houver dados
+        if ($row === 2) {
+            $sheet->setCellValue('A2', 'Nenhum usuário encontrado');
+        }
+
+        // Ajustar largura das colunas
+        $sheet->getColumnDimension('A')->setAutoSize(true);
+        $sheet->getColumnDimension('B')->setAutoSize(true);
+        $sheet->getColumnDimension('C')->setAutoSize(true);
+        $sheet->getColumnDimension('D')->setAutoSize(true);
+        $sheet->getColumnDimension('E')->setAutoSize(true);
+        $sheet->getColumnDimension('F')->setAutoSize(true);
+        $sheet->getColumnDimension('G')->setAutoSize(true);
+
+        // Criar arquivo temporário
+        $fileName = sprintf('usuarios_termos_adesao_%s.xlsx', date('Y-m-d_H-i-s'));
+        $filePath = sprintf('%s/storage/regmel/municipality/exports/%s', $this->getParameter('kernel.project_dir'), $fileName);
+
+        // Garantir que a pasta existe
+        $exportDir = dirname($filePath);
+        if (!is_dir($exportDir)) {
+            mkdir($exportDir, 0755, true);
+        }
+
+        // Salvar arquivo
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($filePath);
+
+        $response = new BinaryFileResponse($filePath, headers: ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $fileName);
         $response->deleteFileAfterSend(true);
 
         return $response;
