@@ -206,6 +206,36 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         return $zipPath;
     }
 
+    public function countAgreements(): int
+    {
+        $proposals = $this->initiativeService->list(10000);
+        $count = 0;
+        
+        foreach ($proposals as $proposal) {
+            $extraFields = $proposal->getExtraFields();
+            if (isset($extraFields['agreement_file'])) {
+                $count++;
+            }
+        }
+        
+        return $count;
+    }
+
+    public function countAgreementsAwaitingApproval(): int
+    {
+        $proposals = $this->initiativeService->list(10000);
+        $count = 0;
+        
+        foreach ($proposals as $proposal) {
+            $extraFields = $proposal->getExtraFields();
+            if (isset($extraFields['agreement_status']) && $extraFields['agreement_status'] === 'submitted') {
+                $count++;
+            }
+        }
+        
+        return $count;
+    }
+
     public function sendEmailOnUpload(Uuid $proposalId): void
     {
         $proposal = $this->initiativeService->get($proposalId);

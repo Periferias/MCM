@@ -163,6 +163,26 @@ dashboard:
         text: search
         route: admin_regmel_municipality_document_list
       total_key: totalCitiesAwaitingTermApproval
+    agreements:
+      acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SUPPORT']
+      title: Termos de Anuência
+      subtitle: Termos de anuência
+      icon: fact_check
+      color: "#00A859"
+      action:
+        text: search
+        route: admin_regmel_proposal_agreement_list
+      total_key: totalAgreements
+    agreements_awaiting:
+      acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SUPPORT']
+      title: Anuências Aguardando
+      subtitle: Termos de anuência para Aprovação
+      icon: pending_actions
+      color: "#E70DCB"
+      action:
+        text: search
+        route: admin_regmel_proposal_agreement_list
+      total_key: totalAgreementsAwaitingApproval
     proposals:
       csv: true
       acl: ['ROLE_MUNICIPALITY']

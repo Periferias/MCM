@@ -7,6 +7,7 @@ namespace App\Controller\Web\Admin;
 use App\DocumentService\NotificationDocumentService;
 use App\Enum\OrganizationTypeEnum;
 use App\Enum\UserRolesEnum;
+use App\Regmel\Service\Interface\ProposalAgreementServiceInterface;
 use App\Service\Interface\AgentServiceInterface;
 use App\Service\Interface\EventServiceInterface;
 use App\Service\Interface\InitiativeServiceInterface;
@@ -27,6 +28,7 @@ class DashboardAdminController extends AbstractAdminController
         readonly private InscriptionOpportunityServiceInterface $inscriptionService,
         readonly private OrganizationServiceInterface $organizationService,
         readonly private NotificationDocumentService $notificationService,
+        readonly private ProposalAgreementServiceInterface $agreementService,
     ) {
     }
 
@@ -83,6 +85,8 @@ class DashboardAdminController extends AbstractAdminController
             'type' => OrganizationTypeEnum::EMPRESA->value,
         ]));
         $totalCitiesAwaitingTermApproval = $this->organizationService->countMunicipalitiesAwaitingTermApproval();
+        $totalAgreements = $this->agreementService->countAgreements();
+        $totalAgreementsAwaitingApproval = $this->agreementService->countAgreementsAwaitingApproval();
         
         // Propostas: usa query direta ao banco sem cache para contar em tempo real
         $totalProposals = $this->initiativeService->countProposals($createdBy);
@@ -99,6 +103,8 @@ class DashboardAdminController extends AbstractAdminController
             'totalOrganizations' => $totalOrganizations,
             'totalProposals' => $totalProposals,
             'totalCitiesAwaitingTermApproval' => $totalCitiesAwaitingTermApproval,
+            'totalAgreements' => $totalAgreements,
+            'totalAgreementsAwaitingApproval' => $totalAgreementsAwaitingApproval,
         ];
 
         // Busca notificações do usuário logado
