@@ -429,7 +429,7 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
                 : '';
             $status = match ($extraFields['term_status'] ?? '') {
                 'awaiting' => $this->translator->trans('awaiting'),
-                'accepted' => $this->translator->trans('accepted'),
+                'approved' => $this->translator->trans('accepted'),
                 'rejected' => $this->translator->trans('rejected'),
                 default => $this->translator->trans('unknown'),
             };
