@@ -53,4 +53,9 @@ interface ProposalAgreementServiceInterface
      * Count agreement documents awaiting approval.
      */
     public function countAgreementsAwaitingApproval(): int;
+
+    /**
+     * Cancel agreement and return proposal to RECEBIDA status.
+     */
+    public function cancelAgreement(Uuid $proposalId): void;
 }
