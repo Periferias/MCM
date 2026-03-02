@@ -61,6 +61,23 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
         );
     }
 
+    public function countMunicipalitiesAwaitingTermApproval(): int
+    {
+        $municipalities = $this->repository->findBy([
+            'type' => OrganizationTypeEnum::MUNICIPIO->value,
+        ]);
+
+        $count = 0;
+        foreach ($municipalities as $municipality) {
+            $extraFields = $municipality->getExtraFields();
+            if (isset($extraFields['term_status']) && $extraFields['term_status'] === 'awaiting') {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
     public function create(array $organization): Organization
     {
         error_log('OrganizationService::create chamado com: ' . json_encode($organization));
@@ -429,7 +446,7 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
                 : '';
             $status = match ($extraFields['term_status'] ?? '') {
                 'awaiting' => $this->translator->trans('awaiting'),
-                'accepted' => $this->translator->trans('accepted'),
+                'approved' => $this->translator->trans('accepted'),
                 'rejected' => $this->translator->trans('rejected'),
                 default => $this->translator->trans('unknown'),
             };
