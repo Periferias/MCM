@@ -1,0 +1,11 @@
+{% block content %}
+    <h1>Documento de Anuência Rejeitado</h1>
+
+    <h1>Olá!</h1>
+
+    <p>O documento de anuência do município <strong>{{ municipalityName }}</strong> para a proposta <strong>"{{ proposalName }}"</strong> da empresa/osc <strong>{{ companyName }}</strong> foi <span style="font-weight: bold; color: red;">rejeitado</span>.</p>
+
+    <p><strong>Motivo:</strong> {{ reason }}</p>
+
+    <p>O município pode reenviar o documento corrigido através do sistema <a href="{{ loginPage }}">Periferia Viva Reformas</a>.</p>
+{% endblock %}

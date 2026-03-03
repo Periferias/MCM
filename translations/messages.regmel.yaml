@@ -167,6 +167,7 @@ discover: Descubra
 documents: Termos de Adesão
 does_not_expire: não expira
 download_all_terms: Baixar todos os termos
+export_users: Exportar usuários
 downloadable-files: Arquivos para download
 download_archive: Baixar arquivo KML
 organization_duplicate: Este município já foi credenciado. Entre em contato com %s para mais informações.
@@ -1155,7 +1156,7 @@ view:
     image: Erro
 
   phase:
-    out_of_period: Fora do prazo de inscrição
+    out_of_period: Prazo de inscrição encerrado às 23:59h de 22/02/2026.
     text_out_of_period: Infelizmente, o período de inscrição não está disponível no momento. Por favor, aguarde o próximo oficio.
 
 proposal:

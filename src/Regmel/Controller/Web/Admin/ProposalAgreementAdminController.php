@@ -70,6 +70,7 @@ class ProposalAgreementAdminController extends AbstractAdminController
                 'agreement_validated_at' => $extraFields['agreement_validated_at'] ?? null,
                 'agreement_validated_by_name' => $extraFields['agreement_validated_by_name'] ?? null,
                 'agreement_reason' => $extraFields['agreement_reason'] ?? null,
+                'status_reason' => $extraFields['status_reason'] ?? null,
             ];
         }, $proposals);
 
@@ -148,6 +149,20 @@ class ProposalAgreementAdminController extends AbstractAdminController
         );
 
         return $response;
+    }
+
+    #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/propostas/{id}/cancel-agreement', name: 'admin_regmel_proposal_cancel_agreement', methods: ['POST'])]
+    public function cancelAgreement(Uuid $id, Request $request): Response
+    {
+        try {
+            $this->agreementService->cancelAgreement($id);
+            $this->addFlashSuccess('Anuência cancelada com sucesso. Proposta retornou para status "Recebida".');
+        } catch (Exception $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirectBack($request);
     }
 
     #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]

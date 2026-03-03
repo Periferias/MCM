@@ -12,6 +12,8 @@ interface OrganizationServiceInterface
 {
     public function count(): int;
 
+    public function countMunicipalitiesAwaitingTermApproval(): int;
+
     public function create(array $organization): Organization;
 
     public function get(Uuid $id): Organization;
