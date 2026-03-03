@@ -444,8 +444,8 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             mkdir($exportsDir, 0755, true);
         }
         
-        // Limpa ZIPs antigos antes de criar novo (mais de 48h)
-        $this->cleanOldExports($exportsDir, 48 * 3600);
+        // Limpa ZIPs antigos antes de criar novo
+        $this->cleanOldExports($exportsDir);
         
         // Gera nome único do arquivo
         $timestamp = date('Y-m-d_H-i-s');
@@ -478,7 +478,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         ];
     }
 
-    private function cleanOldExports(string $dir, int $maxAge): void
+    private function cleanOldExports(string $dir): void
     {
         if (!is_dir($dir)) {
             return;
@@ -486,8 +486,31 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         
         $now = time();
         foreach (glob($dir . '/mapas_poligonais_*.zip') as $file) {
-            if (is_file($file) && ($now - filemtime($file)) > $maxAge) {
+            if (!is_file($file)) {
+                continue;
+            }
+            
+            $downloadedMarkerPath = $file . '.downloaded';
+            $shouldDelete = false;
+            
+            if (file_exists($downloadedMarkerPath)) {
+                // Se foi baixado, apagar após 30 minutos do download
+                $downloadTimestamp = (int) file_get_contents($downloadedMarkerPath);
+                if (($now - $downloadTimestamp) > (30 * 60)) {
+                    $shouldDelete = true;
+                }
+            } else {
+                // Se não foi baixado, apagar após 2 horas da criação
+                if (($now - filemtime($file)) > (2 * 3600)) {
+                    $shouldDelete = true;
+                }
+            }
+            
+            if ($shouldDelete) {
                 unlink($file);
+                if (file_exists($downloadedMarkerPath)) {
+                    unlink($downloadedMarkerPath);
+                }
             }
         }
     }

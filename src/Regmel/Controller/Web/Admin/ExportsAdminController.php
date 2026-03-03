@@ -42,6 +42,12 @@ class ExportsAdminController extends AbstractAdminController
             throw $this->createNotFoundException('Arquivo não encontrado ou expirado');
         }
         
+        // Marca timestamp de download para limpeza posterior
+        $downloadedMarkerPath = $filePath . '.downloaded';
+        if (!file_exists($downloadedMarkerPath)) {
+            file_put_contents($downloadedMarkerPath, (string) time());
+        }
+        
         $response = new BinaryFileResponse($filePath);
         $response->setContentDisposition(
             ResponseHeaderBag::DISPOSITION_ATTACHMENT,

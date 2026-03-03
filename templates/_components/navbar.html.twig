@@ -36,7 +36,7 @@
 
                 {% if app.user %}
                 <div class="d-flex align-items-center gap-3">
-                    {% if is_granted('ROLE_ADMIN') %}
+                    {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_SUPPORT') %}
                         <div class="dropdown dropdown-notification">
                             <button class="btn btn-light d-flex align-items-center position-relative gap-2" id="notificationDropdown">
                                 <span class="fw-semibold text-dark small">{{ 'notifications' | trans }}</span>

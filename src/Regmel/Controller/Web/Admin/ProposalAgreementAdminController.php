@@ -7,6 +7,7 @@ namespace App\Regmel\Controller\Web\Admin;
 use App\Controller\Web\Admin\AbstractAdminController;
 use App\Enum\RegionEnum;
 use App\Enum\UserRolesEnum;
+use App\Regmel\Message\GenerateAgreementsZipMessage;
 use App\Regmel\Service\Interface\ProposalAgreementServiceInterface;
 use App\Service\Interface\StateServiceInterface;
 use Exception;
@@ -16,6 +17,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
@@ -28,6 +30,7 @@ class ProposalAgreementAdminController extends AbstractAdminController
         private readonly StateServiceInterface $stateService,
         private readonly Security $security,
         private readonly TranslatorInterface $translator,
+        private readonly MessageBusInterface $messageBus,
     ) {
     }
 
@@ -165,23 +168,27 @@ class ProposalAgreementAdminController extends AbstractAdminController
         return $this->redirectBack($request);
     }
 
-    #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[IsGranted(new Expression('
+        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
+    '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas-anuencias/download', name: 'admin_regmel_proposal_agreement_download_all', methods: ['GET'])]
     public function downloadAllAgreements(): Response
     {
-        try {
-            $zipPath = $this->agreementService->exportAllAgreements();
-            $zipFileName = basename($zipPath);
+        /** @var \App\Entity\User $user */
+        $user = $this->security->getUser();
+        
+        // Despacha mensagem assíncrona
+        $this->messageBus->dispatch(new GenerateAgreementsZipMessage(
+            userId: $user->getId()->toRfc4122(),
+        ));
 
-            $response = new BinaryFileResponse($zipPath, headers: ['Content-Type' => 'application/zip']);
-            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $zipFileName);
-            $response->deleteFileAfterSend(true);
+        $this->addFlash(
+            'success',
+            'Exportação iniciada! Você será notificado quando o arquivo estiver pronto.'
+        );
 
-            return $response;
-        } catch (Exception $e) {
-            $this->addFlash('error', 'Erro ao gerar arquivo ZIP: ' . $e->getMessage());
-            return $this->redirectToRoute('admin_regmel_proposal_agreement_list');
-        }
+        return $this->redirectToRoute('admin_regmel_proposal_agreement_list');
     }
 
     private function redirectBack(Request $request): Response

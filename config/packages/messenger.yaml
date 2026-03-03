@@ -16,3 +16,4 @@ framework:
                 
         routing:
             'App\Regmel\Message\GenerateMapFilesZipMessage': async
+            'App\Regmel\Message\GenerateAgreementsZipMessage': async
