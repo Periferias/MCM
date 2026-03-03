@@ -236,6 +236,63 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         return $count;
     }
 
+    public function cancelAgreement(Uuid $proposalId): void
+    {
+        $proposal = $this->initiativeService->get($proposalId);
+        $extraFields = $proposal->getExtraFields();
+
+        // Verificar se a proposta tem anuência para cancelar
+        // Pode ter agreement_status OU estar com status ANUIDA/NAO_ANUIDA
+        $currentStatus = $extraFields['status'] ?? null;
+        $hasAgreementStatus = isset($extraFields['agreement_status']);
+        $hasAgreementRelatedStatus = in_array($currentStatus, [
+            StatusProposalEnum::ANUIDA->value,
+            StatusProposalEnum::NAO_ANUIDA->value,
+            StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA->value,
+        ]);
+
+        if (!$hasAgreementStatus && !$hasAgreementRelatedStatus) {
+            throw new \InvalidArgumentException('Esta proposta não possui anuência para cancelar');
+        }
+
+        // Apagar arquivo físico se existir
+        if (isset($extraFields['agreement_file'])) {
+            $filePath = $this->getAgreementDocumentPath($proposalId);
+            if ($filePath && file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+        // Limpar todos os campos relacionados à anuência
+        unset(
+            $extraFields['agreement_file'],
+            $extraFields['agreement_status'],
+            $extraFields['agreement_uploaded_at'],
+            $extraFields['agreement_uploaded_by'],
+            $extraFields['agreement_uploaded_by_name'],
+            $extraFields['agreement_validated_at'],
+            $extraFields['agreement_validated_by'],
+            $extraFields['agreement_validated_by_name'],
+            $extraFields['agreement_reason']
+        );
+
+        // Voltar status para RECEBIDA
+        $extraFields['status'] = StatusProposalEnum::RECEBIDA->value;
+        
+        // Registrar quem cancelou
+        $user = $this->security->getUser();
+        $extraFields['status_updated_by'] = $user?->getId()->toRfc4122();
+        $extraFields['status_updated_at'] = (new DateTime())->format('Y-m-d H:i:s');
+        $extraFields['status_updated_by_name'] = $user?->getName();
+        $extraFields['status_reason'] = 'Anuência cancelada pelo administrador';
+
+        $proposal->setExtraFields($extraFields);
+        $this->initiativeService->update(
+            $proposalId,
+            ['extra_fields' => $extraFields]
+        );
+    }
+
     public function sendEmailOnUpload(Uuid $proposalId): void
     {
         $proposal = $this->initiativeService->get($proposalId);

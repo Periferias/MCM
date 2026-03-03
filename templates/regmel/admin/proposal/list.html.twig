@@ -223,6 +223,22 @@
                                                 </a>
                                             </li>
                                             {% endif %}
+                                            {% if is_granted('ROLE_ADMIN') and (
+                                                (proposal.agreement_status is defined and proposal.agreement_status in ['submitted', 'approved', 'rejected']) or
+                                                (proposal.status is defined and proposal.status in ['Aguardando Validação da Anuência', 'Anuída pelo Município', 'Não Anuída pelo Município'])
+                                            ) %}
+                                            <li>
+                                                <form method="post" action="{{ path('admin_regmel_proposal_cancel_agreement', {'id': proposal.id}) }}" style="margin: 0;">
+                                                    <button
+                                                            type="submit"
+                                                            class="dropdown-item"
+                                                            onclick="return confirm('Tem certeza que deseja cancelar a anuência desta proposta? Ela voltará para o status RECEBIDA e o documento será apagado.');"
+                                                    >
+                                                        Cancelar Anuência
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            {% endif %}
                                             {% if is_granted('ROLE_ADMIN') %}
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
