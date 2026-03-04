@@ -954,3 +954,9 @@ view:
     error-text_third: Pero no te preocupes, hay muchas otras páginas por descubrir aquí en Maps.
     error-homepage: Volver a la página de inicio
     error-image: Imagen de duda
+
+  company:
+    onboarding:
+      flow_description: Imagen explicativa del flujo del proceso para representantes de empresas
+      info_message: Este flujo muestra cómo rastrear el estado de su propuesta y entender cada etapa del proceso de análisis en la plataforma.
+      button_understand: Entendido

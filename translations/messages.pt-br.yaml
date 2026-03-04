@@ -950,3 +950,9 @@ view:
     error-text_third: Mas não se preocupe, existem muitas outras páginas para conhecer aqui na Aurora.
     error-homepage: Voltar para a página inicial
     error-image: Imagem de dúvida
+
+  company:
+    onboarding:
+      flow_description: Imagem explicativa do fluxo do processo para representantes de empresa
+      info_message: Este fluxo mostra como acompanhar o status da sua proposta e entender cada etapa do processo de análise na plataforma.
+      button_understand: Entendi

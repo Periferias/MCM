@@ -953,3 +953,9 @@ view:
     error-text_third: But don't worry, there are many other pages to discover here at Aurora.
     error-homepage: Back to home page
     error-image: Doubt image
+
+  company:
+    onboarding:
+      flow_description: Explanatory image of the process flow for company representatives
+      info_message: This flow shows how to track your proposal status and understand each stage of the analysis process on the platform.
+      button_understand: Understood
