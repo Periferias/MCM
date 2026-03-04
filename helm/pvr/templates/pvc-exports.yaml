@@ -1,0 +1,19 @@
+{{- if .Values.exports.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "pvr.fullname" . }}-exports
+  labels:
+    {{- include "pvr.labels" . | nindent 4 }}
+    component: exports
+spec:
+  accessModes:
+    - {{ .Values.exports.persistence.accessMode | default "ReadWriteMany" }}
+  resources:
+    requests:
+      storage: {{ .Values.exports.persistence.size | default "5Gi" }}
+  {{- if .Values.exports.persistence.storageClass }}
+  storageClassName: {{ .Values.exports.persistence.storageClass }}
+  {{- end }}
+{{- end }}
+

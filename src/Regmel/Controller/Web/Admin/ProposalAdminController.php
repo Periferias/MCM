@@ -25,10 +25,12 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use App\Regmel\Message\GenerateMapFilesZipMessage;
 
 class ProposalAdminController extends AbstractAdminController
 {
@@ -45,6 +47,7 @@ class ProposalAdminController extends AbstractAdminController
         private readonly TranslatorInterface $translator,
         private readonly EntityManagerInterface $entityManager,
         public readonly InscriptionOpportunityServiceInterface $inscriptionOpportunityService,
+        private readonly MessageBusInterface $messageBus,
     ) {
     }
 
@@ -285,25 +288,35 @@ class ProposalAdminController extends AbstractAdminController
     public function exportMapFiles(): Response
     {
         $user = $this->security->getUser();
+        
+        // Verifica se é admin ou manager
+        if (!$this->security->isGranted(UserRolesEnum::ROLE_ADMIN->value) && 
+            !$this->security->isGranted(UserRolesEnum::ROLE_MANAGER->value)) {
+            $this->addFlash('error', 'Apenas administradores podem exportar mapas.');
+            return $this->redirectToRoute('admin_regmel_proposal_list');
+        }
+        
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
         
+        $municipalityId = null;
         if ($isMunicipality) {
             $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
-            $municipality = $agent->getOrganizations()->first();
-            $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
-        } else {
-            $initiatives = $this->initiativeService->list(limit: 10000);
+            $municipality = $agent?->getOrganizations()->first();
+            $municipalityId = $municipality?->getId()->toRfc4122();
         }
 
-        $zipFileName = sprintf('mapas_poligonais_%s.zip', date('Y-m-d_H-i-s'));
+        // Despacha mensagem assíncrona
+        $this->messageBus->dispatch(new GenerateMapFilesZipMessage(
+            userId: $user->getId()->toRfc4122(),
+            municipalityId: $municipalityId,
+        ));
 
-        $filePath = $this->proposalService->exportMapFiles($initiatives);
+        $this->addFlash(
+            'success',
+            'Exportação iniciada! Você será notificado quando o arquivo estiver pronto.'
+        );
 
-        $response = new BinaryFileResponse($filePath, headers: ['Content-Type' => 'application/zip']);
-        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $zipFileName);
-        $response->deleteFileAfterSend(true);
-
-        return $response;
+        return $this->redirectToRoute('admin_dashboard');
     }
 
     #[IsGranted(new Expression('

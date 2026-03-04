@@ -30,6 +30,8 @@ interface ProposalServiceInterface
 
     public function exportMapFiles(array $proposals): string;
 
+    public function exportMapFilesAsync(array $proposals, string $userId): array;
+
     public function exportAnticipationFiles(array $proposals): string;
 
     public function bulkUpdateStatus(array $proposals, string $status): void;

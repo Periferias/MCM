@@ -35,6 +35,11 @@ interface ProposalAgreementServiceInterface
     public function exportAllAgreements(): string;
 
     /**
+     * Generate ZIP with all agreement documents asynchronously.
+     */
+    public function exportAllAgreementsAsync(string $userId): array;
+
+    /**
      * Send email notification when municipality uploads agreement.
      */
     public function sendEmailOnUpload(Uuid $proposalId): void;

@@ -206,6 +206,99 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         return $zipPath;
     }
 
+    public function exportAllAgreementsAsync(string $userId): array
+    {
+        // Cria diretório de exports se não existe
+        $exportsDir = sprintf(
+            '%s/storage/regmel/exports',
+            $this->parameterBag->get('kernel.project_dir')
+        );
+        
+        if (!is_dir($exportsDir)) {
+            mkdir($exportsDir, 0755, true);
+        }
+        
+        // Limpa ZIPs antigos antes de criar novo
+        $this->cleanOldExports($exportsDir);
+        
+        $proposals = $this->getProposalsAwaitingValidation();
+        
+        // Gera nome único do arquivo
+        $timestamp = date('Y-m-d_H-i-s');
+        $zipFileName = sprintf('anuencias_%s_%s.zip', substr($userId, 0, 8), $timestamp);
+        $zipFilePath = sprintf('%s/%s', $exportsDir, $zipFileName);
+        
+        $zip = new ZipArchive();
+        if (true !== $zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+            throw new \RuntimeException('Não foi possível criar arquivo ZIP');
+        }
+
+        $fileCount = 0;
+        foreach ($proposals as $proposal) {
+            $filePath = $this->getAgreementDocumentPath($proposal->getId());
+            if ($filePath && file_exists($filePath)) {
+                $extraFields = $proposal->getExtraFields();
+                $municipalityName = $extraFields['city_name'] ?? 'Municipio';
+                $companyName = $proposal->getOrganizationFrom()?->getName() ?? 'Empresa';
+                
+                $zipEntryName = sprintf(
+                    '%s_%s_%s',
+                    $municipalityName,
+                    $companyName,
+                    basename($filePath)
+                );
+                
+                $zip->addFile($filePath, $zipEntryName);
+                $fileCount++;
+            }
+        }
+        
+        $zip->close();
+
+        return [
+            'path' => $zipFilePath,
+            'filename' => $zipFileName,
+            'fileCount' => $fileCount,
+        ];
+    }
+
+    private function cleanOldExports(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+        
+        $now = time();
+        foreach (glob($dir . '/anuencias_*.zip') as $file) {
+            if (!is_file($file)) {
+                continue;
+            }
+            
+            $downloadedMarkerPath = $file . '.downloaded';
+            $shouldDelete = false;
+            
+            if (file_exists($downloadedMarkerPath)) {
+                // Se foi baixado, apagar após 30 minutos do download
+                $downloadTimestamp = (int) file_get_contents($downloadedMarkerPath);
+                if (($now - $downloadTimestamp) > (30 * 60)) {
+                    $shouldDelete = true;
+                }
+            } else {
+                // Se não foi baixado, apagar após 2 horas da criação
+                if (($now - filemtime($file)) > (2 * 3600)) {
+                    $shouldDelete = true;
+                }
+            }
+            
+            if ($shouldDelete) {
+                unlink($file);
+                if (file_exists($downloadedMarkerPath)) {
+                    unlink($downloadedMarkerPath);
+                }
+            }
+        }
+    }
+
     public function countAgreements(): int
     {
         $proposals = $this->initiativeService->list(10000);

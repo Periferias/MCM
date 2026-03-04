@@ -1,0 +1,19 @@
+framework:
+    messenger:
+        failure_transport: failed
+        
+        transports:
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    queue_name: async
+                retry_strategy:
+                    max_retries: 3
+                    multiplier: 2
+                    
+            failed: 
+                dsn: 'doctrine://default?queue_name=failed'
+                
+        routing:
+            'App\Regmel\Message\GenerateMapFilesZipMessage': async
+            'App\Regmel\Message\GenerateAgreementsZipMessage': async
