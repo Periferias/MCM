@@ -99,8 +99,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {{ proposal.agreement_uploaded_at ? proposal.agreement_uploaded_at|date('d/m/Y H:i') : '-' }}<br>
-                                        <small class="text-muted">{{ proposal.agreement_uploaded_by_name }}</small>
+                                        {{ proposal.agreement_uploaded_at ? proposal.agreement_uploaded_at|date('d/m/Y H:i') : '-' }}
                                     </td>
                                     <td>
                                         {% set status = proposal.agreement_status %}
