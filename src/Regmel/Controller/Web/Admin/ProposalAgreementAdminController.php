@@ -43,7 +43,7 @@ class ProposalAgreementAdminController extends AbstractAdminController
         $states = $filterRegion
             ? $this->stateService->findBy(['region' => $filterRegion])
             : $this->stateService->list();
-        
+
         $statuses = [
             ['value' => 'submitted', 'label' => 'Aguardando Validação'],
             ['value' => 'approved', 'label' => 'Aprovada'],
@@ -55,7 +55,7 @@ class ProposalAgreementAdminController extends AbstractAdminController
         // Formatar dados para a view
         $formattedProposals = array_map(function ($proposal) {
             $extraFields = $proposal->getExtraFields();
-            
+
             return [
                 'id' => $proposal->getId()->toRfc4122(),
                 'name' => $proposal->getName(),
@@ -91,9 +91,10 @@ class ProposalAgreementAdminController extends AbstractAdminController
     {
         try {
             $file = $request->files->get('agreementFile');
-            
+
             if (!$file) {
                 $this->addFlash('error', 'Nenhum arquivo foi enviado');
+
                 return $this->redirectBack($request);
             }
 
@@ -113,11 +114,12 @@ class ProposalAgreementAdminController extends AbstractAdminController
     public function validateAgreement(Uuid $id, Request $request): Response
     {
         try {
-            $approved = $request->request->get('decision') === 'approved';
+            $approved = 'approved' === $request->request->get('decision');
             $reason = $request->request->get('reason');
 
             if (empty(trim($reason))) {
                 $this->addFlash('error', 'O motivo é obrigatório');
+
                 return $this->redirectToRoute('admin_regmel_proposal_agreement_list');
             }
 
@@ -165,7 +167,10 @@ class ProposalAgreementAdminController extends AbstractAdminController
         return $this->redirectBack($request);
     }
 
-    #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[IsGranted(new Expression('
+        is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")
+    '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas-anuencias/download', name: 'admin_regmel_proposal_agreement_download_all', methods: ['GET'])]
     public function downloadAllAgreements(): Response
     {
@@ -179,7 +184,8 @@ class ProposalAgreementAdminController extends AbstractAdminController
 
             return $response;
         } catch (Exception $e) {
-            $this->addFlash('error', 'Erro ao gerar arquivo ZIP: ' . $e->getMessage());
+            $this->addFlash('error', 'Erro ao gerar arquivo ZIP: '.$e->getMessage());
+
             return $this->redirectToRoute('admin_regmel_proposal_agreement_list');
         }
     }
@@ -187,6 +193,7 @@ class ProposalAgreementAdminController extends AbstractAdminController
     private function redirectBack(Request $request): Response
     {
         $referer = $request->headers->get('referer');
+
         return $referer ? $this->redirect($referer) : $this->redirectToRoute('admin_dashboard');
     }
 }
