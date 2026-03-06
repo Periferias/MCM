@@ -10,6 +10,8 @@ use App\Service\Interface\EmailServiceInterface;
 use App\Service\Interface\FileServiceInterface;
 use App\Service\Interface\InitiativeServiceInterface;
 use DateTime;
+use InvalidArgumentException;
+use RuntimeException;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -37,18 +39,18 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         // Verificar se município tem termo aprovado
         $municipality = $proposal->getOrganizationTo();
         if (!$municipality || ($municipality->getExtraFields()['term_status'] ?? null) !== 'approved') {
-            throw new \InvalidArgumentException('Município deve ter termo de adesão aprovado para enviar anuência');
+            throw new InvalidArgumentException('Município deve ter termo de adesão aprovado para enviar anuência');
         }
 
         // Verificar se proposta está com status "Recebida" ou se o documento foi rejeitado
         $currentStatus = $extraFields['status'] ?? null;
         $agreementStatus = $extraFields['agreement_status'] ?? null;
-        
-        $canUpload = $currentStatus === StatusProposalEnum::RECEBIDA->value 
-            || ($currentStatus === StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA->value && $agreementStatus === 'rejected');
-        
+
+        $canUpload = $currentStatus === StatusProposalEnum::RECEBIDA->value
+            || ($currentStatus === StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA->value && 'rejected' === $agreementStatus);
+
         if (!$canUpload) {
-            throw new \InvalidArgumentException('Proposta deve estar com status "Recebida" ou com documento de anuência rejeitado para enviar/reenviar anuência');
+            throw new InvalidArgumentException('Proposta deve estar com status "Recebida" ou com documento de anuência rejeitado para enviar/reenviar anuência');
         }
 
         // Incrementar versão se for reenvio
@@ -56,7 +58,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         if (isset($extraFields['agreement_file'])) {
             // Extrair versão atual e incrementar
             if (preg_match('/_v(\d+)\.pdf$/', $extraFields['agreement_file'], $matches)) {
-                $version = (int)$matches[1] + 1;
+                $version = (int) $matches[1] + 1;
             }
         }
 
@@ -80,7 +82,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $extraFields['agreement_uploaded_at'] = (new DateTime())->format('Y-m-d H:i:s');
         $extraFields['agreement_uploaded_by'] = $user?->getId()->toRfc4122();
         $extraFields['agreement_uploaded_by_name'] = $user?->getName();
-        
+
         // Mudar status da proposta para "Aguardando Avaliação da Anuência"
         $extraFields['status'] = StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA->value;
         $extraFields['status_updated_by'] = $user?->getId()->toRfc4122();
@@ -103,11 +105,11 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         $extraFields = $proposal->getExtraFields();
 
         if (($extraFields['agreement_status'] ?? null) !== 'submitted') {
-            throw new \InvalidArgumentException('Apenas anuências com documentação reenviada podem ser reavaliadas');
+            throw new InvalidArgumentException('Apenas anuências com documentação reenviada podem ser reavaliadas');
         }
 
         $user = $this->security->getUser();
-        
+
         if ($approved) {
             $extraFields['agreement_status'] = 'approved';
             // Atualizar status da proposta para "Anuída"
@@ -132,9 +134,9 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
     {
         $allProposals = $this->initiativeService->list(limit: 10000);
 
-        return array_filter($allProposals, function ($proposal) use ($region, $state, $status) {
+        $filteredProposals = array_filter($allProposals, function ($proposal) use ($region, $state, $status) {
             $extraFields = $proposal->getExtraFields();
-            
+
             // Filtrar apenas propostas com documento de anuência enviado ou validado
             $agreementStatus = $extraFields['agreement_status'] ?? null;
             if (!in_array($agreementStatus, ['submitted', 'approved', 'rejected'])) {
@@ -156,6 +158,26 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
 
             return true;
         });
+
+        // Ordenar por data de envio (mais recentes primeiro)
+        usort($filteredProposals, function ($a, $b) {
+            $dateA = $a->getExtraFields()['agreement_uploaded_at'] ?? null;
+            $dateB = $b->getExtraFields()['agreement_uploaded_at'] ?? null;
+
+            if (!$dateA && !$dateB) {
+                return 0;
+            }
+            if (!$dateA) {
+                return 1;
+            }
+            if (!$dateB) {
+                return -1;
+            }
+
+            return $dateB <=> $dateA;
+        });
+
+        return $filteredProposals;
     }
 
     public function getAgreementDocumentPath(Uuid $proposalId): ?string
@@ -169,19 +191,20 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         }
 
         $path = $this->parameterBag->get('kernel.project_dir');
+
         return "{$path}/storage/regmel/proposals/agreements/{$fileName}";
     }
 
     public function exportAllAgreements(): string
     {
         $proposals = $this->getProposalsAwaitingValidation();
-        
+
         $zip = new ZipArchive();
         $zipFileName = sprintf('anuencias_%s.zip', date('Y-m-d_H-i-s'));
-        $zipPath = sys_get_temp_dir() . '/' . $zipFileName;
+        $zipPath = sys_get_temp_dir().'/'.$zipFileName;
 
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \RuntimeException('Não foi possível criar arquivo ZIP');
+        if (true !== $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+            throw new RuntimeException('Não foi possível criar arquivo ZIP');
         }
 
         foreach ($proposals as $proposal) {
@@ -190,19 +213,20 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
                 $extraFields = $proposal->getExtraFields();
                 $municipalityName = $extraFields['city_name'] ?? 'Municipio';
                 $companyName = $proposal->getOrganizationFrom()?->getName() ?? 'Empresa';
-                
+
                 $zipEntryName = sprintf(
                     '%s_%s_%s',
                     $municipalityName,
                     $companyName,
                     basename($filePath)
                 );
-                
+
                 $zip->addFile($filePath, $zipEntryName);
             }
         }
 
         $zip->close();
+
         return $zipPath;
     }
 
@@ -210,14 +234,14 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
     {
         $proposals = $this->initiativeService->list(10000);
         $count = 0;
-        
+
         foreach ($proposals as $proposal) {
             $extraFields = $proposal->getExtraFields();
             if (isset($extraFields['agreement_file'])) {
                 $count++;
             }
         }
-        
+
         return $count;
     }
 
@@ -225,14 +249,14 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
     {
         $proposals = $this->initiativeService->list(10000);
         $count = 0;
-        
+
         foreach ($proposals as $proposal) {
             $extraFields = $proposal->getExtraFields();
-            if (isset($extraFields['agreement_status']) && $extraFields['agreement_status'] === 'submitted') {
+            if (isset($extraFields['agreement_status']) && 'submitted' === $extraFields['agreement_status']) {
                 $count++;
             }
         }
-        
+
         return $count;
     }
 
@@ -252,7 +276,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         ]);
 
         if (!$hasAgreementStatus && !$hasAgreementRelatedStatus) {
-            throw new \InvalidArgumentException('Esta proposta não possui anuência para cancelar');
+            throw new InvalidArgumentException('Esta proposta não possui anuência para cancelar');
         }
 
         // Apagar arquivo físico se existir
@@ -278,7 +302,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
 
         // Voltar status para RECEBIDA
         $extraFields['status'] = StatusProposalEnum::RECEBIDA->value;
-        
+
         // Registrar quem cancelou
         $user = $this->security->getUser();
         $extraFields['status_updated_by'] = $user?->getId()->toRfc4122();
@@ -297,7 +321,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
     {
         $proposal = $this->initiativeService->get($proposalId);
         $extraFields = $proposal->getExtraFields();
-        
+
         $municipalityName = $extraFields['city_name'] ?? 'Município';
         $proposalName = $proposal->getName();
         $companyName = $proposal->getOrganizationFrom()?->getName() ?? 'Empresa';
@@ -307,7 +331,7 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
 
         $subject = "Nova Anuência Enviada - {$municipalityName}";
         $message = "O município {$municipalityName} enviou o documento de anuência para a proposta '{$proposalName}' da empresa {$companyName}.\n\n";
-        $message .= "Acesse o painel administrativo para validar o documento.";
+        $message .= 'Acesse o painel administrativo para validar o documento.';
 
         $this->emailService->send($adminEmails, $subject, $message);
     }
@@ -316,11 +340,11 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
     {
         $proposal = $this->initiativeService->get($proposalId);
         $extraFields = $proposal->getExtraFields();
-        
+
         $municipalityName = $extraFields['city_name'] ?? 'Município';
         $proposalName = $proposal->getName();
         $companyName = $proposal->getOrganizationFrom()?->getName() ?? 'Empresa';
-        
+
         // Email para município (agentes + email do município nos extra_fields)
         $municipalityEmails = [];
         $municipality = $proposal->getOrganizationTo();
@@ -358,10 +382,10 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         }
 
         // Se rejeitado, enviar apenas para município. Se aprovado, enviar para ambos
-        $allEmails = $approved 
+        $allEmails = $approved
             ? array_unique(array_filter(array_merge($municipalityEmails, $companyEmails)))
             : array_unique(array_filter($municipalityEmails));
-            
+
         if (empty($allEmails)) {
             // Log de erro para debug
             error_log(sprintf(
@@ -371,17 +395,14 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
                 $municipality?->getId()->toRfc4122() ?? 'N/A',
                 $company?->getId()->toRfc4122() ?? 'N/A'
             ));
-            throw new \RuntimeException(
-                'Não foi possível enviar o email: nenhum destinatário válido encontrado. ' .
-                'Verifique se o município possui agentes com emails cadastrados.'
-            );
+            throw new RuntimeException('Não foi possível enviar o email: nenhum destinatário válido encontrado. Verifique se o município possui agentes com emails cadastrados.');
         }
 
-        $template = $approved 
+        $template = $approved
             ? '_emails/notifications/proposal/agreement-approved.html.twig'
             : '_emails/notifications/proposal/agreement-rejected.html.twig';
 
-        $subject = $approved 
+        $subject = $approved
             ? "Documento de Anuência Aprovado - {$proposalName}"
             : "Documento de Anuência Rejeitado - {$proposalName}";
 

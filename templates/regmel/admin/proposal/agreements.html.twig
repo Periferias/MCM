@@ -20,10 +20,12 @@
                             </div>
 
                             <div class="col text-end">
-                                <a href="{{ path('admin_regmel_proposal_agreement_download_all') }}"
-                                   class="btn btn-secondary">
-                                    <i class="bi bi-download me-2"></i>Download Todos Documentos
-                                </a>
+                                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
+                                    <a href="{{ path('admin_regmel_proposal_agreement_download_all') }}"
+                                       class="btn btn-secondary">
+                                        <i class="bi bi-download me-2"></i>Download Todos Documentos
+                                    </a>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -99,8 +101,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {{ proposal.agreement_uploaded_at ? proposal.agreement_uploaded_at|date('d/m/Y H:i') : '-' }}<br>
-                                        <small class="text-muted">{{ proposal.agreement_uploaded_by_name }}</small>
+                                        {{ proposal.agreement_uploaded_at ? proposal.agreement_uploaded_at|date('d/m/Y H:i') : '-' }}
                                     </td>
                                     <td>
                                         {% set status = proposal.agreement_status %}
