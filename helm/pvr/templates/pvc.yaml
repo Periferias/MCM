@@ -1,25 +1,37 @@
+{{- if and .Values.appVolumes.persistence.enabled (not .Values.appVolumes.persistence.assets.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: pvr-assets
-  namespace: default
+  name: {{ include "pvr.fullname" . }}-assets
+  labels:
+    {{- include "pvr.labels" . | nindent 4 }}
+    component: assets
 spec:
   accessModes:
-  - ReadWriteOnce
+    - {{ .Values.appVolumes.persistence.assets.accessMode | default "ReadWriteOnce" }}
   resources:
     requests:
-      storage: 1Gi
-  volumeMode: Filesystem
+      storage: {{ .Values.appVolumes.persistence.assets.size | default "1Gi" }}
+  {{- if .Values.appVolumes.persistence.assets.storageClass }}
+  storageClassName: {{ .Values.appVolumes.persistence.assets.storageClass }}
+  {{- end }}
+{{- end }}
+{{- if and .Values.appVolumes.persistence.enabled (not .Values.appVolumes.persistence.storage.existingClaim) }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: pvr-storage
-  namespace: default
+  name: {{ include "pvr.fullname" . }}-storage
+  labels:
+    {{- include "pvr.labels" . | nindent 4 }}
+    component: storage
 spec:
   accessModes:
-  - ReadWriteOnce
+    - {{ .Values.appVolumes.persistence.storage.accessMode | default "ReadWriteOnce" }}
   resources:
     requests:
-      storage: 1Gi
-  volumeMode: Filesystem
+      storage: {{ .Values.appVolumes.persistence.storage.size | default "1Gi" }}
+  {{- if .Values.appVolumes.persistence.storage.storageClass }}
+  storageClassName: {{ .Values.appVolumes.persistence.storage.storageClass }}
+  {{- end }}
+{{- end }}

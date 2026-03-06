@@ -1,4 +1,6 @@
-{{- if .Values.exports.persistence.enabled }}
+{{- $exports := .Values.exports | default dict }}
+{{- $persistence := $exports.persistence | default dict }}
+{{- if $persistence.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -8,12 +10,11 @@ metadata:
     component: exports
 spec:
   accessModes:
-    - {{ .Values.exports.persistence.accessMode | default "ReadWriteMany" }}
+    - {{ $persistence.accessMode | default "ReadWriteMany" }}
   resources:
     requests:
-      storage: {{ .Values.exports.persistence.size | default "5Gi" }}
-  {{- if .Values.exports.persistence.storageClass }}
-  storageClassName: {{ .Values.exports.persistence.storageClass }}
+      storage: {{ $persistence.size | default "5Gi" }}
+  {{- if $persistence.storageClass }}
+  storageClassName: {{ $persistence.storageClass }}
   {{- end }}
 {{- end }}
-

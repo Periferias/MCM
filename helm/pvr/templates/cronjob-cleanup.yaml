@@ -36,9 +36,8 @@ spec:
           
           containers:
           - name: cleanup
-            # Usar a mesma imagem do PHP da aplicação
-            image: pvr-php:latest
-            imagePullPolicy: IfNotPresent
+            image: "{{ .Values.php.image.repository }}:{{ .Values.php.image.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ .Values.php.image.pullPolicy }}
             
             command:
             - php
@@ -49,9 +48,9 @@ spec:
             # Variáveis de ambiente (mesmas da aplicação)
             envFrom:
             - configMapRef:
-                name: pvr-config
+                name: {{ include "pvr.fullname" . }}
             - secretRef:
-                name: pvr-secrets
+                name: {{ include "pvr.fullname" . }}
             
             # Montagem do volume de exportação
             volumeMounts:
@@ -69,5 +68,9 @@ spec:
           
           volumes:
           - name: exports-volume
+            {{- if and (.Values.exports) (.Values.exports.persistence) (.Values.exports.persistence.enabled) }}
             persistentVolumeClaim:
-              claimName: pvr-exports-pvc
+              claimName: {{ include "pvr.fullname" . }}-exports
+            {{- else }}
+            emptyDir: {}
+            {{- end }}

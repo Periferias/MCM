@@ -133,6 +133,27 @@ app:
   maxFileSizeMb: "10"
   emailAddress: "contato@cidades.gov.br"
 
+appVolumes:
+  persistence:
+    enabled: true
+    assets:
+      existingClaim: ""
+      accessMode: ReadWriteOnce
+      size: 1Gi
+      storageClass: ""
+    storage:
+      existingClaim: ""
+      accessMode: ReadWriteOnce
+      size: 1Gi
+      storageClass: ""
+
+exports:
+  persistence:
+    enabled: false
+    accessMode: ReadWriteMany
+    size: 5Gi
+    storageClass: ""
+
 mailer:
   dsn: "smtp://localhost:587"
 
@@ -142,6 +163,19 @@ jwt:
 
 # If you use Mercure, you need the managed or the On Premise version to deploy more than one pod: https://mercure.rocks/docs/hub/cluster
 replicaCount: 1
+
+worker:
+  enabled: false
+  replicaCount: 1
+  command:
+    - php
+    - bin/console
+    - messenger:consume
+    - async
+    - --time-limit=3600
+    - --memory-limit=512M
+    - -vv
+  resources: {}
 
 autoscaling:
   enabled: false
