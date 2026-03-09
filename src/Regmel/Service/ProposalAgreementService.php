@@ -33,6 +33,13 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
 
     public function uploadAgreementDocument(Uuid $proposalId, UploadedFile $file): void
     {
+        // Bloqueio do prazo de anuência: 09/03/2026 às 23:59 BRT
+        $deadline = new DateTime('2026-03-09 23:59:59', new \DateTimeZone('America/Sao_Paulo'));
+        $now = new DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
+        if ($now > $deadline) {
+            throw new InvalidArgumentException('O prazo para envio do documento de anuência encerrou em 09/03/2026 às 23h59 (horário de Brasília).');
+        }
+
         $proposal = $this->initiativeService->get($proposalId);
         $extraFields = $proposal->getExtraFields();
 
