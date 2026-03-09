@@ -353,14 +353,18 @@
                                                 </button>
                                                 
                                                 {% if municipality.extraFields.term_status == 'approved' and proposal.extraFields.status == 'Recebida' %}
-                                                    <button
-                                                            class="btn btn-success btn-sm ms-1"
-                                                            onclick="openAgreementModal('{{ municipality.id }}', '{{ proposal.id }}')"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#modalAgreement"
-                                                    >
-                                                        Anuir Proposta
-                                                    </button>
+                                                    {% if date() < date('2026-03-20 02:59:59') %}
+                                                        <button
+                                                                class="btn btn-success btn-sm ms-1"
+                                                                onclick="openAgreementModal('{{ municipality.id }}', '{{ proposal.id }}')"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#modalAgreement"
+                                                        >
+                                                            Anuir Proposta
+                                                        </button>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary ms-1" title="Prazo de anuência encerrado em 19/03/2026 às 23h59">Prazo encerrado</span>
+                                                    {% endif %}
                                                 {% endif %}
                                             </td>
                                         </tr>
