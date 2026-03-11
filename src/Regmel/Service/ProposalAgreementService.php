@@ -33,13 +33,6 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
 
     public function uploadAgreementDocument(Uuid $proposalId, UploadedFile $file): void
     {
-        // Bloqueio do prazo de anuência: 09/03/2026 às 23:59 BRT
-        $deadline = new DateTime('2026-03-09 23:59:59', new \DateTimeZone('America/Sao_Paulo'));
-        $now = new DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
-        if ($now > $deadline) {
-            throw new InvalidArgumentException('O prazo para envio do documento de anuência encerrou em 09/03/2026 às 23h59 (horário de Brasília).');
-        }
-
         $proposal = $this->initiativeService->get($proposalId);
         $extraFields = $proposal->getExtraFields();
 
@@ -52,6 +45,17 @@ readonly class ProposalAgreementService implements ProposalAgreementServiceInter
         // Verificar se proposta está com status "Recebida" ou se o documento foi rejeitado
         $currentStatus = $extraFields['status'] ?? null;
         $agreementStatus = $extraFields['agreement_status'] ?? null;
+
+        // Bloqueio do prazo de anuência: 09/03/2026 às 23:59 BRT
+        // Apenas para nova anuência (não bloqueia reenvio quando documento foi rejeitado)
+        $isResend = $agreementStatus === 'rejected';
+        if (!$isResend) {
+            $deadline = new DateTime('2026-03-09 23:59:59', new \DateTimeZone('America/Sao_Paulo'));
+            $now = new DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
+            if ($now > $deadline) {
+                throw new InvalidArgumentException('O prazo para envio do documento de anuência encerrou em 09/03/2026 às 23h59 (horário de Brasília).');
+            }
+        }
 
         $canUpload = $currentStatus === StatusProposalEnum::RECEBIDA->value
             || ($currentStatus === StatusProposalEnum::AGUARDANDO_AVALIACAO_ANUENCIA->value && 'rejected' === $agreementStatus);
