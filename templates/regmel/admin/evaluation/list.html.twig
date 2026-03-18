@@ -174,11 +174,11 @@ document.getElementById('evaluationForm').addEventListener('submit', async (e) =
     const ranking = document.getElementById('ranking').value;
     
     try {
-        const response = await fetch(`/painel/admin/avaliacoes/${proposalId}/submit`, {
+        const response = await fetch(`/api/proposals/${proposalId}/evaluate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'Authorization': `Bearer ${getToken()}`
             },
             body: JSON.stringify({
                 result: result,
@@ -201,5 +201,13 @@ document.getElementById('evaluationForm').addEventListener('submit', async (e) =
         alert('❌ Erro ao avaliar: ' + error.message);
     }
 });
+
+function getToken() {
+    // Extrair token do localStorage ou da sessão
+    return localStorage.getItem('auth_token') || document.cookie
+        .split('; ')
+        .find(row => row.startsWith('BEARER='))
+        ?.split('=')[1] || '';
+}
 </script>
 {% endblock %}
