@@ -1,0 +1,213 @@
+{% extends "_layouts/blank.html.twig" %}
+
+{% block title %}
+    {{ 'control_panel'|trans }} - Avaliação de Propostas
+{% endblock %}
+
+{% block content %}
+<section class="d-flex">
+    {% include "_components/side-bar.html.twig" %}
+
+    <div class="my-3 container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-body shadow">
+                    <div class="row justify-content-between">
+                        <div class="col">
+                            <h2>Avaliação de Propostas</h2>
+                            <p class="text-muted">Propostas aguardando avaliação de seleção</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    {% if proposals is empty %}
+                        <div class="alert alert-info" role="alert">
+                            <strong>Nenhuma proposta aguardando avaliação!</strong>
+                            <p>Todas as propostas anuídas já foram avaliadas.</p>
+                        </div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nome da Proposta</th>
+                                        <th>Região</th>
+                                        <th>Estado</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for proposal in proposals %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ proposal.name }}</strong>
+                                            </td>
+                                            <td>{{ proposal.region ?? '-' }}</td>
+                                            <td>{{ proposal.state ?? '-' }}</td>
+                                            <td>
+                                                <span class="badge bg-success">{{ proposal.status }}</span>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    class="btn btn-sm btn-primary"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#evaluationModal"
+                                                    onclick="openEvaluationModal('{{ proposal.id }}', '{{ proposal.name }}')"
+                                                >
+                                                    Avaliar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal de Avaliação -->
+<div class="modal fade" id="evaluationModal" tabindex="-1" aria-labelledby="evaluationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="evaluationForm" method="post">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="evaluationModalLabel">Avaliar Proposta</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="proposalId" name="proposal_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Proposta: <span id="proposalName"></span></label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="result" class="form-label fw-bold">Resultado *</label>
+                        <select class="form-select" id="result" name="result" required onchange="toggleRankingField()">
+                            <option value="" selected disabled>Selecione o resultado</option>
+                            <option value="Selecionada">✅ Selecionada (aprovada, recebe recurso)</option>
+                            <option value="Não Selecionada">❌ Não Selecionada (rejeitada)</option>
+                            <option value="Classificada">📊 Classificada (suplente)</option>
+                        </select>
+                        <div class="form-text">Escolha uma opção obrigatória</div>
+                    </div>
+
+                    <div class="mb-3" id="rankingField" style="display: none;">
+                        <label for="ranking" class="form-label fw-bold">Ranking (posição) *</label>
+                        <input type="number" class="form-control" id="ranking" name="ranking" min="1" placeholder="Ex: 1, 2, 3...">
+                        <div class="form-text">Obrigatório para propostas classificadas</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label fw-bold">Motivo/Parecer *</label>
+                        <textarea
+                            class="form-control"
+                            id="reason"
+                            name="reason"
+                            rows="4"
+                            placeholder="Descreva o motivo da sua avaliação..."
+                            minlength="10"
+                            required
+                        ></textarea>
+                        <div class="form-text">Mínimo de 10 caracteres</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notas Adicionais</label>
+                        <textarea
+                            class="form-control"
+                            id="notes"
+                            name="notes"
+                            rows="3"
+                            placeholder="Observações adicionais (opcional)..."
+                        ></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEvaluationModal(proposalId, proposalName) {
+    document.getElementById('proposalId').value = proposalId;
+    document.getElementById('proposalName').textContent = proposalName;
+    document.getElementById('result').value = '';
+    document.getElementById('reason').value = '';
+    document.getElementById('notes').value = '';
+    document.getElementById('ranking').value = '';
+    document.getElementById('rankingField').style.display = 'none';
+}
+
+function toggleRankingField() {
+    const result = document.getElementById('result').value;
+    const rankingField = document.getElementById('rankingField');
+    const rankingInput = document.getElementById('ranking');
+    
+    if (result === 'Classificada') {
+        rankingField.style.display = 'block';
+        rankingInput.required = true;
+    } else {
+        rankingField.style.display = 'none';
+        rankingInput.required = false;
+        rankingInput.value = '';
+    }
+}
+
+document.getElementById('evaluationForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const proposalId = document.getElementById('proposalId').value;
+    const result = document.getElementById('result').value;
+    const reason = document.getElementById('reason').value;
+    const notes = document.getElementById('notes').value;
+    const ranking = document.getElementById('ranking').value;
+    
+    try {
+        const response = await fetch(`/api/proposals/${proposalId}/evaluate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({
+                result: result,
+                reason: reason,
+                notes: notes || null,
+                ranking: ranking ? parseInt(ranking) : null
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Proposta avaliada com sucesso!');
+            bootstrap.Modal.getInstance(document.getElementById('evaluationModal')).hide();
+            location.reload();
+        } else {
+            alert('❌ Erro: ' + data.message);
+        }
+    } catch (error) {
+        alert('❌ Erro ao avaliar: ' + error.message);
+    }
+});
+
+function getToken() {
+    // Extrair token do localStorage ou da sessão
+    return localStorage.getItem('auth_token') || document.cookie
+        .split('; ')
+        .find(row => row.startsWith('BEARER='))
+        ?.split('=')[1] || '';
+}
+</script>
+{% endblock %}

@@ -119,25 +119,39 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
             ->from(Initiative::class, 'i')
             ->where('i.deletedAt IS NULL');
 
-        // Filtrar por status ANUIDA
-        $qb->andWhere('JSON_EXTRACT(i.extraFields, \'$."status"\') = :status')
-            ->setParameter('status', StatusProposalEnum::ANUIDA->value);
+        // Usar SQL nativo para JSON_EXTRACT
+        $dql = $qb->getDQL();
+        $results = $this->entityManager->createQuery(
+            'SELECT i FROM App\Entity\Initiative i 
+             WHERE i.deletedAt IS NULL'
+        )->getResult();
 
-        // Filtrar por propostas não avaliadas
-        $qb->andWhere('JSON_EXTRACT(i.extraFields, \'$."evaluation_status"\') IS NULL OR JSON_EXTRACT(i.extraFields, \'$."evaluation_status"\') != :evaluationStatus')
-            ->setParameter('evaluationStatus', 'completed');
-
-        if ($region) {
-            $qb->andWhere('JSON_EXTRACT(i.extraFields, \'$."region"\') = :region')
-                ->setParameter('region', $region);
-        }
-
-        if ($state) {
-            $qb->andWhere('JSON_EXTRACT(i.extraFields, \'$."state"\') = :state')
-                ->setParameter('state', $state);
-        }
-
-        $results = $qb->getQuery()->getResult();
+        // Filtrar em PHP
+        $filtered = array_filter($results, function (Initiative $initiative) use ($region, $state) {
+            $extra = $initiative->getExtraFields() ?? [];
+            
+            // Verificar status ANUIDA
+            if (($extra['status'] ?? null) !== StatusProposalEnum::ANUIDA->value) {
+                return false;
+            }
+            
+            // Verificar se não foi avaliada
+            if (($extra['evaluation_status'] ?? null) === 'completed') {
+                return false;
+            }
+            
+            // Filtrar por região
+            if ($region && ($extra['region'] ?? null) !== $region) {
+                return false;
+            }
+            
+            // Filtrar por estado
+            if ($state && ($extra['state'] ?? null) !== $state) {
+                return false;
+            }
+            
+            return true;
+        });
 
         return array_map(fn (Initiative $initiative) => [
             'id' => $initiative->getId()->toRfc4122(),
@@ -145,7 +159,7 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
             'status' => $initiative->getExtraFields()['status'] ?? '',
             'region' => $initiative->getExtraFields()['region'] ?? '',
             'state' => $initiative->getExtraFields()['state'] ?? '',
-        ], $results);
+        ], $filtered);
     }
 
     public function getEvaluation(Uuid $proposalId): ?array
