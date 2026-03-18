@@ -50,3 +50,13 @@ services:
         arguments:
             $filesystem: '@default.storage'
         public: true
+
+    App\Regmel\Service\ProposalEvaluationService:
+        alias: App\Regmel\Service\Interface\ProposalEvaluationServiceInterface
+
+    App\Regmel\Service\Interface\ProposalEvaluationServiceInterface:
+        class: App\Regmel\Service\ProposalEvaluationService
+
+    App\EventListener\Regmel\EvaluationEventListener:
+        tags:
+            - { name: doctrine.orm.entity_listener }
