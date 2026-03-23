@@ -481,6 +481,7 @@ ROLE_MANAGER: Gestor
 ROLE_ADMIN: Administrador Geral
 ROLE_SNP: Administrador SNP
 ROLE_SUPPORT: Suporte
+ROLE_CAIXA: Visualizador Caixa
 rejected: Rejeitado
 
 selection: Seleção
