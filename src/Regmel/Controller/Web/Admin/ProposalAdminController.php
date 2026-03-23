@@ -115,6 +115,7 @@ class ProposalAdminController extends AbstractAdminController
                 'agreement_status' => $extraFields['agreement_status'] ?? null,
                 'status_reason' => $extraFields['status_reason'] ?? null,
                 'agreement_reason' => $extraFields['agreement_reason'] ?? null,
+                'evaluation_ranking' => $extraFields['evaluation_ranking'] ?? null,
             ];
         }, $filtered);
 
@@ -232,13 +233,40 @@ class ProposalAdminController extends AbstractAdminController
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
         
+        $status = $request->query->get('status');
+        
         if ($isMunicipality) {
             $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
-            $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
+            
+            if ($status) {
+                // Usar listFiltered para filtrar por status
+                $initiatives = $this->initiativeService->listFiltered(
+                    region: null,
+                    state: null,
+                    cityId: null,
+                    status: $status,
+                    anticipation: null
+                );
+                // Filtrar apenas propostas da municipalidade
+                $initiatives = array_filter($initiatives, fn($init) => $init->getOrganizationTo()?->getId() === $municipality->getId());
+            } else {
+                $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
+            }
         } else {
-            // Incluir propostas deletadas na exportação CSV
-            $initiatives = $this->initiativeService->listAllIncludingDeleted(limit: 10000);
+            if ($status) {
+                // Usar listFiltered para filtrar por status
+                $initiatives = $this->initiativeService->listFiltered(
+                    region: null,
+                    state: null,
+                    cityId: null,
+                    status: $status,
+                    anticipation: null
+                );
+            } else {
+                // Incluir propostas deletadas na exportação CSV
+                $initiatives = $this->initiativeService->listAllIncludingDeleted(limit: 10000);
+            }
         }
 
         return $this->proposalService->generateSpreadSheet($initiatives, 'propostas', null);
