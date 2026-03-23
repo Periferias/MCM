@@ -1,0 +1,134 @@
+## 📊 Análise de Status - Requisitos de Avaliação, Classificação e Ordenação de Propostas
+
+Análise completa realizada em **23/03/2026**. Status geral de implementação: **49%** (~29 horas de trabalho faltando).
+
+---
+
+### ✅ O Que Já Está Implementado (49%)
+
+#### 1. ✅ Anuência do Município (70% - Parcial)
+- ✅ Validação backend: proposta só pode ser avaliada após anuência
+- ✅ Três status de anuência: Enviada → Aguardando Validação → Anuída/Não Anuída
+- ✅ Motivo da não-anuência persistido
+- ⚠️ Falta: UI visual de bloqueio/somente-leitura
+
+#### 2. ✅ Classificação de Propostas (95% - Implementado ✓)
+- ✅ Três status finais: `SELECIONADA` (aprovada) | `CLASSIFICADA` (suplente) | `NAO_SELECIONADA` (rejeitada)
+- ✅ Motivo obrigatório para todos (validação backend)
+- ✅ Campos persistidos: status, motivo, notas, ranking, timestamp, usuário
+- ✅ Uma única avaliação por proposta (imutável)
+
+#### 3. ✅ Fluxo Geral (95% - Implementado ✓)
+- ✅ Completo: Cadastro → Anuência → Avaliação → Resultado
+- ⚠️ Falta: Ordenação de prioridade e visualização por perfil Caixa
+
+---
+
+### ❌ O Que Falta Implementar (51%)
+
+#### 1. ❌ Perfil de Acesso "Caixa" (0% - **CRÍTICO**)
+- ❌ Role `ROLE_CAIXA` não existe
+- ❌ Permissão: visualizar apenas propostas `SELECIONADA` + `CLASSIFICADA`
+- ❌ Bloqueio: `NAO_SELECIONADA` + `AGUARDANDO_AVALIACAO_SELECAO` invisíveis
+- ❌ Modo somente-leitura obrigatório
+- **Tempo:** ~4 horas
+
+#### 2. ❌ Ordem de Prioridade (0% - **CRÍTICO**)
+- ❌ Campo persistido `ordem_prioridade` para propostas `SELECIONADA` + `CLASSIFICADA`
+- ❌ Sequência obrigatória (1, 2, 3...)
+- ❌ Validação de unicidade (sem duplicidade)
+- ❌ Validação de integridade (sem quebras)
+- ❌ Endpoint para editar manualmente
+- **Detalhes:** Campo em `extra_fields['ordem_prioridade']` (JSONB - sem migration SQL necessária)
+- **Tempo:** ~5 horas
+
+#### 3. ❌ Reordenação Manual - Drag-and-Drop (0% - **CRÍTICO**)
+- ❌ Interface drag-and-drop
+- ❌ Endpoint POST `/api/proposals/reorder` com transação atômica
+- ❌ Recálculo de sequência automático
+- ❌ Validação de integridade após reordenação
+- ❌ Feedback visual em tempo real
+- **Dependência:** Requer #2 completo antes
+- **Tempo:** ~8 horas
+
+#### 4. ⚠️ Regras de Integridade (50% - Parcial)
+- ✅ Não avaliar sem anuência (implementado)
+- ✅ Motivo obrigatório (implementado)
+- ❌ Ordem para selecionadas/classificadas (falta)
+- ❌ Evitar duplicidade (falta)
+- ❌ Evitar quebra de sequência (falta)
+- **Tempo:** ~3 horas
+
+#### 5. ⚠️ Auditoria (60% - Parcial)
+- ✅ Registra usuário + data da avaliação
+- ✅ Timeline em MongoDB
+- ❌ Histórico de mudanças de ordem
+- **Tempo:** ~2.5 horas
+
+---
+
+### 📋 Tabela Resumida
+
+| Requisito | % | Status | Prioridade | Tempo |
+|-----------|---|--------|----------|--------|
+| 1. Anuência do Município | 70% | ⚠️ Parcial | Baixa | 1h |
+| 2. Classificação de Propostas | 95% | ✅ Implementado | - | - |
+| 3. Perfil Caixa | 0% | ❌ Não feito | **CRÍTICA** | 4h |
+| 4. Ordem de Prioridade | 0% | ❌ Não feito | **CRÍTICA** | 5h |
+| 5. Reordenação Drag-and-Drop | 0% | ❌ Não feito | **CRÍTICA** | 8h |
+| 6. Regras de Integridade | 50% | ⚠️ Parcial | ALTA | 3h |
+| 7. Auditoria | 60% | ⚠️ Parcial | Média | 2.5h |
+| 8. Fluxo Geral | 95% | ✅ Implementado | - | - |
+| **TOTAL** | **49%** | - | - | **~29h** |
+
+---
+
+### 🛠️ Plano de Implementação (4 Semanas)
+
+**Semana 1: Fundação**
+- Criar role `ROLE_CAIXA` (30 min)
+- Implementar campo `ordem_prioridade` persistido (2h)
+- Criar voter para ROLE_CAIXA (1.5h)
+- Testes (1.5h)
+
+**Semana 1-2: Backend APIs**
+- Endpoint GET `/api/proposals/ordered` (1h)
+- Endpoint POST `/api/proposals/reorder` (2h)
+- Service `ProposalOrderingService` (2h)
+- Testes (1.5h)
+
+**Semana 2: Validação**
+- Validator de sequência (1.5h)
+- Constraints de integridade (45 min)
+- Testes (1.5h)
+
+**Semana 2-3: Frontend**
+- Template lista ordenável (2h)
+- JavaScript drag-and-drop (2.5h)
+- Controller web (1h)
+- Testes Cypress (2h)
+
+**Semana 3-4: Auditoria & Testes**
+- EventListener de reordenação (1.5h)
+- Testes unitários (2h)
+- Testes funcionais (2.5h)
+- Testes E2E (2h)
+- Testes de segurança (1.5h)
+
+---
+
+### 🎯 Próximos Passos Imediatos
+
+1. Criar `ROLE_CAIXA` em `src/Enum/UserRolesEnum.php`
+2. Persistir campo ordem em `src/Regmel/Service/ProposalEvaluationService.php`
+3. Implementar Voter em `src/Security/Voter/ProposalViewer.php`
+4. Criar Endpoint de Reordenação em `src/Controller/Api/EvaluationApiController.php`
+
+---
+
+### 📚 Documentação
+
+- **Análise Detalhada:** `EVALUATION-PHASE-ANALYSIS.md`
+- **Plano Completo:** `IMPLEMENTATION-PLAN-REQUIREMENTS.md`
+
+**Pronto para começar a implementação! 🚀**
