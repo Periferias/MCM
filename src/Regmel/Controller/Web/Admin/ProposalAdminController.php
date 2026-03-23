@@ -51,7 +51,8 @@ class ProposalAdminController extends AbstractAdminController
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or 
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_CAIXA->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas', name: 'admin_regmel_proposal_list', methods: ['GET'])]
     public function list(Request $request): Response
@@ -79,6 +80,19 @@ class ProposalAdminController extends AbstractAdminController
         }
 
         $filtered = $this->initiativeService->listFiltered($region, $state, $city, $status, $anticipation);
+
+        // Filtrar propostas por role (ROLE_CAIXA só vê SELECIONADA e CLASSIFICADA)
+        $isCaixa = $this->security->isGranted(UserRolesEnum::ROLE_CAIXA->value);
+        if ($isCaixa) {
+            $filtered = array_filter($filtered, function (Initiative $proposal) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+                $allowedStatuses = [
+                    StatusProposalEnum::SELECIONADA->value,
+                    StatusProposalEnum::CLASSIFICADA->value,
+                ];
+                return in_array($proposalStatus, $allowedStatuses);
+            });
+        }
 
         $env = $this->configEnvironment->aurora();
 
