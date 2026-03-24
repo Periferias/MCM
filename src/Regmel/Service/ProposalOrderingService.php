@@ -6,13 +6,16 @@ namespace App\Regmel\Service;
 
 use App\Entity\Initiative;
 use App\Enum\StatusProposalEnum;
+use App\Validator\Constraints\UniqueProposalOrder;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ProposalOrderingService
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
+        private readonly ValidatorInterface $validator,
     ) {
     }
 
@@ -169,18 +172,16 @@ class ProposalOrderingService
             ];
         }
 
-        // Validar sequência: deve ser contígua (1, 2, 3, ...)
-        $orders = array_map(fn ($p) => $p['newOrder'], $proposals);
-        sort($orders);
+        // Validar sequência com Constraint: deve ser contígua (1, 2, 3, ...) sem duplicidade
+        $ordersData = array_map(fn ($p) => ['newOrder' => $p['newOrder']], $proposals);
+        $violations = $this->validator->validate($ordersData, new UniqueProposalOrder());
 
-        $expectedSequence = range(1, count($orders));
-        if ($orders !== $expectedSequence) {
-            throw new \InvalidArgumentException('Sequência de ordem deve ser contígua: 1, 2, 3, ...');
-        }
-
-        // Validar unicidade de ordem
-        if (count($orders) !== count(array_unique($orders))) {
-            throw new \InvalidArgumentException('Não pode haver duplicidade de ordem.');
+        if (count($violations) > 0) {
+            $messages = [];
+            foreach ($violations as $violation) {
+                $messages[] = $violation->getMessage();
+            }
+            throw new \InvalidArgumentException('Validação de sequência falhou: ' . implode(', ', $messages));
         }
 
         // Atualizar todas as propostas em transação
