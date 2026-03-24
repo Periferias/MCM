@@ -339,9 +339,9 @@
                                 {% for proposal in proposals %}
                                     {% set status = proposal.status ?? '' %}
                                     {% if status == statusEnum.SELECIONADA.value %}
-                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" draggable="true" data-current-order="{{ proposal.order ?? '' }}">
-                                        <td style="cursor: move; font-weight: bold; text-align: center;">
-                                            <input type="number" class="form-control form-control-sm position-input-sel" value="{{ proposal.order ?? '' }}" min="1" style="width: 60px;">
+                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.order ?? '' }}">
+                                        <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center;">
+                                            <input type="number" class="form-control form-control-sm position-input-sel" value="{{ proposal.order ?? '' }}" min="1" style="width: 60px;" {% if not is_granted('ROLE_ADMIN') %}disabled{% endif %}>
                                         </td>
                                         <td>{{ proposal.name|default('N/A') }}</td>
                                         <td>{{ proposal.company }}</td>
@@ -511,9 +511,9 @@
                                 {% set classified = classified|sort((a, b) => (a.evaluation_ranking ?? 999999) <=> (b.evaluation_ranking ?? 999999)) %}
                                 {% for proposal in classified %}
                                     {% set status = proposal.status ?? '' %}
-                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" draggable="true" data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
-                                        <td style="cursor: move; font-weight: bold; text-align: center;">
-                                            <input type="number" class="form-control form-control-sm position-input-class" value="{{ proposal.evaluation_ranking ?? '' }}" min="1" style="width: 60px;">
+                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
+                                        <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center;">
+                                            <input type="number" class="form-control form-control-sm position-input-class" value="{{ proposal.evaluation_ranking ?? '' }}" min="1" style="width: 60px;" {% if not is_granted('ROLE_ADMIN') %}disabled{% endif %}>
                                         </td>
                                         <td>{{ proposal.name|default('N/A') }}</td>
                                         <td>{{ proposal.company }}</td>
@@ -921,9 +921,12 @@
                 tabNaoSelecionada.innerHTML = '<i class="bi bi-x-circle"></i> Não Selecionadas <span class="badge bg-danger ms-2">' + naoSelecionadaCount + '</span>';
             }
 
-            // Inicializar drag-and-drop
-            setupDragAndDrop('tableSelecionada');
-            setupDragAndDrop('tableClassificada');
+            // Inicializar drag-and-drop apenas para ROLE_ADMIN
+            const isAdmin = {{ is_granted('ROLE_ADMIN') ? 'true' : 'false' }};
+            if (isAdmin) {
+                setupDragAndDrop('tableSelecionada');
+                setupDragAndDrop('tableClassificada');
+            }
         });
 
         const autoSaveTimeouts = {};
