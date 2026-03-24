@@ -123,11 +123,12 @@ class ProposalAdminController extends AbstractAdminController
                 'snpr_affiliation_details' => $extraFields['snpr_affiliation_details'] ?? '',
                 'zipcode' => $extraFields['zipcode'] ?? 'Não Informado',
                 'address' => $extraFields['address'] ?? 'Não Informado',
-                // O novo campo que você queria:
                 'status_updated_by_name' => $extraFields['status_updated_by_name'] ?? 'Não informado',
                 'agreement_uploaded_by_name' => $extraFields['agreement_uploaded_by_name'] ?? 'Não informado',
                 'agreement_status' => $extraFields['agreement_status'] ?? null,
                 'status_reason' => $extraFields['status_reason'] ?? null,
+                'order' => $extraFields['ordem_prioridade'] ?? null,
+                'evaluation_ranking' => $extraFields['evaluation_ranking'] ?? null,
                 'agreement_reason' => $extraFields['agreement_reason'] ?? null,
                 'evaluation_ranking' => $extraFields['evaluation_ranking'] ?? null,
             ];
