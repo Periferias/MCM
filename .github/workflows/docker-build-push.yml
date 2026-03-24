@@ -31,7 +31,7 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             # Install the cosign tool except on PR
             # https://github.com/sigstore/cosign-installer
@@ -42,7 +42,7 @@ jobs:
                   cosign-release: "v2.2.4"
 
             - name: Login to ECR
-              uses: docker/login-action@v3
+              uses: docker/login-action@v4
               with:
                   registry: ${{ env.ECR_REGISTRY }}
             # Set up BuildKit Docker container builder to be able to build
