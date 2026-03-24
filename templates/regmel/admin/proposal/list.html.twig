@@ -34,7 +34,7 @@
                                 {{ 'export_project_file'|trans }}
                             </a>
 
-                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
+                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_CAIXA') %}
                                 <a href="{{ path('admin_regmel_proposal_list_download', app.request.query.all) }}" class="btn btn-sm btn-secondary">
                                     {{ 'export_csv'|trans }}
                                 </a>
@@ -73,11 +73,13 @@
                                     <i class="bi bi-folder-check"></i> Classificadas
                                 </button>
                             </li>
+                            {% if 'ROLE_CAIXA' not in app.user.roles %}
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="tab-nao-selecionada" data-bs-toggle="tab" data-bs-target="#panel-nao-selecionada" type="button" role="tab" aria-controls="panel-nao-selecionada" aria-selected="false">
                                     <i class="bi bi-x-circle"></i> Não Selecionadas
                                 </button>
                             </li>
+                            {% endif %}
                         </ul>
                     </div>
 
@@ -643,6 +645,7 @@
                         </div>
 
                         {# Aba: Propostas Não Selecionadas #}
+                        {% if 'ROLE_CAIXA' not in app.user.roles %}
                         <div class="tab-pane fade" id="panel-nao-selecionada" role="tabpanel" aria-labelledby="tab-nao-selecionada">
                             <div class="mb-3">
                                 <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('{{ statusEnum.NAO_SELECIONADA.value }}')">
@@ -802,6 +805,7 @@
                                 </tbody>
                             </table>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

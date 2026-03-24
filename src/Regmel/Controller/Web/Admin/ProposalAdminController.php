@@ -239,13 +239,15 @@ class ProposalAdminController extends AbstractAdminController
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
         is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_CAIXA->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas/list/download', name: 'admin_regmel_proposal_list_download', methods: ['GET'])]
     public function exportProposalsCsv(Request $request): Response
     {
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
+        $isCaixa = $this->security->isGranted(UserRolesEnum::ROLE_CAIXA->value);
         
         $status = $request->query->get('status');
         
@@ -267,6 +269,28 @@ class ProposalAdminController extends AbstractAdminController
             } else {
                 $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
             }
+        } elseif ($isCaixa) {
+            // ROLE_CAIXA pode baixar apenas propostas SELECIONADA e CLASSIFICADA
+            if ($status) {
+                $initiatives = $this->initiativeService->listFiltered(
+                    region: null,
+                    state: null,
+                    cityId: null,
+                    status: $status,
+                    anticipation: null
+                );
+            } else {
+                $initiatives = $this->initiativeService->listAllIncludingDeleted(limit: 10000);
+            }
+            
+            $allowedStatuses = [
+                StatusProposalEnum::SELECIONADA->value,
+                StatusProposalEnum::CLASSIFICADA->value,
+            ];
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) use ($allowedStatuses) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+                return in_array($proposalStatus, $allowedStatuses);
+            });
         } else {
             if ($status) {
                 // Usar listFiltered para filtrar por status
@@ -290,18 +314,32 @@ class ProposalAdminController extends AbstractAdminController
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
         is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_CAIXA->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas/list/download-project-files', name: 'admin_regmel_proposal_project_file_download', methods: ['GET'])]
     public function exportProjectFiles(): Response
     {
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
+        $isCaixa = $this->security->isGranted(UserRolesEnum::ROLE_CAIXA->value);
         
         if ($isMunicipality) {
             $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
             $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
+        } elseif ($isCaixa) {
+            // ROLE_CAIXA pode baixar apenas propostas SELECIONADA e CLASSIFICADA
+            $initiatives = $this->initiativeService->list(limit: 10000);
+            
+            $allowedStatuses = [
+                StatusProposalEnum::SELECIONADA->value,
+                StatusProposalEnum::CLASSIFICADA->value,
+            ];
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) use ($allowedStatuses) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+                return in_array($proposalStatus, $allowedStatuses);
+            });
         } else {
             $initiatives = $this->initiativeService->list(limit: 10000);
         }
