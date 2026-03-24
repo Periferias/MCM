@@ -1,9 +1,9 @@
 # 📋 Plano de Implementação - Avaliação, Classificação e Ordenação de Propostas
 
-**Última atualização:** 24 de março de 2026  
-**Status Geral:** 80% implementado  
+**Última atualização:** 25 de março de 2026  
+**Status Geral:** 85% implementado  
 **Status FASE 1:** ✅ 100% COMPLETA - Fundação (Role CAIXA + Campo + Voter)  
-**Status FASE 2:** ✅ 100% COMPLETA - Backend APIs + Frontend Interface com Auto-Save  
+**Status FASE 2:** ✅ 100% COMPLETA - Backend APIs + Frontend Interface com Auto-Save + Security Hardening  
 **Próxima Etapa:** FASE 3 - Validação de Integridade (Validators & Constraints)
 
 ---
@@ -17,13 +17,16 @@
 - ✅ Fluxo geral: Cadastro → Anuência → Avaliação → Resultado
 - ✅ Role CAIXA implementado com Voter ProposalViewer
 - ✅ Campo `ordem_prioridade` e `evaluation_ranking` persistindo
+- ✅ Posições persistem após page reload (campo mapping fixo)
 - ✅ APIs completas: GET/POST `/api/proposals/reorder`
 - ✅ Frontend com drag-and-drop e auto-save funcionando
+- ✅ Posições incluídas em CSV export (Selecionadas + Classificadas)
+- ✅ ROLE_CAIXA bloqueado de editar posições (UI + Backend)
 
 ### ❌ O que falta implementar:
-- ❌ Testes automatizados (Unit + Functional + E2E)
-- ❌ Validação de integridade de sequência (Validators & Constraints)
-- ❌ Auditoria completa (histórico de reordenação em MongoDB)
+- ❌ Validação de integridade de sequência (Validators & Constraints) - FASE 3
+- ❌ Testes automatizados (Unit + Functional + E2E) - FASE 6
+- ❌ Auditoria completa (histórico de reordenação em MongoDB) - FASE 5
 - ❌ Documentação final e code review
 
 ---
@@ -174,7 +177,7 @@
 
 ---
 
-### 8. ✅ Fluxo Geral (95% - IMPLEMENTADO)
+### 8. ✅ Fluxo Geral (100% - IMPLEMENTADO)
 
 **Implementado:**
 - ✅ Cadastro de proposta
@@ -182,11 +185,9 @@
 - ✅ Liberação para avaliação
 - ✅ Definição de status + motivo
 - ✅ Armazenamento de resultado
-
-**Não implementado:**
-- ❌ Ordenação de prioridade
-- ❌ Ajuste manual de ordem
-- ❌ Visualização por perfil Caixa
+- ✅ Ordenação de prioridade (drag-and-drop + input manual)
+- ✅ Ajuste manual de ordem (com auto-save)
+- ✅ Visualização por perfil Caixa (somente-leitura)
 
 ---
 
@@ -540,7 +541,7 @@ cypress/
 
 ---
 
-**Última atualização:** 24 de março de 2026  
-**Status Atual:** FASE 2 ✅ CONCLUÍDA - Backend APIs + Frontend Interface com Auto-Save  
+**Última atualização:** 25 de março de 2026  
+**Status Atual:** FASE 2 ✅ CONCLUÍDA (100%) - Backend APIs + Frontend Interface com Auto-Save + Security Hardening  
 **Próxima Etapa:** FASE 3 - Validação de Integridade (Validators & Constraints)  
 **Próxima Revisão:** Após implementação e testes da FASE 3
