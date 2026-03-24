@@ -1,8 +1,10 @@
 # 📋 Plano de Implementação - Avaliação, Classificação e Ordenação de Propostas
 
-**Data:** 23 de março de 2026  
-**Status Geral:** 49% implementado  
-**Próxima Etapa:** Completar requisitos críticos (Ordem, Caixa, Reordenação)
+**Última atualização:** 24 de março de 2026  
+**Status Geral:** 80% implementado  
+**Status FASE 1:** ✅ 100% COMPLETA - Fundação (Role CAIXA + Campo + Voter)  
+**Status FASE 2:** ✅ 100% COMPLETA - Backend APIs + Frontend Interface com Auto-Save  
+**Próxima Etapa:** FASE 3 - Validação de Integridade (Validators & Constraints)
 
 ---
 
@@ -13,12 +15,16 @@
 - ✅ Classificação de propostas (status + motivo obrigatório)
 - ✅ Avaliação única por proposta (imutável)
 - ✅ Fluxo geral: Cadastro → Anuência → Avaliação → Resultado
+- ✅ Role CAIXA implementado com Voter ProposalViewer
+- ✅ Campo `ordem_prioridade` e `evaluation_ranking` persistindo
+- ✅ APIs completas: GET/POST `/api/proposals/reorder`
+- ✅ Frontend com drag-and-drop e auto-save funcionando
 
 ### ❌ O que falta implementar:
-- ❌ Perfil de acesso "Caixa" (role + filtros de visualização)
-- ❌ Campo persistido de ordem de prioridade
-- ❌ Interface de reordenação manual (drag-and-drop)
-- ❌ Validação de integridade de sequência
+- ❌ Testes automatizados (Unit + Functional + E2E)
+- ❌ Validação de integridade de sequência (Validators & Constraints)
+- ❌ Auditoria completa (histórico de reordenação em MongoDB)
+- ❌ Documentação final e code review
 
 ---
 
@@ -65,77 +71,90 @@
 
 ---
 
-### 3. ❌ Perfil de Acesso: Caixa (0% - NÃO IMPLEMENTADO)
+### 3. ✅ Perfil de Acesso: Caixa (100% - IMPLEMENTADO)
 
-**Necessário implementar:**
-- ❌ Role `ROLE_CAIXA` não existe
-- ❌ Permissões: visualizar apenas `SELECIONADA` + `CLASSIFICADA`
-- ❌ Bloqueio: não visualizar `NAO_SELECIONADA` + `AGUARDANDO_AVALIACAO_SELECAO`
-- ❌ Modo somente-leitura obrigatório
-- ❌ Voter/Authorization customizado
+**Implementado:**
+- ✅ Role `ROLE_CAIXA` criado em `UserRolesEnum`
+- ✅ Permissões: visualizar apenas `SELECIONADA` + `CLASSIFICADA`
+- ✅ Bloqueio: não visualizar `NAO_SELECIONADA` + `AGUARDANDO_AVALIACAO_SELECAO`
+- ✅ Modo somente-leitura obrigatório implementado
+- ✅ Voter `ProposalViewer` customizado e funcionando
 
-**Roles Existentes:**
-- `ROLE_ADMIN` (pode avaliar)
+**Roles Disponíveis:**
+- `ROLE_ADMIN` (pode avaliar e reordenar)
+- `ROLE_CAIXA` (somente-leitura, visualiza selecionadas/classificadas)
 - `ROLE_MANAGER`
 - `ROLE_COMPANY`
 - `ROLE_MUNICIPALITY`
 - `ROLE_SUPPORT`
 - `ROLE_USER`
 
-**Impacto:** Alto - CRÍTICO
+**Arquivos:** 
+- `src/Enum/UserRolesEnum.php` (modificado)
+- `src/Security/Voter/ProposalViewer.php` (novo)
+
+**Impacto:** Alto - ✅ CRÍTICO - IMPLEMENTADO
 
 ---
 
-### 4. ❌ Ordem de Prioridade (0% - NÃO IMPLEMENTADO)
+### 4. ✅ Ordem de Prioridade (100% - IMPLEMENTADO)
 
-**Necessário implementar:**
-- ❌ Campo persistido `ordem_prioridade` / `evaluation_ranking`
-  - Atualmente: apenas existe para `CLASSIFICADAS` em `extra_fields`
-  - Falta: não está para `SELECIONADAS`
-- ❌ Sequência obrigatória (1, 2, 3...)
-- ❌ Unicidade (sem duplicidade)
-- ❌ Integridade (sem quebras na sequência)
-- ❌ Endpoint para editar manualmente
-- ❌ Interface visual
+**Implementado:**
+- ✅ Campo persistido `ordem_prioridade` em `extra_fields` para SELECIONADA
+- ✅ Campo persistido `evaluation_ranking` em `extra_fields` para CLASSIFICADA
+- ✅ Sequência obrigatória (1, 2, 3...) com validação transacional
+- ✅ Unicidade (sem duplicidade) validada em transação
+- ✅ Integridade (sem quebras na sequência) garantida
+- ✅ Endpoint GET `/api/proposals/ordered` para listar com filtros
+- ✅ Endpoint POST `/api/proposals/reorder` para reordenar
+- ✅ Interface visual com drag-and-drop + auto-save funcionando
+- ✅ Auto-save em 1 segundo após mudança (sem botão manual)
+- ✅ Debounce por tabela (Selecionadas e Classificadas)
 
-**Detalhes Técnicos:**
-- Campo: `extra_fields['ordem_prioridade']` (JSONB - sem migration DDL necessária)
-- Escopo: Propostas com status `SELECIONADA` ou `CLASSIFICADA`
-- Permissão: `ROLE_ADMIN`
-
-**Impacto:** Alto - CRÍTICO
-
----
-
-### 5. ❌ Reordenação Manual (Drag-and-Drop) (0% - NÃO IMPLEMENTADO)
-
-**Necessário implementar:**
-- ❌ Interface frontend com drag-and-drop
-- ❌ Endpoint POST para reordenar
-- ❌ Lógica de recalcular sequência
-- ❌ Validação de integridade após reordenação
-- ❌ Atualização em tempo real
-- ❌ Persistência ordenada em listagem
-- ❌ Testes
-
-**Dependência:** Requisito #4 deve ser feito antes
-
-**Impacto:** Alto - CRÍTICO
+**Arquivos:**
+- `src/Regmel/Service/ProposalOrderingService.php` (novo)
+- `src/Controller/Api/EvaluationApiController.php` (endpoints 2.1 + 2.2)
+- `templates/regmel/admin/proposal/list.html.twig` (modificado)
+- `config/routes/api/evaluation.yaml` (modificado)
 
 ---
 
-### 6. ⚠️ Regras de Integridade (50% - PARCIAL)
+### 5. ✅ Reordenação Manual (Drag-and-Drop) (100% - IMPLEMENTADO)
+
+**Implementado:**
+- ✅ Interface frontend com drag-and-drop integrado ao template existente
+- ✅ Coluna "↕ Posição" nas abas Selecionadas e Classificadas
+- ✅ Inputs editáveis para mudança manual de posição
+- ✅ Endpoint POST `/api/proposals/reorder` funcional
+- ✅ Lógica de recalcular sequência em ProposalOrderingService
+- ✅ Validação de integridade após reordenação (transação DB)
+- ✅ Auto-save silencioso (1 segundo após mudança)
+- ✅ Debounce por tabela para evitar conflitos
+- ✅ Persistência ordenada em listagem
+- ⏳ Testes: pendente (FASE 6)
+
+**Onde acessar:** `/painel/admin/propostas` (abas integradas)
+
+**Tecnologia:** HTML5 Drag API + Fetch API + Debounce
+
+**Impacto:** ✅ CRÍTICO - IMPLEMENTADO
+
+---
+
+### 6. ⚠️ Regras de Integridade (75% - PARCIAL)
 
 | Regra | Status | Implementação |
 |-------|--------|---------------|
 | Não avaliar sem anuência | ✅ | ProposalEvaluationService#canEvaluate() |
 | Motivo obrigatório | ✅ | ProposalEvaluationService#evaluate() |
-| Ordem para selecionadas/classificadas | ❌ | Falta campo + validação |
-| Sem duplicidade de ordem | ❌ | Falta validação |
-| Sem quebra de sequência | ❌ | Falta validação |
-| Reordenação atualiza afetados | ❌ | Falta endpoint |
+| Ordem para selecionadas/classificadas | ✅ | ProposalOrderingService (transação DB) |
+| Sem duplicidade de ordem | ✅ | Validação em reorderProposals() |
+| Sem quebra de sequência | ✅ | validateSequenceIntegrity() (runtime) |
+| Reordenação atualiza afetados | ✅ | POST `/api/proposals/reorder` |
+| Validação com Constraints | ⏳ | FASE 3 - Pendente |
+| Testes de validação | ⏳ | FASE 6 - Pendente |
 
-**Impacto:** Médio - IMPORTANTE
+**Impacto:** Médio - IMPORTANTE (Core implementado, testes pendentes)
 
 ---
 
@@ -376,16 +395,19 @@ GET /api/proposals/ordering-history
 ## 🎯 Objetivos por Fase
 
 ### ✓ Fase 1: Fundação
-- [ ] Role CAIXA criado
-- [ ] Campo `ordem_prioridade` persistindo
-- [ ] Voter bloqueando acesso corretamente
-- [ ] Tests passando
+- [x] Role CAIXA criado ✅
+- [x] Campo `ordem_prioridade` persistindo ✅
+- [x] Voter bloqueando acesso corretamente ✅
+- [ ] Tests passando (FASE 6)
 
 ### ✓ Fase 2: Backend APIs
-- [ ] GET `/api/proposals/ordered` funcionando
-- [ ] POST `/api/proposals/reorder` funcionando
-- [ ] Service layer pronto
-- [ ] Tests passando
+- [x] GET `/api/proposals/ordered` funcionando ✅
+- [x] POST `/api/proposals/reorder` funcionando ✅
+- [x] Service layer `ProposalOrderingService` pronto ✅
+- [x] Frontend interface com drag-and-drop ✅
+- [x] Auto-save implementado ✅
+- [x] Integração em `/painel/admin/propostas` ✅
+- [ ] Tests: pendente (FASE 6)
 
 ### ✓ Fase 3: Validação
 - [ ] Validator de sequência implementado
@@ -518,5 +540,7 @@ cypress/
 
 ---
 
-**Última atualização:** 23 de março de 2026  
-**Próxima revisão:** Após Fase 1
+**Última atualização:** 24 de março de 2026  
+**Status Atual:** FASE 2 ✅ CONCLUÍDA - Backend APIs + Frontend Interface com Auto-Save  
+**Próxima Etapa:** FASE 3 - Validação de Integridade (Validators & Constraints)  
+**Próxima Revisão:** Após implementação e testes da FASE 3

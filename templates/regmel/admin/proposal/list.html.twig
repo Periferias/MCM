@@ -320,9 +320,10 @@
                                     <i class="bi bi-download"></i> Exportar Propostas Selecionadas
                                 </button>
                             </div>
-                            <table class="js-grid table table-hover table-striped">
+                            <table class="js-grid table table-hover table-striped" id="tableSelecionada">
                                 <thead class="table-dark">
                                 <tr>
+                                    <th style="width: 60px;">↕ Posição</th>
                                     <th>Área de Intervenção</th>
                                     <th>Empresa</th>
                                     <th>{{ 'municipality' | trans}}</th>
@@ -338,7 +339,10 @@
                                 {% for proposal in proposals %}
                                     {% set status = proposal.status ?? '' %}
                                     {% if status == statusEnum.SELECIONADA.value %}
-                                    <tr data-status="{{ status }}" class="proposal-row">
+                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" draggable="true" data-current-order="{{ proposal.order ?? '' }}">
+                                        <td style="cursor: move; font-weight: bold; text-align: center;">
+                                            <input type="number" class="form-control form-control-sm position-input-sel" value="{{ proposal.order ?? '' }}" min="1" style="width: 60px;">
+                                        </td>
                                         <td>{{ proposal.name|default('N/A') }}</td>
                                         <td>{{ proposal.company }}</td>
                                         <td>{{ proposal.city_name }}</td>
@@ -467,7 +471,7 @@
                                     {% endif %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="9" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="10" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>
@@ -481,10 +485,10 @@
                                     <i class="bi bi-download"></i> Exportar Propostas Classificadas
                                 </button>
                             </div>
-                            <table class="js-grid table table-hover table-striped">
+                            <table class="js-grid table table-hover table-striped" id="tableClassificada">
                                 <thead class="table-dark">
                                 <tr>
-                                    <th>Posição</th>
+                                    <th style="width: 60px;">↕ Posição</th>
                                     <th>Área de Intervenção</th>
                                     <th>Empresa</th>
                                     <th>{{ 'municipality' | trans}}</th>
@@ -507,8 +511,10 @@
                                 {% set classified = classified|sort((a, b) => (a.evaluation_ranking ?? 999999) <=> (b.evaluation_ranking ?? 999999)) %}
                                 {% for proposal in classified %}
                                     {% set status = proposal.status ?? '' %}
-                                    <tr data-status="{{ status }}" class="proposal-row">
-                                        <td><strong>{{ proposal.evaluation_ranking ?? '-' }}</strong></td>
+                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" draggable="true" data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
+                                        <td style="cursor: move; font-weight: bold; text-align: center;">
+                                            <input type="number" class="form-control form-control-sm position-input-class" value="{{ proposal.evaluation_ranking ?? '' }}" min="1" style="width: 60px;">
+                                        </td>
                                         <td>{{ proposal.name|default('N/A') }}</td>
                                         <td>{{ proposal.company }}</td>
                                         <td>{{ proposal.city_name }}</td>
@@ -914,6 +920,102 @@
             if (tabNaoSelecionada) {
                 tabNaoSelecionada.innerHTML = '<i class="bi bi-x-circle"></i> Não Selecionadas <span class="badge bg-danger ms-2">' + naoSelecionadaCount + '</span>';
             }
+
+            // Inicializar drag-and-drop
+            setupDragAndDrop('tableSelecionada');
+            setupDragAndDrop('tableClassificada');
         });
+
+        const autoSaveTimeouts = {};
+
+        function setupDragAndDrop(tableId) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            if (!tbody) return;
+
+            let draggedItem = null;
+
+            tbody.addEventListener('dragstart', e => {
+                const row = e.target.closest('.proposal-row');
+                if (row) {
+                    draggedItem = row;
+                    draggedItem.style.opacity = '0.5';
+                }
+            });
+
+            tbody.addEventListener('dragend', e => {
+                if (draggedItem) draggedItem.style.opacity = '1';
+                draggedItem = null;
+            });
+
+            tbody.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (!draggedItem) return;
+                const afterElement = getDragAfterElement(tbody, e.clientY);
+                if (afterElement) {
+                    tbody.insertBefore(draggedItem, afterElement);
+                } else {
+                    tbody.appendChild(draggedItem);
+                }
+                updatePositionNumbers(tableId);
+                scheduleAutoSave(tableId);
+            });
+
+            // Salvar ao mudar input de posição
+            tbody.querySelectorAll('input[type="number"]').forEach(input => {
+                input.addEventListener('change', () => {
+                    scheduleAutoSave(tableId);
+                });
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const items = [...container.querySelectorAll('.proposal-row:not(.dragging)')];
+            return items.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset, element: child };
+                }
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function updatePositionNumbers(tableId) {
+            document.querySelectorAll(`#${tableId} .proposal-row`).forEach((row, i) => {
+                const input = row.querySelector('input[type="number"]');
+                if (input) input.value = i + 1;
+            });
+        }
+
+        function scheduleAutoSave(tableId) {
+            clearTimeout(autoSaveTimeouts[tableId]);
+            autoSaveTimeouts[tableId] = setTimeout(() => autoSave(tableId), 1000);
+        }
+
+        async function autoSave(tableId) {
+            const rows = document.querySelectorAll(`#${tableId} .proposal-row`);
+            const reordering = [];
+
+            rows.forEach((row, index) => {
+                const proposalId = row.getAttribute('data-proposal-id');
+                const input = row.querySelector('input[type="number"]');
+                const newOrder = input.value ? parseInt(input.value) : index + 1;
+                reordering.push({ proposalId, newOrder });
+            });
+
+            try {
+                const response = await fetch('/api/proposals/reorder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reordering })
+                });
+
+                if (!response.ok) {
+                    console.error('Erro ao salvar ordem:', await response.text());
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+            }
+        }
     </script>
 {% endblock %}

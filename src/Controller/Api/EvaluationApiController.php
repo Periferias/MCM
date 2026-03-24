@@ -6,6 +6,7 @@ namespace App\Controller\Api;
 
 use App\Regmel\Enum\EvaluationResultEnum;
 use App\Regmel\Service\Interface\ProposalEvaluationServiceInterface;
+use App\Regmel\Service\ProposalOrderingService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,6 +17,7 @@ class EvaluationApiController extends AbstractApiController
 {
     public function __construct(
         private readonly ProposalEvaluationServiceInterface $evaluationService,
+        private readonly ProposalOrderingService $orderingService,
     ) {
     }
 
@@ -168,6 +170,61 @@ class EvaluationApiController extends AbstractApiController
             return $this->json([
                 'success' => false,
                 'message' => 'Erro ao obter propostas: '.$e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    public function getOrderedProposals(Request $request): JsonResponse
+    {
+        try {
+            $status = $request->query->get('status');
+            $region = $request->query->get('region');
+            $state = $request->query->get('state');
+
+            $proposals = $this->orderingService->getProposalsOrdered($status, $region, $state);
+
+            return $this->json([
+                'success' => true,
+                'data' => $proposals,
+                'total' => count($proposals),
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erro ao obter propostas ordenadas: '.$e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    public function reorderProposals(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->toArray();
+
+            if (!isset($data['reordering']) || !is_array($data['reordering'])) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Campo "reordering" deve ser um array de objetos com proposalId e newOrder.',
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $this->orderingService->reorderProposals($data['reordering']);
+
+            return $this->json([
+                'success' => true,
+                'message' => 'Propostas reordenadas com sucesso.',
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], Response::HTTP_BAD_REQUEST);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erro ao reordenar propostas: '.$e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

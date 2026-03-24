@@ -17,3 +17,13 @@ get-proposals-awaiting-evaluation:
   path: /proposals/awaiting-evaluation
   controller: App\Controller\Api\EvaluationApiController::getProposalsAwaitingEvaluation
   methods: ['GET']
+
+get-ordered-proposals:
+  path: /proposals/ordered
+  controller: App\Controller\Api\EvaluationApiController::getOrderedProposals
+  methods: ['GET']
+
+reorder-proposals:
+  path: /proposals/reorder
+  controller: App\Controller\Api\EvaluationApiController::reorderProposals
+  methods: ['POST']
