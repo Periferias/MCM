@@ -2,20 +2,16 @@ name: Docker Build and Push
 
 on:
     push:
-        # branches:
-        #   - main
-        #   - feat/*
-        # Publish semver tags as releases.
+        branches:
+          - migration_to_eks
+    pull_request:
         tags: ["v*.*.*"]
 
 env:
-    # Use docker.io for Docker Hub if empty
     REGISTRY: ghcr.io
-    # github.repository as <account>/<repo>
     IMAGE_NAME: ${{ github.repository }}
     AWS_REGION: us-east-1
     ECR_REGISTRY: "298680963177.dkr.ecr.us-east-1.amazonaws.com"
-    # ECR_REPOSITORY: universidade-nos-perifericos
     ECR_REPOSITORY: melhorias-habitacionais
     AWS_ACCOUNT_ID: 298680963177
 
@@ -25,49 +21,42 @@ jobs:
         permissions:
             contents: read
             packages: write
-            # This is used to complete the identity challenge
-            # with sigstore/fulcio when running outside of PRs.
             id-token: write
 
         steps:
             - name: Checkout repository
               uses: actions/checkout@v5
 
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-region: ${{ env.AWS_REGION }}
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
             # Install the cosign tool except on PR
-            # https://github.com/sigstore/cosign-installer
             - name: Install cosign
               if: github.event_name != 'pull_request'
               uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
               with:
                   cosign-release: "v2.2.4"
 
-            - name: Login to ECR
-              uses: docker/login-action@v4
-              with:
-                  registry: ${{ env.ECR_REGISTRY }}
-            # Set up BuildKit Docker container builder to be able to build
-            # multi-platform images and export cache
-            # https://github.com/docker/setup-buildx-action
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
+            # Set up BuildKit Docker container builder
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
 
             # Extract metadata (tags, labels) for Docker
-            # https://github.com/docker/metadata-action
             - name: Extract Docker metadata
               id: meta
               uses: docker/metadata-action@v5
               with:
                   images: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
                   tags: |
-                      # Branch name with datetime (main-20260122-143000)
-                      # type=ref,event=branch,suffix=-{{date 'YYYYMMDD-HHmmss'}}
-                      # Semver tags for git tags (v1.0.0, v1.2.3)
                       type=semver,pattern={{version}}
-                      # type=semver,pattern={{major}}.{{minor}}
-                      # Latest only for main branch
-                      # type=raw,value=latest,enable={{is_default_branch}}
-                      # Short SHA (abc1234)
-                      # type=sha,format=short
                   labels: |
                       org.opencontainers.image.title=Periferia Viva Reformas (PVR)
                       org.opencontainers.image.description=FrankenPHP-based Symfony application for Periferia Viva Reformas program
@@ -75,8 +64,7 @@ jobs:
                       org.opencontainers.image.source=https://github.com/${{ github.repository }}
                       org.opencontainers.image.created={{date 'rfc3339'}}
 
-            # Build and push Docker image with Buildx (don't push on PR)
-            # https://github.com/docker/build-push-action
+            # Build and push Docker image with Buildx
             - name: Build and push Docker image
               id: build-and-push
               uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
@@ -93,21 +81,6 @@ jobs:
                   build-args: |
                       GIT_COMMIT=${{ github.sha }}
                       GIT_BRANCH=${{ github.ref_name }}
-
-            # Sign the resulting Docker image digest except on PRs.
-            # This will only write to the public Rekor transparency log when the Docker
-            # repository is public to avoid leaking data.  If you would like to publish
-            # transparency data even for private images, pass --force to cosign below.
-            # https://github.com/sigstore/cosign
-            # - name: Sign the published Docker image
-            #   if: ${{ github.event_name != 'pull_request' }}
-            #   env:
-            #     # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
-            #     TAGS: ${{ steps.meta.outputs.tags }}
-            #     DIGEST: ${{ steps.build-and-push.outputs.digest }}
-            #   # This step uses the identity token to provision an ephemeral certificate
-            #   # against the sigstore community Fulcio instance.
-            #   run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
             # Output image details for visibility
             - name: Output image details
