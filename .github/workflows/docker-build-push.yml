@@ -22,7 +22,6 @@ jobs:
             contents: read
             packages: write
             id-token: write
-
         steps:
             - name: Checkout repository
               uses: actions/checkout@v5
@@ -41,6 +40,7 @@ jobs:
               with:
                   cosign-release: "v2.2.4"
 
+            # Login to Amazon ECR
             - name: Login to Amazon ECR
               id: login-ecr
               uses: aws-actions/amazon-ecr-login@v2
