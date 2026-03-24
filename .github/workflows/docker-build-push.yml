@@ -2,8 +2,9 @@ name: Docker Build and Push
 
 on:
     push:
-        branches:
-          - migration_to_eks
+        # branches:
+        #   - main
+        #   - develop
     pull_request:
         tags: ["v*.*.*"]
 
