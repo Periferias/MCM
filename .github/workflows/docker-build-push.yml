@@ -8,8 +8,8 @@ on:
         tags: ["v*.*.*"]
 
 env:
-    REGISTRY: ghcr.io
-    IMAGE_NAME: ${{ github.repository }}
+    # REGISTRY: ghcr.io
+    # IMAGE_NAME: ${{ github.repository }}
     AWS_REGION: us-east-1
     ECR_REGISTRY: "298680963177.dkr.ecr.us-east-1.amazonaws.com"
     ECR_REPOSITORY: melhorias-habitacionais
@@ -18,10 +18,10 @@ env:
 jobs:
     build:
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            packages: write
-            id-token: write
+        # permissions:
+        #     contents: read
+        #     packages: write
+        #     id-token: write
         steps:
             - name: Checkout repository
               uses: actions/checkout@v5
@@ -29,9 +29,9 @@ jobs:
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                  aws-region: ${{ env.AWS_REGION }}
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ env.AWS_REGION }}
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
             # Install the cosign tool except on PR
             - name: Install cosign
