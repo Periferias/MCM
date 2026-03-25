@@ -156,161 +156,68 @@
                     <div class="tab-content" id="proposalTabsContent">
                         {# Aba: Todas as Propostas #}
                         <div class="tab-pane fade show active" id="panel-all" role="tabpanel" aria-labelledby="tab-all">
-                            <table class="js-grid table table-hover table-striped">
+                            <table class="js-grid table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;\">
                                 <thead class="table-dark">
                                 <tr>
-                                    {# A coluna Nome da Área agora é a primeira #}
-                                    <th>Área de Intervenção</th>
-                                    <th>ID</th>
-                                    <th>Empresa</th>
-                                    <th>{{ 'municipality' | trans}}</th>
-                                    <th>{{ 'status' | trans }}</th>
-                                    <th>Usuário Anuência</th>
-                                    <th>Qtd. Domicílios</th>
-                                    <th>Valor Global da Proposta</th>
-                                    <th>Motivo da Não Anuência</th>
-                                    <th>{{ 'actions' | trans }}</th>
+                                    <th class="border-end" style="width: 175px;">ID</th>
+                                    <th class="border-end" style="width: 175px;">Região</th>
+                                    <th class="border-end" style="width: 175px;">Estado</th>
+                                    <th class="border-end" style="width: 175px;">Município</th>
+                                    <th class="border-end" style="width: 175px;">Código Município</th>
+                                    <th class="border-end" style="width: 175px;">Área de Intervenção</th>
+                                    <th class="border-end" style="width: 175px;">Qtd. Domicílios</th>
+                                    <th class="border-end" style="width: 175px;">Área Total</th>
+                                    <th class="border-end" style="width: 175px;">Valor Global</th>
+                                    <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 175px;">Empresa/OSC</th>
+                                    <th class="border-end" style="width: 175px;">CNPJ</th>
+                                    <th class="border-end" style="width: 175px;">Tipo Instituição</th>
+                                    <th class="border-end" style="width: 175px;">Email</th>
+                                    <th class="border-end" style="width: 175px;">Telefone</th>
+                                    <th class="border-end" style="width: 175px;">Arquivo Poligonal</th>
+                                    <th class="border-end" style="width: 175px;">Arquivo Projeto</th>
+                                    <th class="border-end" style="width: 175px;">Representante</th>
+                                    <th class="border-end" style="width: 175px;">CPF Rep.</th>
+                                    <th class="border-end" style="width: 175px;">Email Rep.</th>
+                                    <th class="border-end" style="width: 175px;">Telefone Rep.</th>
+                                    <th style="width: 175px;">Data Proposta</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {% for proposal in proposals %}
                                     {% set status = proposal.status ?? '' %}
                                     <tr data-status="{{ status }}" class="proposal-row">
-                                        {# Dado correspondente ao Nome da Área movido para o início #}
-                                        <td>{{ proposal.name|default('N/A') }}</td>
-                                        <td>{{ proposal.id }}</td>
-                                        <td>{{ proposal.company }}</td>
-                                        <td>{{ proposal.city_name }}</td>
-                                        <td>
-                                            {% set badgeClass = ({
-                                        (statusEnum.SEM_ADESAO.value): 'bg-dark text-white',
-                                        (statusEnum.ENVIADA.value): 'bg-warning',
-                                        (statusEnum.RECEBIDA.value): 'bg-info',
-                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'bg-warning',
-                                        'Aguardando Avaliação da Anuência': 'bg-warning',
-                                        (statusEnum.ANUIDA.value): 'bg-success text-white',
-                                        'Anuída': 'bg-success text-white',
-                                        (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
-                                        'Não Anuída': 'bg-danger text-white',
-                                        (statusEnum.SELECIONADA.value): 'bg-success text-white',
-                                        (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
-                                        (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
-                                    }[status] ?? 'bg-dark') %}
-                                    {% set statusDescriptions = {
-                                        (statusEnum.ENVIADA.value): 'Proposta enviada pela empresa/osc e aguardando recebimento pelo município',
-                                        (statusEnum.RECEBIDA.value): 'Proposta recebida pelo município e aguardando anuência',
-                                        (statusEnum.SEM_ADESAO.value): 'Município ainda não possui termo de adesão aprovado',
-                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'Documento de anuência enviado pelo município e aguardando validação pela SNP',
-                                        (statusEnum.ANUIDA.value): 'Proposta anuída pelo município e aprovada pela SNP',
-                                        'Anuída': 'Proposta anuída pelo município e aprovada pela SNP',
-                                        (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
-                                        'Não Anuída': 'Proposta não anuída pelo município',
-                                        (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
-                                        (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
-                                        (statusEnum.CLASSIFICADA.value): 'Proposta classificada'
-                                    } %}
-                                    {# Mapeia valores antigos para novos textos #}
-                                    {% set displayStatus = status == 'Anuída' ? statusEnum.ANUIDA.value : (status == 'Não Anuída' ? statusEnum.NAO_ANUIDA.value : status) %}
-                                    <span class="badge {{ badgeClass }} text-wrap" 
-                                          style="max-width: 150px;" 
-                                          data-bs-toggle="tooltip" 
-                                          data-bs-placement="top" 
-                                          title="{{ statusDescriptions[status] ?? '' }}">
-                                        {{ displayStatus }}
-                                    </span>
-                                </td>
-                                <td>{{ proposal.agreement_uploaded_by_name != 'Não informado' ? proposal.agreement_uploaded_by_name : proposal.status_updated_by_name }}</td>
-                                <td>{{ proposal.quantity_houses }}</td>
-                                <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
-                                <td>
-                                    {% if status == statusEnum.NAO_ANUIDA.value or status == 'Não Anuída' %}
-                                        {{ proposal.status_reason ?? proposal.agreement_reason ?? '-' }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
-                                <td style="position: relative;">
-                                    <div class="dropdown">
-                                        <button
-                                                class="btn btn-outline-warning btn-sm dropdown-toggle"
-                                                type="button"
-                                                id="dropdownMenu{{ proposal.id }}"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false"
-                                                style="--bs-dropdown-min-width: 0; width: auto;"
-                                        >
-                                            {{ 'actions'|trans }}
-                                        </button>
-                                        <ul
-                                                class="dropdown-menu dropdown-menu-end"
-                                                aria-labelledby="dropdownMenu{{ proposal.id }}"
-                                                style="--bs-dropdown-min-width: 0; width: auto;"
-                                        >
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item"
-                                                        onclick="modalProposalDetails(this)"
-                                                        data-proposal="{{ proposal|json_encode }}"
-                                                >
-                                                    Ver Proposta
-                                                </a>
-                                            </li>
-                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item"
-                                                        onclick="openProposalStatusModal('{{ proposal.id }}')"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalProposalStatus"
-                                                >
-                                                    Atualizar Status
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                            {% if is_granted('ROLE_ADMIN') and (
-                                                (proposal.agreement_status is defined and proposal.agreement_status in ['submitted', 'approved', 'rejected']) or
-                                                (proposal.status is defined and proposal.status in ['Aguardando Validação da Anuência', 'Anuída pelo Município', 'Não Anuída pelo Município'])
-                                            ) %}
-                                            <li>
-                                                <form method="post" action="{{ path('admin_regmel_proposal_cancel_agreement', {'id': proposal.id}) }}" style="margin: 0;">
-                                                    <button
-                                                            type="submit"
-                                                            class="dropdown-item"
-                                                            onclick="return confirm('Tem certeza que deseja cancelar a anuência desta proposta? Ela voltará para o status RECEBIDA e o documento será apagado.');"
-                                                    >
-                                                        Cancelar Anuência
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            {% endif %}
-                                            {% if is_granted('ROLE_ADMIN') %}
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item text-danger"
-                                                        data-cy="remove-{{ proposal.id }}"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalProposalDelete"
-                                                        onclick="openProposalDeleteModal('{{ proposal.id }}', '{{ proposal.name }}')"
-                                                >
-                                                    Excluir Proposta
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="10" class="text-center">{{ 'table.no_records_found'|trans }}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.state }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_code }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.quantity_houses }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
+                                        <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_email }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_phone }}</td>
+                                        <td class="border-end" style="width: 200px; word-break: break-all;">{% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
+                                        <td class="border-end" style="width: 175px; word-break: break-all;">{% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_name|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
+                                        <td style="width: 175px;">{{ proposal.created_at }}</td>
+                                    </tr>
+                                {% endfor %}
+                                {% if proposals|length == 0 %}
+                                    <tr>
+                                        <td colspan="21" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                    </tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
                         </div>
 
                         {# Aba: Propostas Selecionadas #}
@@ -320,19 +227,32 @@
                                     <i class="bi bi-download"></i> Exportar Propostas Selecionadas
                                 </button>
                             </div>
-                            <table class="js-grid table table-hover table-striped" id="tableSelecionada">
+                            <table class="js-grid table table-hover table-striped table-sm" id="tableSelecionada" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
-                                    <th style="width: 60px;">↕ Posição</th>
-                                    <th>Área de Intervenção</th>
-                                    <th>Empresa</th>
-                                    <th>{{ 'municipality' | trans}}</th>
-                                    <th>{{ 'status' | trans }}</th>
-                                    <th>Usuário Anuência</th>
-                                    <th>Qtd. Domicílios</th>
-                                    <th>Valor Global da Proposta</th>
-                                    <th>Motivo da Não Anuência</th>
-                                    <th>{{ 'actions' | trans }}</th>
+                                    <th style="width: 175px;" class="border-end">↕ Posição</th>
+                                    <th class="border-end" style="width: 175px;">ID</th>
+                                    <th class="border-end" style="width: 175px;">Região</th>
+                                    <th class="border-end" style="width: 175px;">Estado</th>
+                                    <th class="border-end" style="width: 175px;">Município</th>
+                                    <th class="border-end" style="width: 175px;">Código Município</th>
+                                    <th class="border-end" style="width: 175px;">Área de Intervenção</th>
+                                    <th class="border-end" style="width: 175px;">Qtd. Domicílios</th>
+                                    <th class="border-end" style="width: 175px;">Área Total</th>
+                                    <th class="border-end" style="width: 175px;">Valor Global</th>
+                                    <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 175px;">Empresa/OSC</th>
+                                    <th class="border-end" style="width: 175px;">CNPJ</th>
+                                    <th class="border-end" style="width: 175px;">Tipo Instituição</th>
+                                    <th class="border-end" style="width: 175px;">Email</th>
+                                    <th class="border-end" style="width: 175px;">Telefone</th>
+                                    <th class="border-end" style="width: 175px;">Arquivo Poligonal</th>
+                                    <th class="border-end" style="width: 175px;">Arquivo Projeto</th>
+                                    <th class="border-end" style="width: 175px;">Representante</th>
+                                    <th class="border-end" style="width: 175px;">CPF Rep.</th>
+                                    <th class="border-end" style="width: 175px;">Email Rep.</th>
+                                    <th class="border-end" style="width: 175px;">Telefone Rep.</th>
+                                    <th style="width: 175px;">Data Proposta</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -340,140 +260,51 @@
                                     {% set status = proposal.status ?? '' %}
                                     {% if status == statusEnum.SELECIONADA.value %}
                                     <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.order ?? '' }}">
-                                        <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center;">
-                                            <input type="number" class="form-control form-control-sm position-input-sel" value="{{ proposal.order ?? '' }}" min="1" style="width: 60px;" {% if not is_granted('ROLE_ADMIN') %}disabled{% endif %}>
+                                        <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center; width: 60px;" class="border-end">
+                                            <input type="number" class="form-control form-control-sm position-input-sel" value="{{ proposal.order ?? '' }}" min="1" style="width: 175px;" {% if not is_granted('ROLE_ADMIN') %}disabled{% endif %}>
                                         </td>
-                                        <td>{{ proposal.name|default('N/A') }}</td>
-                                        <td>{{ proposal.company }}</td>
-                                        <td>{{ proposal.city_name }}</td>
-                                        <td>
-                                            {% set badgeClass = ({
-                                        (statusEnum.SEM_ADESAO.value): 'bg-dark text-white',
-                                        (statusEnum.ENVIADA.value): 'bg-warning',
-                                        (statusEnum.RECEBIDA.value): 'bg-info',
-                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'bg-warning',
-                                        'Aguardando Avaliação da Anuência': 'bg-warning',
-                                        (statusEnum.ANUIDA.value): 'bg-success text-white',
-                                        'Anuída': 'bg-success text-white',
-                                        (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
-                                        'Não Anuída': 'bg-danger text-white',
-                                        (statusEnum.SELECIONADA.value): 'bg-success text-white',
-                                        (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
-                                        (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
-                                    }[status] ?? 'bg-dark') %}
-                                    {% set statusDescriptions = {
-                                        (statusEnum.ENVIADA.value): 'Proposta enviada pela empresa/osc e aguardando recebimento pelo município',
-                                        (statusEnum.RECEBIDA.value): 'Proposta recebida pelo município e aguardando anuência',
-                                        (statusEnum.SEM_ADESAO.value): 'Município ainda não possui termo de adesão aprovado',
-                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'Documento de anuência enviado pelo município e aguardando validação pela SNP',
-                                        (statusEnum.ANUIDA.value): 'Proposta anuída pelo município e aprovada pela SNP',
-                                        'Anuída': 'Proposta anuída pelo município e aprovada pela SNP',
-                                        (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
-                                        'Não Anuída': 'Proposta não anuída pelo município',
-                                        (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
-                                        (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
-                                        (statusEnum.CLASSIFICADA.value): 'Proposta classificada'
-                                    } %}
-                                    {% set displayStatus = status == 'Anuída' ? statusEnum.ANUIDA.value : (status == 'Não Anuída' ? statusEnum.NAO_ANUIDA.value : status) %}
-                                    <span class="badge {{ badgeClass }} text-wrap" 
-                                          style="max-width: 150px;" 
-                                          data-bs-toggle="tooltip" 
-                                          data-bs-placement="top" 
-                                          title="{{ statusDescriptions[status] ?? '' }}">
-                                        {{ displayStatus }}
-                                    </span>
-                                </td>
-                                <td>{{ proposal.agreement_uploaded_by_name != 'Não informado' ? proposal.agreement_uploaded_by_name : proposal.status_updated_by_name }}</td>
-                                <td>{{ proposal.quantity_houses }}</td>
-                                <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
-                                <td>
-                                    {% if status == statusEnum.NAO_ANUIDA.value or status == 'Não Anuída' %}
-                                        {{ proposal.status_reason ?? proposal.agreement_reason ?? '-' }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
-                                <td style="position: relative;">
-                                    <div class="dropdown">
-                                        <button
-                                                class="btn btn-outline-warning btn-sm dropdown-toggle"
-                                                type="button"
-                                                id="dropdownMenu{{ proposal.id }}"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false"
-                                                style="--bs-dropdown-min-width: 0; width: auto;"
-                                        >
-                                            {{ 'actions'|trans }}
-                                        </button>
-                                        <ul
-                                                class="dropdown-menu dropdown-menu-end"
-                                                aria-labelledby="dropdownMenu{{ proposal.id }}"
-                                                style="--bs-dropdown-min-width: 0; width: auto;"
-                                        >
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item"
-                                                        onclick="modalProposalDetails(this)"
-                                                        data-proposal="{{ proposal|json_encode }}"
-                                                >
-                                                    Ver Proposta
-                                                </a>
-                                            </li>
-                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item"
-                                                        onclick="openProposalStatusModal('{{ proposal.id }}')"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalProposalStatus"
-                                                >
-                                                    Atualizar Status
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                            {% if is_granted('ROLE_ADMIN') and (
-                                                (proposal.agreement_status is defined and proposal.agreement_status in ['submitted', 'approved', 'rejected']) or
-                                                (proposal.status is defined and proposal.status in ['Aguardando Validação da Anuência', 'Anuída pelo Município', 'Não Anuída pelo Município'])
-                                            ) %}
-                                            <li>
-                                                <form method="post" action="{{ path('admin_regmel_proposal_cancel_agreement', {'id': proposal.id}) }}" style="margin: 0;">
-                                                    <button
-                                                            type="submit"
-                                                            class="dropdown-item"
-                                                            onclick="return confirm('Tem certeza que deseja cancelar a anuência desta proposta? Ela voltará para o status RECEBIDA e o documento será apagado.');"
-                                                    >
-                                                        Cancelar Anuência
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            {% endif %}
-                                            {% if is_granted('ROLE_ADMIN') %}
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item text-danger"
-                                                        data-cy="remove-{{ proposal.id }}"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalProposalDelete"
-                                                        onclick="openProposalDeleteModal('{{ proposal.id }}', '{{ proposal.name }}')"
-                                                >
-                                                    Excluir Proposta
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                                    {% endif %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="10" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.state }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_code }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.quantity_houses }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
+                                        <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_email }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_phone }}</td>
+                                        <td class="border-end" style="width: 200px; word-break: break-all;">
+                                            {% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                        <td class="border-end" style="width: 175px; word-break: break-all;">
+                                            {% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_name|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
+                                        <td style="width: 175px;">{{ proposal.created_at }}</td>
                                     </tr>
+                                    {% endif %}
                                 {% endfor %}
+                                {% set selecionada_count = 0 %}
+                                {% for proposal in proposals %}
+                                    {% if proposal.status == statusEnum.SELECIONADA.value %}
+                                        {% set selecionada_count = selecionada_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if selecionada_count == 0 %}
+                                    <tr>
+                                        <td colspan="23" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                    </tr>
+                                {% endif %}
                                 </tbody>
                             </table>
                         </div>
@@ -485,19 +316,32 @@
                                     <i class="bi bi-download"></i> Exportar Propostas Classificadas
                                 </button>
                             </div>
-                            <table class="js-grid table table-hover table-striped" id="tableClassificada">
+                            <table class="js-grid table table-hover table-striped table-sm" id="tableClassificada" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
-                                    <th style="width: 60px;">↕ Posição</th>
-                                    <th>Área de Intervenção</th>
-                                    <th>Empresa</th>
-                                    <th>{{ 'municipality' | trans}}</th>
-                                    <th>{{ 'status' | trans }}</th>
-                                    <th>Usuário Anuência</th>
-                                    <th>Qtd. Domicílios</th>
-                                    <th>Valor Global da Proposta</th>
-                                    <th>Motivo da Não Anuência</th>
-                                    <th>{{ 'actions' | trans }}</th>
+                                    <th style="width: 175px;" class="border-end">↕ Posição</th>
+                                    <th class="border-end" style="width: 175px;">ID</th>
+                                    <th class="border-end" style="width: 175px;">Região</th>
+                                    <th class="border-end" style="width: 175px;">Estado</th>
+                                    <th class="border-end" style="width: 175px;">Município</th>
+                                    <th class="border-end" style="width: 175px;">Código Município</th>
+                                    <th class="border-end" style="width: 175px;">Área de Intervenção</th>
+                                    <th class="border-end" style="width: 175px;">Qtd. Domicílios</th>
+                                    <th class="border-end" style="width: 175px;">Área Total</th>
+                                    <th class="border-end" style="width: 175px;">Valor Global</th>
+                                    <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 175px;">Empresa/OSC</th>
+                                    <th class="border-end" style="width: 175px;">CNPJ</th>
+                                    <th class="border-end" style="width: 175px;">Tipo Instituição</th>
+                                    <th class="border-end" style="width: 175px;">Email</th>
+                                    <th class="border-end" style="width: 175px;">Telefone</th>
+                                    <th class="border-end" style="width: 175px;">Arquivo Poligonal</th>
+                                    <th class="border-end" style="width: 175px;">Arquivo Projeto</th>
+                                    <th class="border-end" style="width: 175px;">Representante</th>
+                                    <th class="border-end" style="width: 175px;">CPF Rep.</th>
+                                    <th class="border-end" style="width: 175px;">Email Rep.</th>
+                                    <th class="border-end" style="width: 175px;">Telefone Rep.</th>
+                                    <th style="width: 175px;">Data Proposta</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -512,138 +356,42 @@
                                 {% for proposal in classified %}
                                     {% set status = proposal.status ?? '' %}
                                     <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
-                                        <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center;">
-                                            <input type="number" class="form-control form-control-sm position-input-class" value="{{ proposal.evaluation_ranking ?? '' }}" min="1" style="width: 60px;" {% if not is_granted('ROLE_ADMIN') %}disabled{% endif %}>
+                                        <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center; width: 60px;" class="border-end">
+                                            <input type="number" class="form-control form-control-sm position-input-class" value="{{ proposal.evaluation_ranking ?? '' }}" min="1" style="width: 175px;" {% if not is_granted('ROLE_ADMIN') %}disabled{% endif %}>
                                         </td>
-                                        <td>{{ proposal.name|default('N/A') }}</td>
-                                        <td>{{ proposal.company }}</td>
-                                        <td>{{ proposal.city_name }}</td>
-                                        <td>
-                                            {% set badgeClass = ({
-                                        (statusEnum.SEM_ADESAO.value): 'bg-dark text-white',
-                                        (statusEnum.ENVIADA.value): 'bg-warning',
-                                        (statusEnum.RECEBIDA.value): 'bg-info',
-                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'bg-warning',
-                                        'Aguardando Avaliação da Anuência': 'bg-warning',
-                                        (statusEnum.ANUIDA.value): 'bg-success text-white',
-                                        'Anuída': 'bg-success text-white',
-                                        (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
-                                        'Não Anuída': 'bg-danger text-white',
-                                        (statusEnum.SELECIONADA.value): 'bg-success text-white',
-                                        (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
-                                        (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
-                                    }[status] ?? 'bg-dark') %}
-                                    {% set statusDescriptions = {
-                                        (statusEnum.ENVIADA.value): 'Proposta enviada pela empresa/osc e aguardando recebimento pelo município',
-                                        (statusEnum.RECEBIDA.value): 'Proposta recebida pelo município e aguardando anuência',
-                                        (statusEnum.SEM_ADESAO.value): 'Município ainda não possui termo de adesão aprovado',
-                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'Documento de anuência enviado pelo município e aguardando validação pela SNP',
-                                        (statusEnum.ANUIDA.value): 'Proposta anuída pelo município e aprovada pela SNP',
-                                        'Anuída': 'Proposta anuída pelo município e aprovada pela SNP',
-                                        (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
-                                        'Não Anuída': 'Proposta não anuída pelo município',
-                                        (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
-                                        (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
-                                        (statusEnum.CLASSIFICADA.value): 'Proposta classificada'
-                                    } %}
-                                    {% set displayStatus = status == 'Anuída' ? statusEnum.ANUIDA.value : (status == 'Não Anuída' ? statusEnum.NAO_ANUIDA.value : status) %}
-                                    <span class="badge {{ badgeClass }} text-wrap" 
-                                          style="max-width: 150px;" 
-                                          data-bs-toggle="tooltip" 
-                                          data-bs-placement="top" 
-                                          title="{{ statusDescriptions[status] ?? '' }}">
-                                        {{ displayStatus }}
-                                    </span>
-                                </td>
-                                <td>{{ proposal.agreement_uploaded_by_name != 'Não informado' ? proposal.agreement_uploaded_by_name : proposal.status_updated_by_name }}</td>
-                                <td>{{ proposal.quantity_houses }}</td>
-                                <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
-                                <td>
-                                    {% if status == statusEnum.NAO_ANUIDA.value or status == 'Não Anuída' %}
-                                        {{ proposal.status_reason ?? proposal.agreement_reason ?? '-' }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
-                                <td style="position: relative;">
-                                    <div class="dropdown">
-                                        <button
-                                                class="btn btn-outline-warning btn-sm dropdown-toggle"
-                                                type="button"
-                                                id="dropdownMenu{{ proposal.id }}"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false"
-                                                style="--bs-dropdown-min-width: 0; width: auto;"
-                                        >
-                                            {{ 'actions'|trans }}
-                                        </button>
-                                        <ul
-                                                class="dropdown-menu dropdown-menu-end"
-                                                aria-labelledby="dropdownMenu{{ proposal.id }}"
-                                                style="--bs-dropdown-min-width: 0; width: auto;"
-                                        >
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item"
-                                                        onclick="modalProposalDetails(this)"
-                                                        data-proposal="{{ proposal|json_encode }}"
-                                                >
-                                                    Ver Proposta
-                                                </a>
-                                            </li>
-                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item"
-                                                        onclick="openProposalStatusModal('{{ proposal.id }}')"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalProposalStatus"
-                                                >
-                                                    Atualizar Status
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                            {% if is_granted('ROLE_ADMIN') and (
-                                                (proposal.agreement_status is defined and proposal.agreement_status in ['submitted', 'approved', 'rejected']) or
-                                                (proposal.status is defined and proposal.status in ['Aguardando Validação da Anuência', 'Anuída pelo Município', 'Não Anuída pelo Município'])
-                                            ) %}
-                                            <li>
-                                                <form method="post" action="{{ path('admin_regmel_proposal_cancel_agreement', {'id': proposal.id}) }}" style="margin: 0;">
-                                                    <button
-                                                            type="submit"
-                                                            class="dropdown-item"
-                                                            onclick="return confirm('Tem certeza que deseja cancelar a anuência desta proposta? Ela voltará para o status RECEBIDA e o documento será apagado.');"
-                                                    >
-                                                        Cancelar Anuência
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            {% endif %}
-                                            {% if is_granted('ROLE_ADMIN') %}
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item text-danger"
-                                                        data-cy="remove-{{ proposal.id }}"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalProposalDelete"
-                                                        onclick="openProposalDeleteModal('{{ proposal.id }}', '{{ proposal.name }}')"
-                                                >
-                                                    Excluir Proposta
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.state }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_code }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.quantity_houses }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
+                                        <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_email }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_phone }}</td>
+                                        <td class="border-end" style="width: 200px; word-break: break-all;">
+                                            {% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                        <td class="border-end" style="width: 175px; word-break: break-all;">
+                                            {% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_name|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
+                                        <td style="width: 175px;">{{ proposal.created_at }}</td>
+                                    </tr>
                                 {% endfor %}
                                 {% if classified|length == 0 %}
                                     <tr>
-                                        <td colspan="10" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="23" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
@@ -658,18 +406,31 @@
                                     <i class="bi bi-download"></i> Exportar Propostas Não Selecionadas
                                 </button>
                             </div>
-                            <table class="js-grid table table-hover table-striped">
+                            <table class="js-grid table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
-                                    <th>Área de Intervenção</th>
-                                    <th>Empresa</th>
-                                    <th>{{ 'municipality' | trans}}</th>
-                                    <th>{{ 'status' | trans }}</th>
-                                    <th>Usuário Anuência</th>
-                                    <th>Qtd. Domicílios</th>
-                                    <th>Valor Global da Proposta</th>
-                                    <th>Motivo da Não Anuência</th>
-                                    <th>{{ 'actions' | trans }}</th>
+                                    <th class="border-end" style="width: 175px;">ID</th>
+                                    <th class="border-end" style="width: 175px;">Região</th>
+                                    <th class="border-end" style="width: 175px;">Estado</th>
+                                    <th class="border-end" style="width: 175px;">Município</th>
+                                    <th class="border-end" style="width: 175px;">Código Município</th>
+                                    <th class="border-end" style="width: 175px;">Área de Intervenção</th>
+                                    <th class="border-end" style="width: 175px;">Qtd. Domicílios</th>
+                                    <th class="border-end" style="width: 175px;">Área Total</th>
+                                    <th class="border-end" style="width: 175px;">Valor Global</th>
+                                    <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 175px;">Empresa/OSC</th>
+                                    <th class="border-end" style="width: 175px;">CNPJ</th>
+                                    <th class="border-end" style="width: 175px;">Tipo Instituição</th>
+                                    <th class="border-end" style="width: 175px;">Email</th>
+                                    <th class="border-end" style="width: 175px;">Telefone</th>
+                                    <th class="border-end" style="width: 175px;">Arquivo Poligonal</th>
+                                    <th class="border-end" style="width: 175px;">Arquivo Projeto</th>
+                                    <th class="border-end" style="width: 175px;">Representante</th>
+                                    <th class="border-end" style="width: 175px;">CPF Rep.</th>
+                                    <th class="border-end" style="width: 175px;">Email Rep.</th>
+                                    <th class="border-end" style="width: 175px;">Telefone Rep.</th>
+                                    <th style="width: 175px;">Data Proposta</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -677,137 +438,48 @@
                                     {% set status = proposal.status ?? '' %}
                                     {% if status == statusEnum.NAO_SELECIONADA.value %}
                                     <tr data-status="{{ status }}" class="proposal-row">
-                                        <td>{{ proposal.name|default('N/A') }}</td>
-                                        <td>{{ proposal.company }}</td>
-                                        <td>{{ proposal.city_name }}</td>
-                                        <td>
-                                            {% set badgeClass = ({
-                                        (statusEnum.SEM_ADESAO.value): 'bg-dark text-white',
-                                        (statusEnum.ENVIADA.value): 'bg-warning',
-                                        (statusEnum.RECEBIDA.value): 'bg-info',
-                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'bg-warning',
-                                        'Aguardando Avaliação da Anuência': 'bg-warning',
-                                        (statusEnum.ANUIDA.value): 'bg-success text-white',
-                                        'Anuída': 'bg-success text-white',
-                                        (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
-                                        'Não Anuída': 'bg-danger text-white',
-                                        (statusEnum.SELECIONADA.value): 'bg-success text-white',
-                                        (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
-                                        (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
-                                    }[status] ?? 'bg-dark') %}
-                                    {% set statusDescriptions = {
-                                        (statusEnum.ENVIADA.value): 'Proposta enviada pela empresa/osc e aguardando recebimento pelo município',
-                                        (statusEnum.RECEBIDA.value): 'Proposta recebida pelo município e aguardando anuência',
-                                        (statusEnum.SEM_ADESAO.value): 'Município ainda não possui termo de adesão aprovado',
-                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'Documento de anuência enviado pelo município e aguardando validação pela SNP',
-                                        (statusEnum.ANUIDA.value): 'Proposta anuída pelo município e aprovada pela SNP',
-                                        'Anuída': 'Proposta anuída pelo município e aprovada pela SNP',
-                                        (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
-                                        'Não Anuída': 'Proposta não anuída pelo município',
-                                        (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
-                                        (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
-                                        (statusEnum.CLASSIFICADA.value): 'Proposta classificada'
-                                    } %}
-                                    {% set displayStatus = status == 'Anuída' ? statusEnum.ANUIDA.value : (status == 'Não Anuída' ? statusEnum.NAO_ANUIDA.value : status) %}
-                                    <span class="badge {{ badgeClass }} text-wrap" 
-                                          style="max-width: 150px;" 
-                                          data-bs-toggle="tooltip" 
-                                          data-bs-placement="top" 
-                                          title="{{ statusDescriptions[status] ?? '' }}">
-                                        {{ displayStatus }}
-                                    </span>
-                                </td>
-                                <td>{{ proposal.agreement_uploaded_by_name != 'Não informado' ? proposal.agreement_uploaded_by_name : proposal.status_updated_by_name }}</td>
-                                <td>{{ proposal.quantity_houses }}</td>
-                                <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
-                                <td>
-                                    {% if status == statusEnum.NAO_ANUIDA.value or status == 'Não Anuída' %}
-                                        {{ proposal.status_reason ?? proposal.agreement_reason ?? '-' }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
-                                <td style="position: relative;">
-                                    <div class="dropdown">
-                                        <button
-                                                class="btn btn-outline-warning btn-sm dropdown-toggle"
-                                                type="button"
-                                                id="dropdownMenu{{ proposal.id }}"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false"
-                                                style="--bs-dropdown-min-width: 0; width: auto;"
-                                        >
-                                            {{ 'actions'|trans }}
-                                        </button>
-                                        <ul
-                                                class="dropdown-menu dropdown-menu-end"
-                                                aria-labelledby="dropdownMenu{{ proposal.id }}"
-                                                style="--bs-dropdown-min-width: 0; width: auto;"
-                                        >
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item"
-                                                        onclick="modalProposalDetails(this)"
-                                                        data-proposal="{{ proposal|json_encode }}"
-                                                >
-                                                    Ver Proposta
-                                                </a>
-                                            </li>
-                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item"
-                                                        onclick="openProposalStatusModal('{{ proposal.id }}')"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalProposalStatus"
-                                                >
-                                                    Atualizar Status
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                            {% if is_granted('ROLE_ADMIN') and (
-                                                (proposal.agreement_status is defined and proposal.agreement_status in ['submitted', 'approved', 'rejected']) or
-                                                (proposal.status is defined and proposal.status in ['Aguardando Validação da Anuência', 'Anuída pelo Município', 'Não Anuída pelo Município'])
-                                            ) %}
-                                            <li>
-                                                <form method="post" action="{{ path('admin_regmel_proposal_cancel_agreement', {'id': proposal.id}) }}" style="margin: 0;">
-                                                    <button
-                                                            type="submit"
-                                                            class="dropdown-item"
-                                                            onclick="return confirm('Tem certeza que deseja cancelar a anuência desta proposta? Ela voltará para o status RECEBIDA e o documento será apagado.');"
-                                                    >
-                                                        Cancelar Anuência
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            {% endif %}
-                                            {% if is_granted('ROLE_ADMIN') %}
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item text-danger"
-                                                        data-cy="remove-{{ proposal.id }}"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalProposalDelete"
-                                                        onclick="openProposalDeleteModal('{{ proposal.id }}', '{{ proposal.name }}')"
-                                                >
-                                                    Excluir Proposta
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                                    {% endif %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="9" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.state }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_code }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.quantity_houses }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
+                                        <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_email }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_phone }}</td>
+                                        <td class="border-end" style="width: 200px; word-break: break-all;">
+                                            {% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                        <td class="border-end" style="width: 175px; word-break: break-all;">
+                                            {% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_name|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
+                                        <td style="width: 175px;">{{ proposal.created_at }}</td>
                                     </tr>
+                                    {% endif %}
                                 {% endfor %}
+                                {% set nao_selecionada_count = 0 %}
+                                {% for proposal in proposals %}
+                                    {% if proposal.status == statusEnum.NAO_SELECIONADA.value %}
+                                        {% set nao_selecionada_count = nao_selecionada_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if nao_selecionada_count == 0 %}
+                                    <tr>
+                                        <td colspan="22" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                    </tr>
+                                {% endif %}
                                 </tbody>
                             </table>
                         </div>

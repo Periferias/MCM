@@ -465,6 +465,7 @@ export declare const ROLEMANAGER: Message<{ 'messages': { parameters: NoParamete
 export declare const ROLEADMIN: Message<{ 'messages': { parameters: NoParametersType } }, 'regmel'>;
 export declare const ROLESNP: Message<{ 'messages': { parameters: NoParametersType } }, 'regmel'>;
 export declare const ROLESUPPORT: Message<{ 'messages': { parameters: NoParametersType } }, 'regmel'>;
+export declare const ROLECAIXA: Message<{ 'messages': { parameters: NoParametersType } }, 'regmel'>;
 export declare const REJECTED: Message<{ 'messages': { parameters: NoParametersType } }, 'regmel'|'pt-br'|'en'|'es'>;
 export declare const SELECTION: Message<{ 'messages': { parameters: NoParametersType } }, 'regmel'>;
 export declare const SEVERAL_DOCUMENTS: Message<{ 'messages': { parameters: NoParametersType } }, 'regmel'>;

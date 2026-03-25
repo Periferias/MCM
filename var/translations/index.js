@@ -463,6 +463,7 @@ export const ROLEMANAGER = {"id":"ROLE_MANAGER","translations":{"messages":{"reg
 export const ROLEADMIN = {"id":"ROLE_ADMIN","translations":{"messages":{"regmel":"Administrador Geral"}}};
 export const ROLESNP = {"id":"ROLE_SNP","translations":{"messages":{"regmel":"Administrador SNP"}}};
 export const ROLESUPPORT = {"id":"ROLE_SUPPORT","translations":{"messages":{"regmel":"Suporte"}}};
+export const ROLECAIXA = {"id":"ROLE_CAIXA","translations":{"messages":{"regmel":"Visualizador Caixa"}}};
 export const REJECTED = {"id":"rejected","translations":{"messages":{"regmel":"Rejeitado","pt-br":"Rejeitados","en":"Rejected","es":"Rechazado"}}};
 export const SELECTION = {"id":"selection","translations":{"messages":{"regmel":"Sele\u00e7\u00e3o"}}};
 export const SEVERAL_DOCUMENTS = {"id":"several_documents","translations":{"messages":{"regmel":"Caso existam diversos documentos, re\u00fana todos em um \u00fanico arquivo PDF antes do envio."}}};

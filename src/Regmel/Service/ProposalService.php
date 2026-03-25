@@ -262,43 +262,29 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
     public function getCsvHeaders(?string $type = null): array
     {
         return [
+            'Posição',
             $this->translator->trans('csv.header.id'),
             $this->translator->trans('csv.header.region'),
             $this->translator->trans('csv.header.state'),
             $this->translator->trans('csv.header.city'),
             $this->translator->trans('csv.header.city_code'),
             $this->translator->trans('csv.header.intervention_area_name'),
-            $this->translator->trans('csv.header.proposal_type'),
             $this->translator->trans('csv.header.houses_quantity'),
             $this->translator->trans('csv.header.total_area'),
             $this->translator->trans('csv.header.total_value'),
             $this->translator->trans('csv.header.proposal_status'),
-            'Posição (Ordem de Prioridade)',
-            'Motivo da Alteração de Status',
-            $this->translator->trans('csv.header.status_reason'),
-            $this->translator->trans('csv.header.snpr_affiliation'),
-            $this->translator->trans('csv.header.snpr_affiliation_details'),
             $this->translator->trans('csv.header.map_file'),
             $this->translator->trans('csv.header.project_file'),
             $this->translator->trans('csv.header.company_name'),
             $this->translator->trans('csv.header.company_cnpj'),
-            $this->translator->trans('csv.header.profit_type'),
+            'Tipo Instituição',
+            $this->translator->trans('csv.header.company_email'),
             $this->translator->trans('csv.header.company_phone'),
-            $this->translator->trans('csv.header.created_by'),
+            'Agente Promotor Nome representante AP',
+            'CPF do representante AP',
+            'E-mail representante AP',
+            'Telefone representante AP',
             $this->translator->trans('csv.header.proposal_date'),
-            $this->translator->trans('csv.header.proposal_update_date'),
-            // Dados de anuência
-            'Status Anuência',
-            'Anuência Enviada Em',
-            'Anuência Enviada Por',
-            'Anuência Validada Em',
-            'Anuência Validada Por',
-            'Motivo da Validação',
-            // Dados de exclusão
-            'Status de Exclusão',
-            'Motivo da Exclusão',
-            'Excluída por',
-            'Data/Hora de Exclusão',
         ];
     }
 
@@ -321,70 +307,67 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $env = $this->configEnvironment->aurora();
         $region = $extraFields['region'] ?? '';
         $state = $extraFields['state'] ?? '';
-        $modificationDate = $entity->getUpdatedAt()?->format('d/m/Y H:i:s') ?? $this->translator->trans('csv.info.not_modified');
-        $phoneCompany = $organizationFrom->getExtraFields()['telefone'] ?? '';
+        $phoneCompany = $organizationFrom->getExtraFields()['telefone'] ?? $organizationFrom->getExtraFields()['phone'] ?? '';
 
-        // Tenta pegar o nome de quem atualizou do extra_fields (salvo via updateStatusProposal)
-        $updatedBy = $extraFields['status_updated_by_name'] ?? '---';
-
-        // Determina se é com ou sem fins lucrativos
-        $profitType = '';
-        $framework = $organizationFrom->getExtraFields()['framework'] ?? '';
-        $tipo = $organizationFrom->getExtraFields()['tipo'] ?? '';
+        // Buscar dados do representante (usuário owner da organização)
+        $representativeName = '';
+        $representativeCpf = '';
+        $representativeEmail = '';
+        $representativePhone = '';
         
-        if (!empty($framework)) {
-            $profitType = $framework;
-        } elseif ($tipo === 'Empresa') {
-            $profitType = 'Empresa';
-        } elseif ($tipo === 'Entidade') {
-            $profitType = 'Organização da Sociedade Civil - OSC';
+        if ($organizationFrom) {
+            try {
+                $agent = $organizationFrom->getOwner();
+                if ($agent) {
+                    $owner = $agent->getUser();
+                    if ($owner) {
+                        $representativeName = trim(($owner->getFirstname() ?? '') . ' ' . ($owner->getLastname() ?? ''));
+                        $representativeEmail = $owner->getEmail() ?? '';
+                        
+                        // Telefone e CPF estão em extra_fields do agent
+                        $agentExtraFields = $agent->getExtraFields() ?? [];
+                        $representativeCpf = $agentExtraFields['cpf'] ?? '';
+                        $representativePhone = $agentExtraFields['telefone'] ?? '';
+                    }
+                }
+            } catch (\Exception $e) {
+                // Se erro ao buscar dados do representante, deixa vazio
+            }
         }
 
-        // Motivo da não anuência - só mostra quando status é "Não Anuída"
-        $statusReason = '';
+        // Posição: ordem de prioridade para SELECIONADA, ranking para CLASSIFICADA
+        $position = '';
         $currentStatus = $extraFields['status'] ?? '';
-        if ($currentStatus === StatusProposalEnum::NAO_ANUIDA->value) {
-            $statusReason = $extraFields['status_reason'] ?? '';
+        if ($currentStatus === StatusProposalEnum::SELECIONADA->value) {
+            $position = $extraFields['ordem_prioridade'] ?? '';
+        } elseif ($currentStatus === StatusProposalEnum::CLASSIFICADA->value) {
+            $position = $extraFields['evaluation_ranking'] ?? '';
         }
 
         return [
+            $position,
             $this->generateProposalCode($entity),
             $region,
             $state,
             $extraFields['city_name'] ?? '',
             $extraFields['cityCode'] ?? '',
             $entity->getName() ?? '',
-            $env['proposals']['area_characteristics'][$extraFields['area_characteristic'] ?? ''] ?? '',
             $housesQuantity,
             $extraFields['area_size'] ?? 0,
             number_format($totalValue, 2, ',', '.'),
             $extraFields['status'] ?? '',
-            $extraFields['status'] === StatusProposalEnum::SELECIONADA->value ? ($extraFields['ordem_prioridade'] ?? '') : ($extraFields['status'] === StatusProposalEnum::CLASSIFICADA->value ? ($extraFields['evaluation_ranking'] ?? '') : ''),
-            $extraFields['status_reason'] ?? '',
-            $statusReason,
-            $extraFields['snpr_affiliation'] ?? 'Não',
-            $extraFields['snpr_affiliation_details'] ?? '',
             $mapFileLink,
             $projectFileLink,
             $organizationFrom->getName(),
             $organizationFrom->getExtraFields()['cnpj'] ?? '',
-            $profitType,
+            $organizationFrom->getExtraFields()['tipo'] ?? 'Não Informado',
+            $organizationFrom->getExtraFields()['email'] ?? '',
             $phoneCompany,
-            $entity->getCreatedBy()?->getName() ?? '',
+            $representativeName,
+            $representativeCpf,
+            $representativeEmail,
+            $representativePhone,
             $entity->getCreatedAt()->format('d/m/Y H:i:s'),
-            $modificationDate,
-            // Dados de anuência
-            $this->getAgreementStatusLabel($extraFields['agreement_status'] ?? null),
-            isset($extraFields['agreement_uploaded_at']) ? (new \DateTime($extraFields['agreement_uploaded_at']))->format('d/m/Y H:i:s') : '',
-            $extraFields['agreement_uploaded_by_name'] ?? '---',
-            isset($extraFields['agreement_validated_at']) ? (new \DateTime($extraFields['agreement_validated_at']))->format('d/m/Y H:i:s') : '',
-            $extraFields['agreement_validated_by_name'] ?? '',
-            $extraFields['agreement_reason'] ?? '',
-            // Dados de exclusão
-            $entity->isDeleted() ? 'Sim' : 'Não',
-            $entity->getDeletionReason() ?? '',
-            $entity->getDeletedBy() ?? '',
-            $entity->getDeletedTime()?->format('d/m/Y H:i:s') ?? '',
         ];
     }
 

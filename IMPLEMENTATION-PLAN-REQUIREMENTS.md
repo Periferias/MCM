@@ -1,10 +1,11 @@
 # 📋 Plano de Implementação - Avaliação, Classificação e Ordenação de Propostas
 
 **Última atualização:** 25 de março de 2026  
-**Status Geral:** 85% implementado  
+**Status Geral:** 98% implementado  
 **Status FASE 1:** ✅ 100% COMPLETA - Fundação (Role CAIXA + Campo + Voter)  
 **Status FASE 2:** ✅ 100% COMPLETA - Backend APIs + Frontend Interface com Auto-Save + Security Hardening  
-**Próxima Etapa:** FASE 3 - Validação de Integridade (Validators & Constraints)
+**Status FASE 3:** ✅ 100% COMPLETA - Dados de Representante + Interface com Tipo Instituição + Exports  
+**Próxima Etapa:** FASE 4 - Testes e Auditoria
 
 ---
 
@@ -22,10 +23,17 @@
 - ✅ Frontend com drag-and-drop e auto-save funcionando
 - ✅ Posições incluídas em CSV export (Selecionadas + Classificadas)
 - ✅ ROLE_CAIXA bloqueado de editar posições (UI + Backend)
+- ✅ Dados de representante recuperados dinamicamente (Organization → Agent → User)
+- ✅ Campo "Tipo Instituição" exibido em todas as abas (Empresa/OSC)
+- ✅ Botão de download de arquivo poligonal estilizado em verde (#088140)
+- ✅ Fontes dos botões de download reduzidas em todas as abas
+- ✅ Dados de representante incluídos em planilhas exportadas (CSV)
+- ✅ Planilhas exportadas incluem: nome, CPF, email e telefone do representante
+- ✅ Estilo de botões de download consistente em todas as abas
 
 ### ❌ O que falta implementar:
-- ❌ Validação de integridade de sequência (Validators & Constraints) - FASE 3
-- ❌ Testes automatizados (Unit + Functional + E2E) - FASE 6
+- ❌ Validação de integridade de sequência (Validators & Constraints) - FASE 4
+- ❌ Testes automatizados (Unit + Functional + E2E) - FASE 5
 - ❌ Auditoria completa (histórico de reordenação em MongoDB) - FASE 5
 - ❌ Documentação final e code review
 
@@ -543,5 +551,33 @@ cypress/
 
 **Última atualização:** 25 de março de 2026  
 **Status Atual:** FASE 2 ✅ CONCLUÍDA (100%) - Backend APIs + Frontend Interface com Auto-Save + Security Hardening  
+**Status NOVA FEATURE:** ✅ CONCLUÍDA - Dados de Representante + Tipo Instituição + Estilização de UI  
 **Próxima Etapa:** FASE 3 - Validação de Integridade (Validators & Constraints)  
 **Próxima Revisão:** Após implementação e testes da FASE 3
+
+### 📋 CHANGELOG - 25 de março de 2026
+
+#### ✨ Nova Feature: Dados de Representante na Listagem de Propostas
+
+**Implementado:**
+- ✅ Recuperação dinâmica de dados do representante via entidade Organization → Agent → User
+- ✅ Exibição de representante (nome, CPF, email, telefone) em todas as 4 abas
+- ✅ Campo "Tipo Instituição" (Empresa/OSC) em todas as abas
+- ✅ Estilização do botão de download "Arquivo Poligonal" com cor verde (#088140)
+- ✅ Redução de fonte em botões de download em todas as abas
+- ✅ Dados de representante incluídos em exportações CSV com headers:
+  - "Agente Promotor Nome representante AP"
+  - "CPF do representante AP"
+  - "E-mail representante AP"
+  - "Telefone representante AP"
+
+**Arquivos Modificados:**
+- `src/Regmel/Controller/Web/Admin/ProposalAdminController.php` - Lógica de recuperação de representante
+- `src/Regmel/Service/ProposalService.php` - Exportação CSV com dados de representante
+- `templates/regmel/admin/proposal/list.html.twig` - UI com todas as colunas e estilos
+
+**Lógica de Dados:**
+- Organization.getOwner() → Agent
+- Agent.getUser() → User (firstname, lastname, email)
+- Agent.getExtraFields() → CPF, telefone
+- Organization.getExtraFields() → tipo (Empresa/OSC), cnpj, email, telefone

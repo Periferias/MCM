@@ -101,23 +101,60 @@ class ProposalAdminController extends AbstractAdminController
             $extraFields = $initiative->getExtraFields();
             $areaCharacteristic = $extraFields['area_characteristic'] ?? null;
             $quantityHouses = (int) ($extraFields['quantity_houses'] ?? 0);
+            $orgExtraFields = $organization?->getExtraFields() ?? [];
+
+            // Generate download URLs for files
+            $mapFileUrl = isset($extraFields['map_file']) 
+                ? $this->generateUrl('admin_regmel_proposal_mapa', ['id' => $initiative->getId()])
+                : '';
+            $projectFileUrl = isset($extraFields['project_file'])
+                ? $this->generateUrl('admin_regmel_proposal_projeto', ['id' => $initiative->getId()])
+                : '';
+
+            // Buscar dados do representante (usuário owner da organização)
+            $representativeName = '';
+            $representativeCpf = '';
+            $representativeEmail = '';
+            $representativePhone = '';
+            
+            if ($organization) {
+                try {
+                    $agent = $organization->getOwner();
+                    if ($agent) {
+                        $owner = $agent->getUser();
+                        if ($owner) {
+                            $representativeName = trim(($owner->getFirstname() ?? '') . ' ' . ($owner->getLastname() ?? ''));
+                            $representativeEmail = $owner->getEmail() ?? '';
+                            
+                            // Telefone e CPF estão em extra_fields do agent
+                            $agentExtraFields = $agent->getExtraFields() ?? [];
+                            $representativeCpf = $agentExtraFields['cpf'] ?? '';
+                            $representativePhone = $agentExtraFields['telefone'] ?? '';
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Se erro ao buscar dados do representante, deixa vazio
+                }
+            }
 
             return [
                 'id' => $initiative->getId()->toRfc4122(),
                 'name' => $initiative->getName(),
-                'company' => $organization?->getName() ?? '', // Esta é a chave que deu erro!
+                'company' => $organization?->getName() ?? '',
+                'institution_type' => $orgExtraFields['tipo'] ?? 'Não Informado',
                 'city_name' => $extraFields['city_name'] ?? '',
+                'city_code' => $extraFields['city_code'] ?? '',
                 'region' => $extraFields['region'] ?? '',
                 'state' => $extraFields['state'] ?? '',
                 'status' => $extraFields['status'] ?? '',
                 'quantity_houses' => $quantityHouses,
                 'area_size' => $extraFields['area_size'] ?? '',
-                'created_at' => $initiative->getCreatedAt()->format('d/m/Y'),
+                'created_at' => $initiative->getCreatedAt()->format('d/m/Y H:i:s'),
                 'created_by' => $initiative->getCreatedBy()?->getName() ?? '',
                 'area_option' => null !== $areaCharacteristic ? ($env['proposals']['area_characteristics'][$areaCharacteristic] ?? '') : '',
                 'price_per_house' => (float) ($env['variables']['price_per_household'] ?? 1),
-                'map_file' => $extraFields['map_file'] ?? '',
-                'project_file' => $extraFields['project_file'] ?? '',
+                'map_file' => $mapFileUrl,
+                'project_file' => $projectFileUrl,
                 'anticipation' => $extraFields['anticipation'] ?? '',
                 'snpr_affiliation' => $extraFields['snpr_affiliation'] ?? 'Não',
                 'snpr_affiliation_details' => $extraFields['snpr_affiliation_details'] ?? '',
@@ -130,7 +167,15 @@ class ProposalAdminController extends AbstractAdminController
                 'order' => $extraFields['ordem_prioridade'] ?? null,
                 'evaluation_ranking' => $extraFields['evaluation_ranking'] ?? null,
                 'agreement_reason' => $extraFields['agreement_reason'] ?? null,
-                'evaluation_ranking' => $extraFields['evaluation_ranking'] ?? null,
+                // Dados da empresa/OSC
+                'company_cnpj' => $orgExtraFields['cnpj'] ?? '',
+                'company_email' => $orgExtraFields['email'] ?? '',
+                'company_phone' => $orgExtraFields['telefone'] ?? $orgExtraFields['phone'] ?? '',
+                // Dados do representante (usuário owner da empresa)
+                'representative_name' => $representativeName,
+                'representative_cpf' => $representativeCpf,
+                'representative_email' => $representativeEmail,
+                'representative_phone' => $representativePhone,
             ];
         }, $filtered);
 
