@@ -6,8 +6,10 @@ namespace App\Regmel\Service;
 
 use App\Entity\Initiative;
 use App\Enum\StatusProposalEnum;
+use App\Event\Regmel\ProposalOrderingEvent;
 use App\Validator\Constraints\UniqueProposalOrder;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -16,6 +18,7 @@ class ProposalOrderingService
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -186,6 +189,31 @@ class ProposalOrderingService
 
         // Atualizar todas as propostas em transação
         try {
+            // Capturar estado anterior para auditoria
+            $previousOrdering = [];
+            $newOrdering = [];
+
+            foreach ($proposals as $item) {
+                $proposal = $item['proposal'];
+                $extra = $proposal->getExtraFields() ?? [];
+                $status = $item['status'];
+
+                // Estado anterior
+                $previousOrder = null;
+                if ($status === StatusProposalEnum::CLASSIFICADA->value) {
+                    $previousOrder = $extra['evaluation_ranking'] ?? null;
+                } else {
+                    $previousOrder = $extra['ordem_prioridade'] ?? null;
+                }
+
+                $previousOrdering[] = [
+                    'proposalId' => $proposal->getId()->toRfc4122(),
+                    'order' => $previousOrder,
+                    'name' => $proposal->getName(),
+                ];
+            }
+
+            // Atualizar propostas
             foreach ($proposals as $item) {
                 $proposal = $item['proposal'];
                 $newOrder = $item['newOrder'];
@@ -202,9 +230,26 @@ class ProposalOrderingService
 
                 $proposal->setExtraFields($extra);
                 $this->entityManager->persist($proposal);
+
+                $newOrdering[] = [
+                    'proposalId' => $proposal->getId()->toRfc4122(),
+                    'order' => $newOrder,
+                    'name' => $proposal->getName(),
+                ];
             }
 
             $this->entityManager->flush();
+
+            // Disparar evento de auditoria para cada proposta (usar a primeira como ID base)
+            if (!empty($proposals)) {
+                $firstProposal = $proposals[0]['proposal'];
+                $event = new ProposalOrderingEvent(
+                    $firstProposal->getId()->toRfc4122(),
+                    $previousOrdering,
+                    $newOrdering,
+                );
+                $this->eventDispatcher->dispatch($event);
+            }
         } catch (\Exception $e) {
             $this->entityManager->rollback();
             throw new \InvalidArgumentException('Erro ao reordenar propostas: ' . $e->getMessage());

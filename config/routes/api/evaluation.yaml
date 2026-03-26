@@ -27,3 +27,8 @@ reorder-proposals:
   path: /proposals/reorder
   controller: App\Controller\Api\EvaluationApiController::reorderProposals
   methods: ['POST']
+
+ordering-history:
+  path: /proposals/{proposalId}/ordering-history
+  controller: App\Controller\Api\EvaluationApiController::getOrderingHistory
+  methods: ['GET']

@@ -228,4 +228,41 @@ class EvaluationApiController extends AbstractApiController
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    #[IsGranted('ROLE_ADMIN')]
+    public function getOrderingHistory(Uuid $proposalId): JsonResponse
+    {
+        try {
+            $documentManager = $this->container->get('doctrine_mongodb.odm.document_manager');
+            $repository = $documentManager->getRepository('App:ProposalOrderingTimeline');
+
+            // Buscar histórico desta proposta, ordenado por timestamp descendente
+            $history = $repository->findBy(
+                ['proposalId' => $proposalId->toRfc4122()],
+                ['timestamp' => -1],
+                20 // Limitar aos últimos 20 registros
+            );
+
+            $data = [];
+            foreach ($history as $record) {
+                $data[] = [
+                    'id' => $record->getId(),
+                    'timestamp' => $record->getTimestamp()->format('Y-m-d H:i:s'),
+                    'userName' => $record->getUserName(),
+                    'changes' => $record->getChanges(),
+                ];
+            }
+
+            return $this->json([
+                'success' => true,
+                'data' => $data,
+                'total' => count($data),
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erro ao buscar histórico: '.$e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }
