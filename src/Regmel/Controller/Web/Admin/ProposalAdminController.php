@@ -143,7 +143,7 @@ class ProposalAdminController extends AbstractAdminController
                 'company' => $organization?->getName() ?? '',
                 'institution_type' => $orgExtraFields['tipo'] ?? 'Não Informado',
                 'city_name' => $extraFields['city_name'] ?? '',
-                'city_code' => $extraFields['city_code'] ?? '',
+                'city_code' => $extraFields['city_code'] ?? $extraFields['cityCode'] ?? '',
                 'region' => $extraFields['region'] ?? '',
                 'state' => $extraFields['state'] ?? '',
                 'status' => $extraFields['status'] ?? '',

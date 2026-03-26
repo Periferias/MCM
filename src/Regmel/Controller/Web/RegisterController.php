@@ -210,7 +210,7 @@ class RegisterController extends AbstractWebController
                 'type' => OrganizationTypeEnum::MUNICIPIO->value,
                 'extraFields' => [
                     'cityId' => $city?->getId(),
-                    'cityCode' => $city?->getCityCode(),
+                    'city_code' => $city?->getCityCode(),
                     'region' => $city?->getState()?->getRegion(),
                     'state' => $city?->getState()?->getAcronym(),
                     'cnpj' => $request->get('cnpj'),
