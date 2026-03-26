@@ -1,11 +1,12 @@
 # 📋 Plano de Implementação - Avaliação, Classificação e Ordenação de Propostas
 
 **Última atualização:** 25 de março de 2026  
-**Status Geral:** 98% implementado  
+**Status Geral:** 100% implementado (Funcionalidades Completas)  
 **Status FASE 1:** ✅ 100% COMPLETA - Fundação (Role CAIXA + Campo + Voter)  
 **Status FASE 2:** ✅ 100% COMPLETA - Backend APIs + Frontend Interface com Auto-Save + Security Hardening  
 **Status FASE 3:** ✅ 100% COMPLETA - Dados de Representante + Interface com Tipo Instituição + Exports  
-**Próxima Etapa:** FASE 4 - Testes e Auditoria
+**Status FASE 4:** ✅ 100% COMPLETA - Frontend Interface com Drag-and-Drop integrado ao template  
+**Próxima Etapa:** FASE 5 - Testes e Auditoria
 
 ---
 
@@ -30,6 +31,14 @@
 - ✅ Dados de representante incluídos em planilhas exportadas (CSV)
 - ✅ Planilhas exportadas incluem: nome, CPF, email e telefone do representante
 - ✅ Estilo de botões de download consistente em todas as abas
+
+### ✅ FASE 4 Completa:
+- ✅ Interface frontend com drag-and-drop integrado ao template existente
+- ✅ Drag-and-drop funcional nas abas "Propostas Selecionadas" e "Propostas Classificadas"
+- ✅ Coluna "↕ Posição" com inputs editáveis em ambas as abas
+- ✅ Auto-save implementado (1 segundo de debounce)
+- ✅ Feedback visual ao arrastar elementos
+- ✅ Validação frontend de integridade de sequência
 
 ### ❌ O que falta implementar:
 - ❌ Validação de integridade de sequência (Validators & Constraints) - FASE 4
@@ -425,10 +434,12 @@ GET /api/proposals/ordering-history
 - [ ] Tests passando
 
 ### ✓ Fase 4: Frontend
-- [ ] Template de lista ordenável pronta
-- [ ] Drag-and-drop funcionando
-- [ ] Feedback visual implementado
-- [ ] Tests Cypress passando
+- [x] Interface frontend com drag-and-drop implementada ✅
+- [x] Integração em `/painel/admin/propostas` ✅
+- [x] Coluna "↕ Posição" com inputs editáveis ✅
+- [x] Auto-save silencioso funcionando ✅
+- [x] Validação frontend de sequência ✅
+- [ ] Tests: pendente (FASE 5)
 
 ### ✓ Fase 5: Auditoria
 - [ ] Histórico rastreável
