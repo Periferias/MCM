@@ -73,7 +73,7 @@ Exportação em Planilhas
 ### 1. Acessar Painel de Propostas
 
 ```
-http://localhost:8080/painel/admin/propostas
+/painel/admin/propostas
 ```
 
 **Abas disponíveis:**
