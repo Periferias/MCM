@@ -89,12 +89,10 @@ class ProposalOrderingService
             $extra = $initiative->getExtraFields() ?? [];
             $proposalStatus = $extra['status'] ?? null;
 
-            // Obter ordem: evaluation_ranking para CLASSIFICADA, ordem_prioridade para SELECIONADA
+            // Obter ordem: evaluation_ranking para CLASSIFICADA e SELECIONADA
             $order = null;
-            if ($proposalStatus === StatusProposalEnum::CLASSIFICADA->value) {
+            if ($proposalStatus === StatusProposalEnum::CLASSIFICADA->value || $proposalStatus === StatusProposalEnum::SELECIONADA->value) {
                 $order = $extra['evaluation_ranking'] ?? null;
-            } else {
-                $order = $extra['ordem_prioridade'] ?? null;
             }
 
             return [
@@ -200,10 +198,8 @@ class ProposalOrderingService
 
                 // Estado anterior
                 $previousOrder = null;
-                if ($status === StatusProposalEnum::CLASSIFICADA->value) {
+                if ($status === StatusProposalEnum::CLASSIFICADA->value || $status === StatusProposalEnum::SELECIONADA->value) {
                     $previousOrder = $extra['evaluation_ranking'] ?? null;
-                } else {
-                    $previousOrder = $extra['ordem_prioridade'] ?? null;
                 }
 
                 $previousOrdering[] = [
@@ -222,10 +218,8 @@ class ProposalOrderingService
                 $extra = $proposal->getExtraFields() ?? [];
 
                 // Atualizar o campo de ordem correto baseado no status
-                if ($status === StatusProposalEnum::CLASSIFICADA->value) {
+                if ($status === StatusProposalEnum::CLASSIFICADA->value || $status === StatusProposalEnum::SELECIONADA->value) {
                     $extra['evaluation_ranking'] = $newOrder;
-                } else {
-                    $extra['ordem_prioridade'] = $newOrder;
                 }
 
                 $proposal->setExtraFields($extra);

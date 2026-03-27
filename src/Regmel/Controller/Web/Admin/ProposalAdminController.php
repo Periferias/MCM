@@ -164,7 +164,6 @@ class ProposalAdminController extends AbstractAdminController
                 'agreement_uploaded_by_name' => $extraFields['agreement_uploaded_by_name'] ?? 'Não informado',
                 'agreement_status' => $extraFields['agreement_status'] ?? null,
                 'status_reason' => $extraFields['status_reason'] ?? null,
-                'order' => $extraFields['ordem_prioridade'] ?? null,
                 'evaluation_ranking' => $extraFields['evaluation_ranking'] ?? null,
                 'agreement_reason' => $extraFields['agreement_reason'] ?? null,
                 // Dados da empresa/OSC

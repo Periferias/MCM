@@ -335,12 +335,10 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             }
         }
 
-        // Posição: ordem de prioridade para SELECIONADA, ranking para CLASSIFICADA
+        // Posição: evaluation_ranking para SELECIONADA e CLASSIFICADA
         $position = '';
         $currentStatus = $extraFields['status'] ?? '';
-        if ($currentStatus === StatusProposalEnum::SELECIONADA->value) {
-            $position = $extraFields['ordem_prioridade'] ?? '';
-        } elseif ($currentStatus === StatusProposalEnum::CLASSIFICADA->value) {
+        if ($currentStatus === StatusProposalEnum::SELECIONADA->value || $currentStatus === StatusProposalEnum::CLASSIFICADA->value) {
             $position = $extraFields['evaluation_ranking'] ?? '';
         }
 

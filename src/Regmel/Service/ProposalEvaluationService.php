@@ -69,8 +69,8 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
             throw new \InvalidArgumentException('O motivo da avaliação é obrigatório.');
         }
 
-        if ($result === EvaluationResultEnum::CLASSIFICADA && !$ranking) {
-            throw new \InvalidArgumentException('O ranking é obrigatório para propostas classificadas.');
+        if (($result === EvaluationResultEnum::CLASSIFICADA || $result === EvaluationResultEnum::SELECIONADA) && !$ranking) {
+            throw new \InvalidArgumentException('O ranking é obrigatório para propostas selecionadas e classificadas.');
         }
 
         $extraFields = $proposal->getExtraFields() ?? [];
@@ -85,7 +85,7 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
             'evaluation_completed_at' => new \DateTime('now', new \DateTimeZone('America/Sao_Paulo')),
         ];
 
-        if ($result === EvaluationResultEnum::CLASSIFICADA && $ranking) {
+        if (($result === EvaluationResultEnum::CLASSIFICADA || $result === EvaluationResultEnum::SELECIONADA) && $ranking) {
             $evaluationData['evaluation_ranking'] = $ranking;
         }
 
