@@ -101,7 +101,7 @@
                     <div class="mb-3" id="rankingField" style="display: none;">
                         <label for="ranking" class="form-label fw-bold">Ranking (posição) *</label>
                         <input type="number" class="form-control" id="ranking" name="ranking" min="1" placeholder="Ex: 1, 2, 3...">
-                        <div class="form-text">Obrigatório para propostas classificadas</div>
+                        <div class="form-text">Obrigatório para propostas selecionadas e classificadas</div>
                     </div>
 
                     <div class="mb-3">
@@ -154,7 +154,7 @@ function toggleRankingField() {
     const rankingField = document.getElementById('rankingField');
     const rankingInput = document.getElementById('ranking');
     
-    if (result === 'Classificada') {
+    if (result === 'Selecionada' || result === 'Classificada') {
         rankingField.style.display = 'block';
         rankingInput.required = true;
     } else {
