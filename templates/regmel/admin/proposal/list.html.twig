@@ -90,6 +90,11 @@
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-anuida" data-bs-toggle="tab" data-bs-target="#panel-anuida" type="button" role="tab" aria-controls="panel-anuida" aria-selected="false">
+                                    <i class="bi bi-check2-circle"></i> Anuídas
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="tab-selecionada" data-bs-toggle="tab" data-bs-target="#panel-selecionada" type="button" role="tab" aria-controls="panel-selecionada" aria-selected="false">
                                     <i class="bi bi-check-circle"></i> Selecionadas
                                 </button>
@@ -244,6 +249,87 @@
                                 {% endif %}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {# Aba: Propostas Anuídas #}
+                        <div class="tab-pane fade" id="panel-anuida" role="tabpanel" aria-labelledby="tab-anuida">
+                            <div class="mb-3">
+                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('{{ statusEnum.ANUIDA.value }}')">
+                                    <i class="bi bi-download"></i> Exportar Propostas Anuídas
+                                </button>
+                            </div>
+                            <div class="table-scroll-container">
+                            <table class="js-grid table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;">
+                                <thead class="table-dark">
+                                <tr>
+                                    <th class="border-end" style="width: 175px;">ID</th>
+                                    <th class="border-end" style="width: 175px;">Região</th>
+                                    <th class="border-end" style="width: 175px;">Estado</th>
+                                    <th class="border-end" style="width: 175px;">Município</th>
+                                    <th class="border-end" style="width: 175px;">Código Município</th>
+                                    <th class="border-end" style="width: 175px;">Área de Intervenção</th>
+                                    <th class="border-end" style="width: 175px;">Qtd. Domicílios</th>
+                                    <th class="border-end" style="width: 175px;">Área Total</th>
+                                    <th class="border-end" style="width: 175px;">Valor Global</th>
+                                    <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 175px;">Empresa/OSC</th>
+                                    <th class="border-end" style="width: 175px;">CNPJ</th>
+                                    <th class="border-end" style="width: 175px;">Tipo Instituição</th>
+                                    <th class="border-end" style="width: 175px;">Email</th>
+                                    <th class="border-end" style="width: 175px;">Telefone</th>
+                                    <th class="border-end" style="width: 175px;">Arquivo Poligonal</th>
+                                    <th class="border-end" style="width: 175px;">Arquivo Projeto</th>
+                                    <th class="border-end" style="width: 175px;">Representante</th>
+                                    <th class="border-end" style="width: 175px;">CPF Rep.</th>
+                                    <th class="border-end" style="width: 175px;">Email Rep.</th>
+                                    <th class="border-end" style="width: 175px;">Telefone Rep.</th>
+                                    <th style="width: 175px;">Data Proposta</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for proposal in proposals %}
+                                    {% set status = proposal.status ?? '' %}
+                                    {% if status == statusEnum.ANUIDA.value %}
+                                    <tr data-status="{{ status }}" class="proposal-row">
+                                        <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.state }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_code }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.quantity_houses }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
+                                        <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_email }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_phone }}</td>
+                                        <td class="border-end" style="width: 200px; word-break: break-all;">{% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
+                                        <td class="border-end" style="width: 175px; word-break: break-all;">{% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_name|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
+                                        <td style="width: 175px;">{{ proposal.created_at }}</td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                                {% set anuida_count = 0 %}
+                                {% for proposal in proposals %}
+                                    {% if proposal.status == statusEnum.ANUIDA.value %}
+                                        {% set anuida_count = anuida_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if anuida_count == 0 %}
+                                    <tr>
+                                        <td colspan="22" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                    </tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                            </div>
                         </div>
 
                         {# Aba: Propostas Selecionadas #}
