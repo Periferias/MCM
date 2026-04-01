@@ -20,12 +20,6 @@
                             <h2> Empresas - Propostas </h2>
                         </div>
                         <div class="col gap-1 text-end">
-                            {% if is_granted('ROLE_ADMIN') %}
-                                <a href="{{ path('admin_evaluation_list') }}" class="btn btn-sm btn-warning">
-                                    <i class="bi bi-check-circle"></i> Avaliar Propostas Anuídas
-                                </a>
-                            {% endif %}
-
                             <a href="{{ path('admin_regmel_proposal_map_file_download') }}" class="btn btn-sm btn-success">
                                 {{ 'export_map_file'|trans }}
                             </a>
