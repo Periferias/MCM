@@ -154,6 +154,7 @@ class ProposalAdminController extends AbstractAdminController
                 'area_option' => null !== $areaCharacteristic ? ($env['proposals']['area_characteristics'][$areaCharacteristic] ?? '') : '',
                 'price_per_house' => (float) ($env['variables']['price_per_household'] ?? 1),
                 'map_file' => $mapFileUrl,
+                'map_file_type' => isset($extraFields['map_file']) ? strtolower(pathinfo($extraFields['map_file'], PATHINFO_EXTENSION)) : '',
                 'project_file' => $projectFileUrl,
                 'anticipation' => $extraFields['anticipation'] ?? '',
                 'snpr_affiliation' => $extraFields['snpr_affiliation'] ?? 'Não',

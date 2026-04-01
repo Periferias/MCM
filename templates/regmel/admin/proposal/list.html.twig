@@ -81,6 +81,27 @@
                             scrollbar-width: thin;
                             scrollbar-color: #888 #f1f1f1;
                         }
+                        /* Estilos do dropdown para não ficar branco no hover */
+                        .dropdown-toggle {
+                            color: #6c757d;
+                            border-color: #6c757d;
+                            text-decoration: none;
+                        }
+                        .dropdown-toggle:hover {
+                            color: #5a6268 !important;
+                            border-color: #5a6268 !important;
+                            background-color: transparent !important;
+                        }
+                        .dropdown-toggle:focus {
+                            color: #5a6268 !important;
+                            border-color: #5a6268 !important;
+                            background-color: transparent !important;
+                            box-shadow: 0 0 0 0.2rem rgba(130, 138, 147, 0.25);
+                        }
+                        .dropdown-item:hover {
+                            background-color: #f8f9fa;
+                            color: #212529;
+                        }
                     </style>
                     <div class="mt-4 mb-3">
                         <ul class="nav nav-tabs" id="proposalTabs" role="tablist">
@@ -283,7 +304,8 @@
                                     <th class="border-end" style="width: 175px;">CPF Rep.</th>
                                     <th class="border-end" style="width: 175px;">Email Rep.</th>
                                     <th class="border-end" style="width: 175px;">Telefone Rep.</th>
-                                    <th style="width: 175px;">Data Proposta</th>
+                                    <th class="border-end" style="width: 175px;">Data Proposta</th>
+                                    <th style="width: 120px;">Ações</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -312,7 +334,45 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
-                                        <td style="width: 175px;">{{ proposal.created_at }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.created_at }}</td>
+                                        <td style="width: 120px;">
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots-vertical"></i> Ações
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><a class="dropdown-item" href="#" 
+                                                        onclick="return modalProposalDetails(this);"
+                                                        data-proposal='{{ {
+                                                            id: proposal.id,
+                                                            name: proposal.name,
+                                                            region: proposal.region,
+                                                            state: proposal.state,
+                                                            city_name: proposal.city_name,
+                                                            zipcode: proposal.zipcode,
+                                                            address: proposal.address,
+                                                            company: proposal.company,
+                                                            created_by: proposal.created_by,
+                                                            created_at: proposal.created_at,
+                                                            area_option: proposal.area_option,
+                                                            area_size: proposal.area_size,
+                                                            quantity_houses: proposal.quantity_houses,
+                                                            price_per_house: proposal.price_per_house ?? 1,
+                                                            snpr_affiliation: proposal.snpr_affiliation ?? 'Não',
+                                                            snpr_affiliation_details: proposal.snpr_affiliation_details ?? '',
+                                                            map_file: proposal.map_file ?? '',
+                                                            map_file_type: proposal.map_file_type ?? '',
+                                                            agreement_status: proposal.agreement_status ?? '',
+                                                            term_status: proposal.term_status ?? '',
+                                                            agreement_reason: proposal.agreement_reason ?? '',
+                                                            status_reason: proposal.status_reason ?? '',
+                                                            status: proposal.status ?? ''
+                                                        }|json_encode|e('html_attr') }}'
+                                                    ><i class="bi bi-eye"></i> Ver Proposta</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="openEvaluationModal('{{ proposal.id }}', '{{ proposal.company }}', event)"><i class="bi bi-pencil"></i> Avaliar Proposta</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
                                     </tr>
                                     {% endif %}
                                 {% endfor %}
@@ -324,7 +384,7 @@
                                 {% endfor %}
                                 {% if anuida_count == 0 %}
                                     <tr>
-                                        <td colspan="22" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="23" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
@@ -610,6 +670,140 @@
 </section>
 
 {% include "regmel/_components/modal-proposal.html.twig" %}
+
+<!-- Modal de Avaliação (igual ao da página de avaliações) -->
+<div class="modal fade" id="evaluationModal" tabindex="-1" aria-labelledby="evaluationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="evaluationForm" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="evaluationModalLabel">Avaliar Proposta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="proposalId" name="proposal_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Proposta: <span id="proposalName"></span></label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="result" class="form-label fw-bold">Resultado <span class="text-danger">*</span></label>
+                        <select class="form-select" id="result" name="result" required onchange="toggleRankingField()">
+                            <option value="" selected disabled>Selecione o resultado</option>
+                            <option value="Selecionada">✅ Selecionada (aprovada)</option>
+                            <option value="Não Selecionada">❌ Não Selecionada (rejeitada)</option>
+                            <option value="Classificada">📊 Classificada (suplente)</option>
+                        </select>
+                        <div class="form-text">Escolha uma opção obrigatória</div>
+                    </div>
+
+                    <div class="mb-3" id="rankingField" style="display: none;">
+                        <label for="ranking" class="form-label fw-bold">Ranking (posição) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="ranking" name="ranking" min="1" placeholder="Ex: 1, 2, 3...">
+                        <div class="form-text">Obrigatório para propostas selecionadas e classificadas</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label fw-bold">Motivo/Parecer <span class="text-danger">*</span></label>
+                        <textarea
+                            class="form-control"
+                            id="reason"
+                            name="reason"
+                            rows="4"
+                            placeholder="Descreva o motivo da sua avaliação..."
+                            minlength="10"
+                            required
+                        ></textarea>
+                        <div class="form-text">Mínimo de 10 caracteres</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notas Adicionais</label>
+                        <textarea
+                            class="form-control"
+                            id="notes"
+                            name="notes"
+                            rows="3"
+                            placeholder="Observações adicionais (opcional)..."
+                        ></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEvaluationModal(proposalId, proposalName, event) {
+        event.preventDefault();
+        document.getElementById('proposalId').value = proposalId;
+        document.getElementById('proposalName').textContent = proposalName;
+        document.getElementById('result').value = '';
+        document.getElementById('reason').value = '';
+        document.getElementById('notes').value = '';
+        document.getElementById('ranking').value = '';
+        document.getElementById('rankingField').style.display = 'none';
+    }
+
+    function toggleRankingField() {
+        const result = document.getElementById('result').value;
+        const rankingField = document.getElementById('rankingField');
+        const rankingInput = document.getElementById('ranking');
+        
+        if (result === 'Selecionada' || result === 'Classificada') {
+            rankingField.style.display = 'block';
+            rankingInput.required = true;
+        } else {
+            rankingField.style.display = 'none';
+            rankingInput.required = false;
+            rankingInput.value = '';
+        }
+    }
+
+    document.getElementById('evaluationForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const proposalId = document.getElementById('proposalId').value;
+        const result = document.getElementById('result').value;
+        const reason = document.getElementById('reason').value;
+        const notes = document.getElementById('notes').value;
+        const ranking = document.getElementById('ranking').value;
+        
+        try {
+            const response = await fetch(`/painel/admin/avaliacoes/${proposalId}/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    result: result,
+                    reason: reason,
+                    notes: notes || null,
+                    ranking: ranking ? parseInt(ranking) : null
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('✅ Proposta avaliada com sucesso!');
+                bootstrap.Modal.getInstance(document.getElementById('evaluationModal')).hide();
+                location.reload();
+            } else {
+                alert('❌ Erro: ' + data.message);
+            }
+        } catch (error) {
+            alert('❌ Erro ao avaliar: ' + error.message);
+        }
+    });
+</script>
+
 {% endblock %}
 
 {% block extra_javascripts %}
@@ -783,6 +977,42 @@
                 const input = row.querySelector('input[type="number"]');
                 if (input) input.value = i + 1;
             });
+        }
+
+        function scheduleAutoSave(tableId) {
+            clearTimeout(autoSaveTimeouts[tableId]);
+            autoSaveTimeouts[tableId] = setTimeout(() => saveProposalOrder(tableId), 1000);
+        }
+
+        // Função para abrir modal de avaliar proposta (igual a página de avaliações)
+        function openEvaluationModal(proposalId, proposalName, event) {
+            event.preventDefault();
+            
+            document.getElementById('proposalId').value = proposalId;
+            document.getElementById('proposalName').textContent = proposalName;
+            document.getElementById('result').value = '';
+            document.getElementById('reason').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('ranking').value = '';
+            document.getElementById('rankingField').style.display = 'none';
+            
+            const modal = new bootstrap.Modal(document.getElementById('evaluationModal'));
+            modal.show();
+        }
+
+        function toggleRankingField() {
+            const result = document.getElementById('result').value;
+            const rankingField = document.getElementById('rankingField');
+            const rankingInput = document.getElementById('ranking');
+            
+            if (result === 'Selecionada' || result === 'Classificada') {
+                rankingField.style.display = 'block';
+                rankingInput.required = true;
+            } else {
+                rankingField.style.display = 'none';
+                rankingInput.required = false;
+                rankingInput.value = '';
+            }
         }
 
         function scheduleAutoSave(tableId) {

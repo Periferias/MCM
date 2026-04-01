@@ -33,15 +33,15 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         $extraFields = $proposal->getExtraFields() ?? [];
         $status = $extraFields['status'] ?? '';
 
-        // Proposta deve estar com status ANUIDA
-        if ($status !== StatusProposalEnum::ANUIDA->value) {
-            return false;
-        }
+        // Proposta deve estar com status ANUIDA OU já avaliada (permitir reavaliação)
+        $allowedStatuses = [
+            StatusProposalEnum::ANUIDA->value,
+            StatusProposalEnum::SELECIONADA->value,
+            StatusProposalEnum::CLASSIFICADA->value,
+            StatusProposalEnum::NAO_SELECIONADA->value,
+        ];
 
-        // Proposta ainda não foi avaliada
-        $evaluationStatus = $extraFields['evaluation_status'] ?? null;
-
-        return $evaluationStatus !== 'completed';
+        return in_array($status, $allowedStatuses);
     }
 
     public function evaluate(

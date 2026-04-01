@@ -1,8 +1,18 @@
 function modalProposalDetails(event) {
+    console.log('=== INICIANDO modalProposalDetails ===');
+    console.log('event:', event);
+    
+    // Prevenir comportamento padrão do link
+    if (event && event.preventDefault) {
+        event.preventDefault();
+    }
+    
     const modal = new bootstrap.Modal('#proposalDetails');
 
     const data = event.getAttribute('data-proposal');
+    console.log('data-proposal raw:', data);
     const proposal = JSON.parse(data);
+    console.log('proposal object completo:', proposal);
 
     const quantityHouses = proposal.quantity_houses;
     const pricePerHouse = proposal.price_per_house;
@@ -43,16 +53,26 @@ function modalProposalDetails(event) {
         snprDetailsContainer.style.display = 'none';
     }
 
-    if ('pdf' === proposal.map_file.slice(-3)) {
-        document.querySelector('#map-file').innerHTML = `
-            <object style="min-height: 600px;" data="/painel/admin/propostas/`+proposal.id+`/mapa" type="application/pdf" width="100%">
-                <p>Caso o documento não esteja visível, <a href="/painel/admin/propostas/`+proposal.id+`/mapa">clique aqui para acessar o PDF!</a></p>
+    // Renderizar mapa/arquivo poligonal - FORÇA COMO OBJECT PDF
+    console.log('=== VERIFICANDO MAP FILE ===');
+    console.log('proposal.map_file:', proposal.map_file);
+    console.log('proposal.map_file_type:', proposal.map_file_type);
+    
+    if (proposal.map_file) {
+        console.log('MAP FILE EXISTE, renderizando como PDF object...');
+        const mapFileHTML = `
+            <object style="min-height: 600px;" data="`+proposal.map_file+`" type="application/pdf" width="100%">
+                <p>Caso o documento não esteja visível, <a href="`+proposal.map_file+`">clique aqui para acessar o PDF!</a></p>
             </object>
         `;
+        const mapFileDiv = document.querySelector('#map-file');
+        console.log('mapFileDiv element:', mapFileDiv);
+        mapFileDiv.innerHTML = mapFileHTML;
+        console.log('Map file renderizado como PDF object');
+        console.log('Map file HTML:', mapFileHTML);
     } else {
-        document.querySelector('#map-file').innerHTML = `
-            <img src="/painel/admin/propostas/`+proposal.id+`/mapa" alt="Mapa do projeto" class="img-fluid">
-        `;
+        console.log('MAP FILE NÃO EXISTE');
+        document.querySelector('#map-file').innerHTML = '<p class="text-muted">Nenhum arquivo de mapa poligonal enviado.</p>';
     }
 
     // Lógica de Anuência
@@ -134,4 +154,6 @@ function modalProposalDetails(event) {
     }
 
     modal.show();
+    
+    return false;
 }
