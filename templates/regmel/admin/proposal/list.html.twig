@@ -690,16 +690,21 @@
             const selecionadaCount = document.querySelectorAll('#panel-selecionada .proposal-row').length;
             const classificadaCount = document.querySelectorAll('#panel-classificada .proposal-row').length;
             const naoSelecionadaCount = document.querySelectorAll('#panel-nao-selecionada .proposal-row').length;
+            const anuídaCount = document.querySelectorAll('#panel-anuida .proposal-row').length;
             const totalCount = document.querySelectorAll('#panel-all .proposal-row').length;
 
             // Atualizar labels das abas
             const tabAll = document.getElementById('tab-all');
+            const tabAnuida = document.getElementById('tab-anuida');
             const tabSelecionada = document.getElementById('tab-selecionada');
             const tabClassificada = document.getElementById('tab-classificada');
             const tabNaoSelecionada = document.getElementById('tab-nao-selecionada');
 
             if (tabAll) {
                 tabAll.innerHTML = '<i class="bi bi-list"></i> Todas as Propostas <span class="badge bg-secondary ms-2">' + totalCount + '</span>';
+            }
+            if (tabAnuida) {
+                tabAnuida.innerHTML = '<i class="bi bi-check2-circle"></i> Anuídas <span class="badge bg-success ms-2" style="background-color: #155724 !important;">' + anuídaCount + '</span>';
             }
             if (tabSelecionada) {
                 tabSelecionada.innerHTML = '<i class="bi bi-check-circle"></i> Selecionadas <span class="badge bg-success ms-2">' + selecionadaCount + '</span>';
