@@ -55,6 +55,32 @@
                             min-width: 22px;
                             height: 22px;
                         }
+                        /* Estilos para container com scroll horizontal */
+                        .table-scroll-container {
+                            overflow-x: auto;
+                            border: 1px solid #dee2e6;
+                            border-radius: 4px;
+                            max-height: 100%;
+                        }
+                        /* Barra de rolagem estilizada para Chrome, Edge e Safari */
+                        .table-scroll-container::-webkit-scrollbar {
+                            height: 8px;
+                        }
+                        .table-scroll-container::-webkit-scrollbar-track {
+                            background: #f1f1f1;
+                        }
+                        .table-scroll-container::-webkit-scrollbar-thumb {
+                            background: #888;
+                            border-radius: 4px;
+                        }
+                        .table-scroll-container::-webkit-scrollbar-thumb:hover {
+                            background: #555;
+                        }
+                        /* Firefox */
+                        .table-scroll-container {
+                            scrollbar-width: thin;
+                            scrollbar-color: #888 #f1f1f1;
+                        }
                     </style>
                     <div class="mt-4 mb-3">
                         <ul class="nav nav-tabs" id="proposalTabs" role="tablist">
@@ -227,6 +253,7 @@
                                     <i class="bi bi-download"></i> Exportar Propostas Selecionadas
                                 </button>
                             </div>
+                            <div class="table-scroll-container">
                             <table class="js-grid table table-hover table-striped table-sm" id="tableSelecionada" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
@@ -307,6 +334,7 @@
                                 {% endif %}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
 
                         {# Aba: Propostas Classificadas #}
@@ -316,6 +344,7 @@
                                     <i class="bi bi-download"></i> Exportar Propostas Classificadas
                                 </button>
                             </div>
+                            <div class="table-scroll-container">
                             <table class="js-grid table table-hover table-striped table-sm" id="tableClassificada" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
@@ -396,6 +425,7 @@
                                 {% endif %}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
 
                         {# Aba: Propostas Não Selecionadas #}
@@ -406,6 +436,7 @@
                                     <i class="bi bi-download"></i> Exportar Propostas Não Selecionadas
                                 </button>
                             </div>
+                            <div class="table-scroll-container">
                             <table class="js-grid table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
@@ -482,6 +513,7 @@
                                 {% endif %}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
