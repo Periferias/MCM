@@ -221,7 +221,7 @@
                     <div class="tab-content" id="proposalTabsContent">
                         {# Aba: Todas as Propostas #}
                         <div class="tab-pane fade show active" id="panel-all" role="tabpanel" aria-labelledby="tab-all">
-                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;\">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" data-gridjs-mode="bulk" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
                                     <th class="border-end" style="width: 175px;">ID</th>
@@ -293,7 +293,7 @@
                                 </button>
                             </div>
                             <div class="table-scroll-container">
-                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" data-native-grid="true" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
                                     <th class="border-end" style="width: 175px;">ID</th>
@@ -413,7 +413,7 @@
                                 </button>
                             </div>
                             <div class="table-scroll-container">
-                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" id="tableSelecionada" style="table-layout: fixed; width: 100%;">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" id="tableSelecionada" data-native-grid="true" data-pagination="false" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
                                     <th style="width: 175px;" class="border-end">↕ Posição</th>
@@ -504,7 +504,7 @@
                                 </button>
                             </div>
                             <div class="table-scroll-container">
-                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" id="tableClassificada" style="table-layout: fixed; width: 100%;">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" id="tableClassificada" data-native-grid="true" data-pagination="false" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
                                     <th style="width: 175px;" class="border-end">↕ Posição</th>
@@ -596,7 +596,7 @@
                                 </button>
                             </div>
                             <div class="table-scroll-container">
-                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" data-native-grid="true" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
                                     <th class="border-end" style="width: 175px;">ID</th>
