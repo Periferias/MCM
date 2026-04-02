@@ -96,6 +96,25 @@
                             background-color: #f8f9fa;
                             color: #212529;
                         }
+                        .proposal-sort-table th[data-sortable="true"] {
+                            cursor: pointer;
+                            user-select: none;
+                            position: relative;
+                        }
+                        .proposal-sort-table th[data-sortable="true"]::after {
+                            content: "⇅";
+                            font-size: 0.75rem;
+                            opacity: 0.6;
+                            margin-left: 0.35rem;
+                        }
+                        .proposal-sort-table th.sort-asc::after {
+                            content: "↑";
+                            opacity: 1;
+                        }
+                        .proposal-sort-table th.sort-desc::after {
+                            content: "↓";
+                            opacity: 1;
+                        }
                     </style>
                     <div class="mt-4 mb-3">
                         <ul class="nav nav-tabs" id="proposalTabs" role="tablist">
@@ -202,7 +221,7 @@
                     <div class="tab-content" id="proposalTabsContent">
                         {# Aba: Todas as Propostas #}
                         <div class="tab-pane fade show active" id="panel-all" role="tabpanel" aria-labelledby="tab-all">
-                            <table class="js-grid table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;\">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;\">
                                 <thead class="table-dark">
                                 <tr>
                                     <th class="border-end" style="width: 175px;">ID</th>
@@ -274,7 +293,7 @@
                                 </button>
                             </div>
                             <div class="table-scroll-container">
-                            <table class="js-grid table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
                                     <th class="border-end" style="width: 175px;">ID</th>
@@ -299,7 +318,7 @@
                                     <th class="border-end" style="width: 175px;">Email Rep.</th>
                                     <th class="border-end" style="width: 175px;">Telefone Rep.</th>
                                     <th class="border-end" style="width: 175px;">Data Proposta</th>
-                                    <th style="width: 120px;">Ações</th>
+                                    <th data-sortable="false" style="width: 120px;">Ações</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -394,7 +413,7 @@
                                 </button>
                             </div>
                             <div class="table-scroll-container">
-                            <table class="js-grid table table-hover table-striped table-sm" id="tableSelecionada" style="table-layout: fixed; width: 100%;">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" id="tableSelecionada" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
                                     <th style="width: 175px;" class="border-end">↕ Posição</th>
@@ -485,7 +504,7 @@
                                 </button>
                             </div>
                             <div class="table-scroll-container">
-                            <table class="js-grid table table-hover table-striped table-sm" id="tableClassificada" style="table-layout: fixed; width: 100%;">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" id="tableClassificada" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
                                     <th style="width: 175px;" class="border-end">↕ Posição</th>
@@ -577,7 +596,7 @@
                                 </button>
                             </div>
                             <div class="table-scroll-container">
-                            <table class="js-grid table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" style="table-layout: fixed; width: 100%;">
                                 <thead class="table-dark">
                                 <tr>
                                     <th class="border-end" style="width: 175px;">ID</th>
@@ -867,12 +886,129 @@
             window.location.href = '{{ path('admin_regmel_proposal_list_download') }}?' + params.toString();
         }
 
+        function initializeProposalTabSorting() {
+            const tables = document.querySelectorAll('#proposalTabsContent table.proposal-sort-table');
+
+            tables.forEach((table) => {
+                const headers = table.querySelectorAll('thead th');
+
+                headers.forEach((header, columnIndex) => {
+                    if (header.dataset.sortable === 'false') {
+                        return;
+                    }
+
+                    header.dataset.sortable = 'true';
+
+                    header.addEventListener('click', () => {
+                        const tbody = table.querySelector('tbody');
+                        if (!tbody) {
+                            return;
+                        }
+
+                        const rows = Array.from(tbody.querySelectorAll('tr'))
+                            .filter((row) => !row.querySelector(`td[colspan]`));
+
+                        if (rows.length === 0) {
+                            return;
+                        }
+
+                        const nextDirection = header.dataset.sortDirection === 'asc' ? 'desc' : 'asc';
+
+                        headers.forEach((th) => {
+                            th.classList.remove('sort-asc', 'sort-desc');
+                            th.dataset.sortDirection = '';
+                        });
+
+                        header.dataset.sortDirection = nextDirection;
+                        header.classList.add(nextDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+
+                        rows.sort((rowA, rowB) => {
+                            const valueA = getSortableCellValue(rowA, columnIndex);
+                            const valueB = getSortableCellValue(rowB, columnIndex);
+                            return compareSortableValues(valueA, valueB, nextDirection);
+                        });
+
+                        rows.forEach((row) => tbody.appendChild(row));
+                    });
+                });
+            });
+        }
+
+        function getSortableCellValue(row, columnIndex) {
+            const cell = row.children[columnIndex];
+            if (!cell) {
+                return '';
+            }
+
+            const input = cell.querySelector('input, select, textarea');
+            if (input) {
+                return input.value.trim();
+            }
+
+            return cell.textContent.replace(/\s+/g, ' ').trim();
+        }
+
+        function compareSortableValues(rawValueA, rawValueB, direction) {
+            const valueA = normalizeSortableValue(rawValueA);
+            const valueB = normalizeSortableValue(rawValueB);
+
+            let result = 0;
+
+            if (valueA.type === valueB.type && (valueA.type === 'number' || valueA.type === 'date')) {
+                result = valueA.value - valueB.value;
+            } else {
+                result = String(valueA.value).localeCompare(String(valueB.value), 'pt-BR', {
+                    numeric: true,
+                    sensitivity: 'base'
+                });
+            }
+
+            return direction === 'asc' ? result : -result;
+        }
+
+        function normalizeSortableValue(value) {
+            const normalized = String(value ?? '').trim();
+
+            if (normalized === '' || normalized === '-') {
+                return { type: 'text', value: '' };
+            }
+
+            const currencyValue = normalized
+                .replace(/\s/g, '')
+                .replace(/^R\$/, '')
+                .replace(/\./g, '')
+                .replace(',', '.');
+
+            if (/^-?\d+(\.\d+)?$/.test(currencyValue)) {
+                return { type: 'number', value: Number(currencyValue) };
+            }
+
+            const dateMatch = normalized.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?$/);
+            if (dateMatch) {
+                const [, day, month, year, hour = '00', minute = '00'] = dateMatch;
+                const dateValue = new Date(`${year}-${month}-${day}T${hour}:${minute}:00`).getTime();
+
+                if (!Number.isNaN(dateValue)) {
+                    return { type: 'date', value: dateValue };
+                }
+            }
+
+            const isoDateValue = Date.parse(normalized);
+            if (!Number.isNaN(isoDateValue) && /[-/:]/.test(normalized)) {
+                return { type: 'date', value: isoDateValue };
+            }
+
+            return { type: 'text', value: normalized.toLowerCase() };
+        }
+
         // Inicializar tooltips do Bootstrap
         document.addEventListener('DOMContentLoaded', function() {
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+
+            initializeProposalTabSorting();
 
             // Contar registros por status e atualizar abas (apenas dentro de cada tab)
             const selecionadaCount = document.querySelectorAll('#panel-selecionada .proposal-row').length;
