@@ -450,9 +450,9 @@
                                 {% for proposal in proposals %}
                                     {% set status = proposal.status ?? '' %}
                                     {% if status == statusEnum.SELECIONADA.value %}
-                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.order ?? '' }}">
+                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
                                         <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center; width: 60px;" class="border-end">
-                                            <input type="number" class="form-control form-control-sm position-input-sel" value="{{ proposal.order ?? '' }}" min="1" style="width: 175px;" {% if not is_granted('ROLE_ADMIN') %}disabled{% endif %}>
+                                            <input type="number" class="form-control form-control-sm position-input-sel" value="{{ proposal.evaluation_ranking ?? '' }}" min="1" style="width: 175px;" readonly tabindex="-1">
                                         </td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
@@ -552,7 +552,7 @@
                                     {% set status = proposal.status ?? '' %}
                                     <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
                                         <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center; width: 60px;" class="border-end">
-                                            <input type="number" class="form-control form-control-sm position-input-class" value="{{ proposal.evaluation_ranking ?? '' }}" min="1" style="width: 175px;" {% if not is_granted('ROLE_ADMIN') %}disabled{% endif %}>
+                                            <input type="number" class="form-control form-control-sm position-input-class" value="{{ proposal.evaluation_ranking ?? '' }}" min="1" style="width: 175px;" readonly tabindex="-1">
                                         </td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
@@ -757,6 +757,24 @@
                     <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmReorderModal" tabindex="-1" aria-labelledby="confirmReorderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmReorderModalLabel">Confirmar reposicionamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Deseja salvar a nova ordem das propostas?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmReorderButton">Confirmar</button>
+            </div>
         </div>
     </div>
 </div>
@@ -1058,7 +1076,11 @@
             }
         });
 
-        const autoSaveTimeouts = {};
+        let reorderState = {
+            tableId: null,
+            originalRows: [],
+            reordering: []
+        };
 
         function setupDragAndDrop(tableId) {
             const tbody = document.querySelector(`#${tableId} tbody`);
@@ -1069,13 +1091,28 @@
             tbody.addEventListener('dragstart', e => {
                 const row = e.target.closest('.proposal-row');
                 if (row) {
+                    reorderState.originalRows = getTableSnapshot(tableId);
+                    reorderState.tableId = tableId;
                     draggedItem = row;
                     draggedItem.style.opacity = '0.5';
+                    draggedItem.classList.add('dragging');
                 }
             });
 
             tbody.addEventListener('dragend', e => {
-                if (draggedItem) draggedItem.style.opacity = '1';
+                if (draggedItem) {
+                    draggedItem.style.opacity = '1';
+                    draggedItem.classList.remove('dragging');
+                }
+
+                if (reorderState.tableId === tableId && hasOrderChanged(tableId, reorderState.originalRows)) {
+                    updatePositionNumbers(tableId);
+                    reorderState.reordering = collectReordering(tableId);
+                    openReorderConfirmationModal();
+                } else {
+                    resetReorderState();
+                }
+
                 draggedItem = null;
             });
 
@@ -1089,14 +1126,6 @@
                     tbody.appendChild(draggedItem);
                 }
                 updatePositionNumbers(tableId);
-                scheduleAutoSave(tableId);
-            });
-
-            // Salvar ao mudar input de posição
-            tbody.querySelectorAll('input[type="number"]').forEach(input => {
-                input.addEventListener('change', () => {
-                    scheduleAutoSave(tableId);
-                });
             });
         }
 
@@ -1117,11 +1146,6 @@
                 const input = row.querySelector('input[type="number"]');
                 if (input) input.value = i + 1;
             });
-        }
-
-        function scheduleAutoSave(tableId) {
-            clearTimeout(autoSaveTimeouts[tableId]);
-            autoSaveTimeouts[tableId] = setTimeout(() => saveProposalOrder(tableId), 1000);
         }
 
         // Função para abrir modal de avaliar proposta (igual a página de avaliações)
@@ -1155,21 +1179,91 @@
             }
         }
 
-        function scheduleAutoSave(tableId) {
-            clearTimeout(autoSaveTimeouts[tableId]);
-            autoSaveTimeouts[tableId] = setTimeout(() => autoSave(tableId), 1000);
-        }
-
-        async function autoSave(tableId) {
+        function collectReordering(tableId) {
             const rows = document.querySelectorAll(`#${tableId} .proposal-row`);
             const reordering = [];
 
             rows.forEach((row, index) => {
                 const proposalId = row.getAttribute('data-proposal-id');
-                const input = row.querySelector('input[type="number"]');
-                const newOrder = input.value ? parseInt(input.value) : index + 1;
-                reordering.push({ proposalId, newOrder });
+                reordering.push({ proposalId, newOrder: index + 1 });
             });
+
+            return reordering;
+        }
+
+        function getTableSnapshot(tableId) {
+            return Array.from(document.querySelectorAll(`#${tableId} .proposal-row`)).map((row) => ({
+                proposalId: row.getAttribute('data-proposal-id'),
+                order: row.getAttribute('data-current-order') || ''
+            }));
+        }
+
+        function hasOrderChanged(tableId, originalRows) {
+            const currentRows = Array.from(document.querySelectorAll(`#${tableId} .proposal-row`)).map((row, index) => ({
+                proposalId: row.getAttribute('data-proposal-id'),
+                order: String(index + 1)
+            }));
+
+            if (currentRows.length !== originalRows.length) {
+                return true;
+            }
+
+            return currentRows.some((row, index) => row.proposalId !== originalRows[index]?.proposalId);
+        }
+
+        function restoreOriginalOrder(tableId, snapshot) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            if (!tbody || !snapshot.length) {
+                return;
+            }
+
+            snapshot.forEach((item) => {
+                const row = tbody.querySelector(`[data-proposal-id="${item.proposalId}"]`);
+                if (row) {
+                    tbody.appendChild(row);
+                    row.setAttribute('data-current-order', item.order);
+                    const input = row.querySelector('input[type="number"]');
+                    if (input) {
+                        input.value = item.order;
+                    }
+                }
+            });
+        }
+
+        function openReorderConfirmationModal() {
+            const modalEl = document.getElementById('confirmReorderModal');
+            if (!modalEl) {
+                return;
+            }
+
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+
+            modalEl.addEventListener('hidden.bs.modal', handleReorderCancel, { once: true });
+        }
+
+        function handleReorderCancel() {
+            if (!reorderState.tableId || reorderState.reordering.length === 0) {
+                return;
+            }
+
+            restoreOriginalOrder(reorderState.tableId, reorderState.originalRows);
+            resetReorderState();
+        }
+
+        function resetReorderState() {
+            reorderState = {
+                tableId: null,
+                originalRows: [],
+                reordering: []
+            };
+        }
+
+        async function saveConfirmedReordering() {
+            const { tableId, reordering } = reorderState;
+            if (!tableId || reordering.length === 0) {
+                return;
+            }
 
             try {
                 const response = await fetch('/api/proposals/reorder', {
@@ -1180,10 +1274,29 @@
 
                 if (!response.ok) {
                     console.error('Erro ao salvar ordem:', await response.text());
+                    restoreOriginalOrder(tableId, reorderState.originalRows);
+                } else {
+                    reordering.forEach((item) => {
+                        const row = document.querySelector(`#${tableId} [data-proposal-id="${item.proposalId}"]`);
+                        if (row) {
+                            row.setAttribute('data-current-order', String(item.newOrder));
+                        }
+                    });
                 }
             } catch (error) {
                 console.error('Erro na requisição:', error);
+                restoreOriginalOrder(tableId, reorderState.originalRows);
+            } finally {
+                resetReorderState();
             }
         }
+
+        document.getElementById('confirmReorderButton')?.addEventListener('click', async () => {
+            const modalEl = document.getElementById('confirmReorderModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modalEl.removeEventListener('hidden.bs.modal', handleReorderCancel);
+            modal.hide();
+            await saveConfirmedReordering();
+        });
     </script>
 {% endblock %}
