@@ -105,6 +105,7 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         };
 
         $extraFields['status'] = $newStatus;
+        $extraFields['status_reason'] = $reason;
 
         $proposal->setExtraFields($extraFields);
         $this->entityManager->flush();
