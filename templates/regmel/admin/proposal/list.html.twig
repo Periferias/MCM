@@ -234,6 +234,7 @@
                                     <th class="border-end" style="width: 175px;">Área Total</th>
                                     <th class="border-end" style="width: 175px;">Valor Global</th>
                                     <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 175px;">Motivo do Status</th>
                                     <th class="border-end" style="width: 175px;">Empresa/OSC</th>
                                     <th class="border-end" style="width: 175px;">CNPJ</th>
                                     <th class="border-end" style="width: 175px;">Tipo Instituição</th>
@@ -262,6 +263,7 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
                                         <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
@@ -278,7 +280,7 @@
                                 {% endfor %}
                                 {% if proposals|length == 0 %}
                                     <tr>
-                                        <td colspan="21" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="22" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
@@ -306,6 +308,7 @@
                                     <th class="border-end" style="width: 175px;">Área Total</th>
                                     <th class="border-end" style="width: 175px;">Valor Global</th>
                                     <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 175px;">Motivo do Status</th>
                                     <th class="border-end" style="width: 175px;">Empresa/OSC</th>
                                     <th class="border-end" style="width: 175px;">CNPJ</th>
                                     <th class="border-end" style="width: 175px;">Tipo Instituição</th>
@@ -336,6 +339,7 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
                                         <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
@@ -397,7 +401,7 @@
                                 {% endfor %}
                                 {% if anuida_count == 0 %}
                                     <tr>
-                                        <td colspan="23" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="24" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
@@ -427,6 +431,7 @@
                                     <th class="border-end" style="width: 175px;">Área Total</th>
                                     <th class="border-end" style="width: 175px;">Valor Global</th>
                                     <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 175px;">Motivo do Status</th>
                                     <th class="border-end" style="width: 175px;">Empresa/OSC</th>
                                     <th class="border-end" style="width: 175px;">CNPJ</th>
                                     <th class="border-end" style="width: 175px;">Tipo Instituição</th>
@@ -459,6 +464,7 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
                                         <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
@@ -488,7 +494,7 @@
                                 {% endfor %}
                                 {% if selecionada_count == 0 %}
                                     <tr>
-                                        <td colspan="23" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="24" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
@@ -518,6 +524,7 @@
                                     <th class="border-end" style="width: 175px;">Área Total</th>
                                     <th class="border-end" style="width: 175px;">Valor Global</th>
                                     <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 175px;">Motivo do Status</th>
                                     <th class="border-end" style="width: 175px;">Empresa/OSC</th>
                                     <th class="border-end" style="width: 175px;">CNPJ</th>
                                     <th class="border-end" style="width: 175px;">Tipo Instituição</th>
@@ -557,6 +564,7 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
                                         <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
@@ -579,7 +587,7 @@
                                 {% endfor %}
                                 {% if classified|length == 0 %}
                                     <tr>
-                                        <td colspan="23" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="24" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
@@ -609,6 +617,7 @@
                                     <th class="border-end" style="width: 175px;">Área Total</th>
                                     <th class="border-end" style="width: 175px;">Valor Global</th>
                                     <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 175px;">Motivo do Status</th>
                                     <th class="border-end" style="width: 175px;">Empresa/OSC</th>
                                     <th class="border-end" style="width: 175px;">CNPJ</th>
                                     <th class="border-end" style="width: 175px;">Tipo Instituição</th>
@@ -638,6 +647,7 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
                                         <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
@@ -667,7 +677,7 @@
                                 {% endfor %}
                                 {% if nao_selecionada_count == 0 %}
                                     <tr>
-                                        <td colspan="22" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="23" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
