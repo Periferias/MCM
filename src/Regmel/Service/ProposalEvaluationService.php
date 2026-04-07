@@ -107,8 +107,100 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         $extraFields['status'] = $newStatus;
         $extraFields['status_reason'] = $reason;
 
+        $normalizedRanking = $this->applyRankingForStatusChange($proposal, $newStatus, $ranking);
+        if (null !== $normalizedRanking) {
+            $extraFields['evaluation_ranking'] = $normalizedRanking;
+        } else {
+            unset($extraFields['evaluation_ranking']);
+        }
+
         $proposal->setExtraFields($extraFields);
         $this->entityManager->flush();
+    }
+
+    private function applyRankingForStatusChange(Initiative $proposal, string $newStatus, ?int $ranking): ?int
+    {
+        $currentExtraFields = $proposal->getExtraFields() ?? [];
+        $currentStatus = $currentExtraFields['status'] ?? null;
+        $currentProposalId = $proposal->getId()->toRfc4122();
+
+        $rankedStatuses = [
+            StatusProposalEnum::SELECIONADA->value,
+            StatusProposalEnum::CLASSIFICADA->value,
+        ];
+
+        if (in_array($currentStatus, $rankedStatuses, true)) {
+            $this->normalizeStatusRankings($currentStatus, $currentProposalId);
+        }
+
+        if (!in_array($newStatus, $rankedStatuses, true)) {
+            return null;
+        }
+
+        $rankedProposals = $this->getRankedProposalsByStatus($newStatus, $currentProposalId);
+        $targetRanking = max(1, min($ranking ?? 1, count($rankedProposals) + 1));
+
+        $position = 1;
+        foreach ($rankedProposals as $rankedProposal) {
+            if ($position === $targetRanking) {
+                ++$position;
+            }
+
+            $rankedExtraFields = $rankedProposal->getExtraFields() ?? [];
+            $rankedExtraFields['evaluation_ranking'] = $position;
+            $rankedProposal->setExtraFields($rankedExtraFields);
+            $this->entityManager->persist($rankedProposal);
+            ++$position;
+        }
+
+        return $targetRanking;
+    }
+
+    /**
+     * @return Initiative[]
+     */
+    private function getRankedProposalsByStatus(string $status, ?string $excludeProposalId = null): array
+    {
+        $proposals = $this->entityManager->getRepository(Initiative::class)->findAll();
+
+        $filtered = array_filter($proposals, function (Initiative $candidate) use ($status, $excludeProposalId) {
+            if (method_exists($candidate, 'isDeleted') && $candidate->isDeleted()) {
+                return false;
+            }
+
+            if ($excludeProposalId && $candidate->getId()->toRfc4122() === $excludeProposalId) {
+                return false;
+            }
+
+            $extra = $candidate->getExtraFields() ?? [];
+
+            return ($extra['status'] ?? null) === $status;
+        });
+
+        usort($filtered, function (Initiative $a, Initiative $b) {
+            $orderA = (int) (($a->getExtraFields()['evaluation_ranking'] ?? PHP_INT_MAX));
+            $orderB = (int) (($b->getExtraFields()['evaluation_ranking'] ?? PHP_INT_MAX));
+
+            if ($orderA === $orderB) {
+                return strcmp($a->getId()->toRfc4122(), $b->getId()->toRfc4122());
+            }
+
+            return $orderA <=> $orderB;
+        });
+
+        return array_values($filtered);
+    }
+
+    private function normalizeStatusRankings(string $status, ?string $excludeProposalId = null): void
+    {
+        $rankedProposals = $this->getRankedProposalsByStatus($status, $excludeProposalId);
+
+        foreach ($rankedProposals as $index => $rankedProposal) {
+            $extraFields = $rankedProposal->getExtraFields() ?? [];
+            $extraFields['evaluation_ranking'] = $index + 1;
+            $rankedProposal->setExtraFields($extraFields);
+            $this->entityManager->persist($rankedProposal);
+        }
     }
 
     public function getProposalsAwaitingEvaluation(

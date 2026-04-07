@@ -447,12 +447,18 @@
                                 </tr>
                                 </thead>
                                 <tbody>
+                                {% set selected = [] %}
                                 {% for proposal in proposals %}
+                                    {% if proposal.status == statusEnum.SELECIONADA.value %}
+                                        {% set selected = selected|merge([proposal]) %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% set selected = selected|sort((a, b) => (a.evaluation_ranking ?? 999999) <=> (b.evaluation_ranking ?? 999999)) %}
+                                {% for proposal in selected %}
                                     {% set status = proposal.status ?? '' %}
-                                    {% if status == statusEnum.SELECIONADA.value %}
-                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
+                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ loop.index }}">
                                         <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center; width: 60px;" class="border-end">
-                                            <input type="number" class="form-control form-control-sm position-input-sel" value="{{ proposal.evaluation_ranking ?? '' }}" min="1" style="width: 175px;" readonly tabindex="-1">
+                                            <input type="number" class="form-control form-control-sm position-input-sel" value="{{ loop.index }}" min="1" style="width: 175px;" readonly tabindex="-1">
                                         </td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
@@ -484,15 +490,8 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
                                         <td style="width: 175px;">{{ proposal.created_at }}</td>
                                     </tr>
-                                    {% endif %}
                                 {% endfor %}
-                                {% set selecionada_count = 0 %}
-                                {% for proposal in proposals %}
-                                    {% if proposal.status == statusEnum.SELECIONADA.value %}
-                                        {% set selecionada_count = selecionada_count + 1 %}
-                                    {% endif %}
-                                {% endfor %}
-                                {% if selecionada_count == 0 %}
+                                {% if selected|length == 0 %}
                                     <tr>
                                         <td colspan="24" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
@@ -550,9 +549,9 @@
                                 {% set classified = classified|sort((a, b) => (a.evaluation_ranking ?? 999999) <=> (b.evaluation_ranking ?? 999999)) %}
                                 {% for proposal in classified %}
                                     {% set status = proposal.status ?? '' %}
-                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
+                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ loop.index }}">
                                         <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center; width: 60px;" class="border-end">
-                                            <input type="number" class="form-control form-control-sm position-input-class" value="{{ proposal.evaluation_ranking ?? '' }}" min="1" style="width: 175px;" readonly tabindex="-1">
+                                            <input type="number" class="form-control form-control-sm position-input-class" value="{{ loop.index }}" min="1" style="width: 175px;" readonly tabindex="-1">
                                         </td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
