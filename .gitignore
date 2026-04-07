@@ -60,3 +60,5 @@ coverage.xml
 /phpcs.xml
 ###< squizlabs/php_codesniffer ###
 helm/pvr/charts
+.codex
+.codex/
