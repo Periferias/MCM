@@ -126,7 +126,7 @@
                                 <th>Num. de Domicílios</th>
                                 <th>Valor Global da Proposta</th>
                                 <th>Status da Proposta</th>
-                                <th>Motivo da Não Anuência</th>
+                                <th>Motivo do Status</th>
                                 <th>Ações</th>
                             </tr>
                             </thead>
@@ -186,7 +186,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    {% if status == statusEnum.NAO_ANUIDA.value or status == 'Não Anuída' %}
+                                    {% if proposal.extraFields.status_reason is defined and proposal.extraFields.status_reason is not empty %}
                                         {{ proposal.extraFields.status_reason ?? '-' }}
                                     {% else %}
                                         -
