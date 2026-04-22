@@ -228,24 +228,15 @@
                                     <th class="border-end" style="width: 175px;">Região</th>
                                     <th class="border-end" style="width: 175px;">Estado</th>
                                     <th class="border-end" style="width: 175px;">Município</th>
-                                    <th class="border-end" style="width: 175px;">Código Município</th>
                                     <th class="border-end" style="width: 175px;">Área de Intervenção</th>
                                     <th class="border-end" style="width: 175px;">Qtd. Domicílios</th>
-                                    <th class="border-end" style="width: 175px;">Área Total</th>
-                                    <th class="border-end" style="width: 175px;">Valor Global</th>
                                     <th class="border-end" style="width: 175px;">Status</th>
                                     <th class="border-end" style="width: 175px;">Motivo do Status</th>
                                     <th class="border-end" style="width: 175px;">Empresa/OSC</th>
                                     <th class="border-end" style="width: 175px;">CNPJ</th>
                                     <th class="border-end" style="width: 175px;">Tipo Instituição</th>
-                                    <th class="border-end" style="width: 175px;">Email</th>
-                                    <th class="border-end" style="width: 175px;">Telefone</th>
                                     <th class="border-end" style="width: 175px;">Arquivo Poligonal</th>
                                     <th class="border-end" style="width: 175px;">Arquivo Projeto</th>
-                                    <th class="border-end" style="width: 175px;">Representante</th>
-                                    <th class="border-end" style="width: 175px;">CPF Rep.</th>
-                                    <th class="border-end" style="width: 175px;">Email Rep.</th>
-                                    <th class="border-end" style="width: 175px;">Telefone Rep.</th>
                                     <th style="width: 175px;">Data Proposta</th>
                                 </tr>
                                 </thead>
@@ -257,30 +248,21 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.state }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.city_code }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.quantity_houses }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
-                                        <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.company_email }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.company_phone }}</td>
                                         <td class="border-end" style="width: 200px; word-break: break-all;">{% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
                                         <td class="border-end" style="width: 175px; word-break: break-all;">{% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_name|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
                                         <td style="width: 175px;">{{ proposal.created_at }}</td>
                                     </tr>
                                 {% endfor %}
                                 {% if proposals|length == 0 %}
                                     <tr>
-                                        <td colspan="22" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="14" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
@@ -302,24 +284,15 @@
                                     <th class="border-end" style="width: 175px;">Região</th>
                                     <th class="border-end" style="width: 175px;">Estado</th>
                                     <th class="border-end" style="width: 175px;">Município</th>
-                                    <th class="border-end" style="width: 175px;">Código Município</th>
                                     <th class="border-end" style="width: 175px;">Área de Intervenção</th>
                                     <th class="border-end" style="width: 175px;">Qtd. Domicílios</th>
-                                    <th class="border-end" style="width: 175px;">Área Total</th>
-                                    <th class="border-end" style="width: 175px;">Valor Global</th>
                                     <th class="border-end" style="width: 175px;">Status</th>
                                     <th class="border-end" style="width: 175px;">Motivo do Status</th>
                                     <th class="border-end" style="width: 175px;">Empresa/OSC</th>
                                     <th class="border-end" style="width: 175px;">CNPJ</th>
                                     <th class="border-end" style="width: 175px;">Tipo Instituição</th>
-                                    <th class="border-end" style="width: 175px;">Email</th>
-                                    <th class="border-end" style="width: 175px;">Telefone</th>
                                     <th class="border-end" style="width: 175px;">Arquivo Poligonal</th>
                                     <th class="border-end" style="width: 175px;">Arquivo Projeto</th>
-                                    <th class="border-end" style="width: 175px;">Representante</th>
-                                    <th class="border-end" style="width: 175px;">CPF Rep.</th>
-                                    <th class="border-end" style="width: 175px;">Email Rep.</th>
-                                    <th class="border-end" style="width: 175px;">Telefone Rep.</th>
                                     <th class="border-end" style="width: 175px;">Data Proposta</th>
                                     <th data-sortable="false" style="width: 120px;">Ações</th>
                                 </tr>
@@ -333,24 +306,15 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.state }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.city_code }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.quantity_houses }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
-                                        <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.company_email }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.company_phone }}</td>
                                         <td class="border-end" style="width: 200px; word-break: break-all;">{% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
                                         <td class="border-end" style="width: 175px; word-break: break-all;">{% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_name|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.created_at }}</td>
                                         <td style="width: 120px;">
                                             <div class="dropdown">
@@ -401,7 +365,7 @@
                                 {% endfor %}
                                 {% if anuida_count == 0 %}
                                     <tr>
-                                        <td colspan="24" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="15" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
@@ -425,24 +389,15 @@
                                     <th class="border-end" style="width: 175px;">Região</th>
                                     <th class="border-end" style="width: 175px;">Estado</th>
                                     <th class="border-end" style="width: 175px;">Município</th>
-                                    <th class="border-end" style="width: 175px;">Código Município</th>
                                     <th class="border-end" style="width: 175px;">Área de Intervenção</th>
                                     <th class="border-end" style="width: 175px;">Qtd. Domicílios</th>
-                                    <th class="border-end" style="width: 175px;">Área Total</th>
-                                    <th class="border-end" style="width: 175px;">Valor Global</th>
                                     <th class="border-end" style="width: 175px;">Status</th>
                                     <th class="border-end" style="width: 175px;">Motivo do Status</th>
                                     <th class="border-end" style="width: 175px;">Empresa/OSC</th>
                                     <th class="border-end" style="width: 175px;">CNPJ</th>
                                     <th class="border-end" style="width: 175px;">Tipo Instituição</th>
-                                    <th class="border-end" style="width: 175px;">Email</th>
-                                    <th class="border-end" style="width: 175px;">Telefone</th>
                                     <th class="border-end" style="width: 175px;">Arquivo Poligonal</th>
                                     <th class="border-end" style="width: 175px;">Arquivo Projeto</th>
-                                    <th class="border-end" style="width: 175px;">Representante</th>
-                                    <th class="border-end" style="width: 175px;">CPF Rep.</th>
-                                    <th class="border-end" style="width: 175px;">Email Rep.</th>
-                                    <th class="border-end" style="width: 175px;">Telefone Rep.</th>
                                     <th style="width: 175px;">Data Proposta</th>
                                 </tr>
                                 </thead>
@@ -464,18 +419,13 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.state }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.city_code }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.quantity_houses }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
-                                        <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.company_email }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.company_phone }}</td>
                                         <td class="border-end" style="width: 200px; word-break: break-all;">
                                             {% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
                                             {% else %}-{% endif %}
@@ -484,16 +434,12 @@
                                             {% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
                                             {% else %}-{% endif %}
                                         </td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_name|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
                                         <td style="width: 175px;">{{ proposal.created_at }}</td>
                                     </tr>
                                 {% endfor %}
                                 {% if selected|length == 0 %}
                                     <tr>
-                                        <td colspan="24" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="15" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
@@ -517,24 +463,15 @@
                                     <th class="border-end" style="width: 175px;">Região</th>
                                     <th class="border-end" style="width: 175px;">Estado</th>
                                     <th class="border-end" style="width: 175px;">Município</th>
-                                    <th class="border-end" style="width: 175px;">Código Município</th>
                                     <th class="border-end" style="width: 175px;">Área de Intervenção</th>
                                     <th class="border-end" style="width: 175px;">Qtd. Domicílios</th>
-                                    <th class="border-end" style="width: 175px;">Área Total</th>
-                                    <th class="border-end" style="width: 175px;">Valor Global</th>
                                     <th class="border-end" style="width: 175px;">Status</th>
                                     <th class="border-end" style="width: 175px;">Motivo do Status</th>
                                     <th class="border-end" style="width: 175px;">Empresa/OSC</th>
                                     <th class="border-end" style="width: 175px;">CNPJ</th>
                                     <th class="border-end" style="width: 175px;">Tipo Instituição</th>
-                                    <th class="border-end" style="width: 175px;">Email</th>
-                                    <th class="border-end" style="width: 175px;">Telefone</th>
                                     <th class="border-end" style="width: 175px;">Arquivo Poligonal</th>
                                     <th class="border-end" style="width: 175px;">Arquivo Projeto</th>
-                                    <th class="border-end" style="width: 175px;">Representante</th>
-                                    <th class="border-end" style="width: 175px;">CPF Rep.</th>
-                                    <th class="border-end" style="width: 175px;">Email Rep.</th>
-                                    <th class="border-end" style="width: 175px;">Telefone Rep.</th>
                                     <th style="width: 175px;">Data Proposta</th>
                                 </tr>
                                 </thead>
@@ -557,18 +494,13 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.state }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.city_code }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.quantity_houses }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
-                                        <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.company_email }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.company_phone }}</td>
                                         <td class="border-end" style="width: 200px; word-break: break-all;">
                                             {% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
                                             {% else %}-{% endif %}
@@ -577,16 +509,12 @@
                                             {% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
                                             {% else %}-{% endif %}
                                         </td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_name|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
                                         <td style="width: 175px;">{{ proposal.created_at }}</td>
                                     </tr>
                                 {% endfor %}
                                 {% if classified|length == 0 %}
                                     <tr>
-                                        <td colspan="24" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="15" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
@@ -610,24 +538,15 @@
                                     <th class="border-end" style="width: 175px;">Região</th>
                                     <th class="border-end" style="width: 175px;">Estado</th>
                                     <th class="border-end" style="width: 175px;">Município</th>
-                                    <th class="border-end" style="width: 175px;">Código Município</th>
                                     <th class="border-end" style="width: 175px;">Área de Intervenção</th>
                                     <th class="border-end" style="width: 175px;">Qtd. Domicílios</th>
-                                    <th class="border-end" style="width: 175px;">Área Total</th>
-                                    <th class="border-end" style="width: 175px;">Valor Global</th>
                                     <th class="border-end" style="width: 175px;">Status</th>
                                     <th class="border-end" style="width: 175px;">Motivo do Status</th>
                                     <th class="border-end" style="width: 175px;">Empresa/OSC</th>
                                     <th class="border-end" style="width: 175px;">CNPJ</th>
                                     <th class="border-end" style="width: 175px;">Tipo Instituição</th>
-                                    <th class="border-end" style="width: 175px;">Email</th>
-                                    <th class="border-end" style="width: 175px;">Telefone</th>
                                     <th class="border-end" style="width: 175px;">Arquivo Poligonal</th>
                                     <th class="border-end" style="width: 175px;">Arquivo Projeto</th>
-                                    <th class="border-end" style="width: 175px;">Representante</th>
-                                    <th class="border-end" style="width: 175px;">CPF Rep.</th>
-                                    <th class="border-end" style="width: 175px;">Email Rep.</th>
-                                    <th class="border-end" style="width: 175px;">Telefone Rep.</th>
                                     <th style="width: 175px;">Data Proposta</th>
                                 </tr>
                                 </thead>
@@ -640,18 +559,13 @@
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.state }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.city_code }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.quantity_houses }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.area_size }}</td>
-                                        <td class="border-end" style="width: 175px;">R$ {{ (proposal.quantity_houses * proposal.price_per_house)|number_format(2, ',', '.') }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.institution_type }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.company_email }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.company_phone }}</td>
                                         <td class="border-end" style="width: 200px; word-break: break-all;">
                                             {% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
                                             {% else %}-{% endif %}
@@ -660,10 +574,6 @@
                                             {% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
                                             {% else %}-{% endif %}
                                         </td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_name|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_cpf|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_email|default("-") }}</td>
-                                        <td class="border-end" style="width: 175px;">{{ proposal.representative_phone|default("-") }}</td>
                                         <td style="width: 175px;">{{ proposal.created_at }}</td>
                                     </tr>
                                     {% endif %}
@@ -676,7 +586,7 @@
                                 {% endfor %}
                                 {% if nao_selecionada_count == 0 %}
                                     <tr>
-                                        <td colspan="23" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                        <td colspan="14" class="text-center">{{ 'table.no_records_found'|trans }}</td>
                                     </tr>
                                 {% endif %}
                                 </tbody>
