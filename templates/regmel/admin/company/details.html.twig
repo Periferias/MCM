@@ -232,18 +232,16 @@
                                                     Ver Proposta
                                                 </a>
                                             </li>
-                                            
-                                            {# BLOCO ALTERADO: Somente admin e manager vêem este botão #}
-                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
+
+                                            {% set proposalStatus = proposal.extraFields.status ?? '' %}
+                                            {% if is_granted('ROLE_ADMIN') and proposalStatus in [statusEnum.ANUIDA.value, 'Anuída'] %}
                                             <li>
                                                 <a
                                                     href="#"
                                                     class="dropdown-item"
-                                                    onclick="openProposalStatusModal('{{ proposal.id }}')"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#modalProposalStatus"
+                                                    onclick="openEvaluationModal('{{ proposal.id.toRfc4122() }}', '{{ proposal.organizationFrom.name|e('js') }}', event)"
                                                 >
-                                                    Atualizar Status
+                                                    Avaliar Proposta
                                                 </a>
                                             </li>
                                             {% endif %}
@@ -349,39 +347,66 @@
         </div>
     </section>
 
-    {# Modal: Atualizar status da proposta #}
-    <div class="modal fade" id="modalProposalStatus" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="evaluationModal" tabindex="-1" aria-labelledby="evaluationModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="proposalStatusForm" method="post">
+                <form id="evaluationForm" method="post">
                     <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">Atualizar status da proposta</h1>
+                        <h5 class="modal-title" id="evaluationModalLabel">Avaliar Proposta</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Status *</label>
-                            <select class="form-select" name="status" required>
-                                <option value="" selected disabled>Selecione o status</option>
-                                <option value="{{ statusEnum.ANUIDA.value }}">{{ statusEnum.ANUIDA.value }}</option>
-                                <option value="{{ statusEnum.NAO_ANUIDA.value }}">{{ statusEnum.NAO_ANUIDA.value }}</option>
-                                <option value="{{ statusEnum.SELECIONADA.value }}">{{ statusEnum.SELECIONADA.value }}</option>
-                                <option value="{{ statusEnum.NAO_SELECIONADA.value }}">{{ statusEnum.NAO_SELECIONADA.value }}</option>
-                                <option value="{{ statusEnum.CLASSIFICADA.value }}">{{ statusEnum.CLASSIFICADA.value }}</option>
-                            </select>
-                            <div class="form-text">Selecione uma opção obrigatória</div>
+                        <input type="hidden" id="proposalId" name="proposal_id">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Proposta: <span id="proposalName"></span></label>
                         </div>
 
                         <div class="mb-3">
-                            <label for="reasonText" class="form-label fw-bold">Motivo *</label>
-                            <textarea name="reason" id="reasonText" class="form-control" rows="4"
-                                      placeholder="Descreva o motivo da sua decisão..." required></textarea>
-                            <div class="form-text">Mínimo de 20 caracteres</div>
+                            <label for="result" class="form-label fw-bold">Resultado <span class="text-danger">*</span></label>
+                            <select class="form-select" id="result" name="result" required onchange="toggleRankingField()">
+                                <option value="" selected disabled>Selecione o resultado</option>
+                                <option value="Selecionada">✅ Selecionada (aprovada)</option>
+                                <option value="Não Selecionada">❌ Não Selecionada (rejeitada)</option>
+                                <option value="Classificada">📊 Classificada (suplente)</option>
+                            </select>
+                            <div class="form-text">Escolha uma opção obrigatória</div>
+                        </div>
+
+                        <div class="mb-3" id="rankingField" style="display: none;">
+                            <label for="ranking" class="form-label fw-bold">Ranking (posição) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="ranking" name="ranking" min="1" placeholder="Ex: 1, 2, 3...">
+                            <div class="form-text">Obrigatório para propostas selecionadas e classificadas</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="reason" class="form-label fw-bold">Motivo/Parecer <span class="text-danger">*</span></label>
+                            <textarea
+                                class="form-control"
+                                id="reason"
+                                name="reason"
+                                rows="4"
+                                placeholder="Descreva o motivo da sua avaliação..."
+                                minlength="10"
+                                required
+                            ></textarea>
+                            <div class="form-text">Mínimo de 10 caracteres</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notas Adicionais</label>
+                            <textarea
+                                class="form-control"
+                                id="notes"
+                                name="notes"
+                                rows="3"
+                                placeholder="Observações adicionais (opcional)..."
+                            ></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
                     </div>
                 </form>
             </div>
@@ -400,47 +425,73 @@
     <script src="{{ asset('js/modal-proposal-details.js') }}"></script>
 
     <script>
-        function openProposalStatusModal(proposalId) {
-            const form = document.getElementById('proposalStatusForm');
-            form.action = `/painel/admin/propostas/${proposalId}/status`;
+        function openEvaluationModal(proposalId, proposalName, event) {
+            event.preventDefault();
+
+            document.getElementById('proposalId').value = proposalId;
+            document.getElementById('proposalName').textContent = proposalName;
+            document.getElementById('result').value = '';
+            document.getElementById('reason').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('ranking').value = '';
+            document.getElementById('rankingField').style.display = 'none';
+
+            const modal = new bootstrap.Modal(document.getElementById('evaluationModal'));
+            modal.show();
         }
 
-        (function () {
-            const form = document.getElementById('proposalStatusForm');
-            if (!form) return;
+        function toggleRankingField() {
+            const result = document.getElementById('result').value;
+            const rankingField = document.getElementById('rankingField');
+            const rankingInput = document.getElementById('ranking');
 
-            form.addEventListener('submit', async function (e) {
-                e.preventDefault();
+            if (result === 'Selecionada' || result === 'Classificada') {
+                rankingField.style.display = 'block';
+                rankingInput.required = true;
+            } else {
+                rankingField.style.display = 'none';
+                rankingInput.required = false;
+                rankingInput.value = '';
+            }
+        }
 
-                const submitBtn = form.querySelector('button[type="submit"]');
-                submitBtn?.setAttribute('disabled', 'disabled');
+        document.getElementById('evaluationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-                try {
-                    const res = await fetch(form.action, {
-                        method: 'POST',
-                        body: new FormData(form),
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    });
+            const proposalId = document.getElementById('proposalId').value;
+            const result = document.getElementById('result').value;
+            const reason = document.getElementById('reason').value;
+            const notes = document.getElementById('notes').value;
+            const ranking = document.getElementById('ranking').value;
 
-                    if (!res.ok) {
-                        alert('Não foi possível salvar. Tente novamente.');
-                        submitBtn?.removeAttribute('disabled');
-                        return;
-                    }
+            try {
+                const response = await fetch(`/painel/admin/avaliacoes/${proposalId}/submit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        result: result,
+                        reason: reason,
+                        notes: notes || null,
+                        ranking: ranking ? parseInt(ranking) : null
+                    })
+                });
 
-                    const modalEl = document.getElementById('modalProposalStatus');
-                    if (modalEl && window.bootstrap) {
-                        const instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                        instance.hide();
-                    }
-                    window.location.reload();
-                } catch (err) {
-                    console.error(err);
-                    alert('Ocorreu um erro inesperado.');
-                    submitBtn?.removeAttribute('disabled');
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ Proposta avaliada com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('evaluationModal')).hide();
+                    location.reload();
+                } else {
+                    alert('❌ Erro: ' + data.message);
                 }
-            });
-        })();
+            } catch (error) {
+                alert('❌ Erro ao avaliar: ' + error.message);
+            }
+        });
 
         // Inicializar tooltips do Bootstrap
         document.addEventListener('DOMContentLoaded', function() {
