@@ -257,8 +257,7 @@
                                             <th>Titulo</th>
                                             <th>Empresa/OSC</th>
                                             <th>Status da Proposta</th>
-                                            <th>Status da Anuência</th>
-                                            <th>Motivo da Não Anuência</th>
+                                            <th>Motivo do Status</th>
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
@@ -305,29 +304,7 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                {% set agreementStatus = proposal.extraFields.agreement_status ?? null %}
-                                                {% if agreementStatus == 'submitted' %}
-                                                    <span class="badge bg-warning text-dark">
-                                                        Aguardando Validação
-                                                    </span>
-                                                {% elseif agreementStatus == 'approved' %}
-                                                    <span class="badge bg-success text-white">
-                                                        Documento Aprovado
-                                                    </span>
-                                                {% elseif agreementStatus == 'rejected' %}
-                                                    <span class="badge bg-danger text-white">
-                                                        Documento Rejeitado
-                                                    </span>
-                                                {% else %}
-                                                    <span class="text-muted">-</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if status == 'Não Anuída' or status == statusEnum.NAO_ANUIDA.value %}
-                                                    {{ proposal.extraFields.status_reason ?? '-' }}
-                                                {% else %}
-                                                    -
-                                                {% endif %}
+                                                {{ proposal.extraFields.status_reason ?? '-' }}
                                             </td>
                                             <td>
                                                 <button
