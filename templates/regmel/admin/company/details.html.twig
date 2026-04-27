@@ -89,6 +89,46 @@
                         </div>
                     </div>
                     <div class="tab-pane fade pt-3" id="pills-list" role="tabpanel" aria-labelledby="pills-list-tab" tabindex="0">
+                        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
+                        <div class="modal fade" id="modalProposalStatus" tabindex="-1" aria-labelledby="proposalStatusModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form id="proposalStatusForm" method="post">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="proposalStatusModalLabel">Atualizar status da proposta</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">Status *</label>
+                                                <select class="form-select" name="status" required>
+                                                    <option value="" selected disabled>Selecione o status</option>
+                                                    <option value="{{ statusEnum.ANUIDA.value }}">{{ statusEnum.ANUIDA.value }}</option>
+                                                    <option value="{{ statusEnum.NAO_ANUIDA.value }}">{{ statusEnum.NAO_ANUIDA.value }}</option>
+                                                    <option value="{{ statusEnum.SELECIONADA.value }}">{{ statusEnum.SELECIONADA.value }}</option>
+                                                    <option value="{{ statusEnum.NAO_SELECIONADA.value }}">{{ statusEnum.NAO_SELECIONADA.value }}</option>
+                                                    <option value="{{ statusEnum.CLASSIFICADA.value }}">{{ statusEnum.CLASSIFICADA.value }}</option>
+                                                </select>
+                                                <div class="form-text">Selecione uma opção obrigatória</div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="reasonText" class="form-label fw-bold">Motivo *</label>
+                                                <textarea name="reason" id="reasonText" class="form-control" rows="4"
+                                                          placeholder="Descreva o motivo da sua decisão..." required></textarea>
+                                                <div class="form-text">Mínimo de 20 caracteres</div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                            <button type="submit" class="btn btn-primary">Salvar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         {% if is_granted('ROLE_COMPANY') %}
                         <div class="row">
                             <div class="col">
@@ -226,6 +266,7 @@
                                                         zipcode: proposal.extraFields.zipcode ?? 'Não informado',
                                                         snpr_affiliation: proposal.extraFields.snpr_affiliation ?? 'Não',
                                                         snpr_affiliation_details: proposal.extraFields.snpr_affiliation_details ?? '',
+                                                        term_status: proposal.organizationTo.extraFields.term_status ?? null,
                                                         ...proposal.extraFields
                                                     }|json_encode|e('html_attr') }}'
                                                 >
@@ -234,6 +275,20 @@
                                             </li>
 
                                             {% set proposalStatus = proposal.extraFields.status ?? '' %}
+                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
+                                            <li>
+                                                <a
+                                                    href="#"
+                                                    class="dropdown-item"
+                                                    onclick="openProposalStatusModal('{{ proposal.id.toRfc4122() }}', event)"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalProposalStatus"
+                                                >
+                                                    Atualizar Status
+                                                </a>
+                                            </li>
+                                            {% endif %}
+
                                             {% if is_granted('ROLE_ADMIN') and proposalStatus in [statusEnum.ANUIDA.value, 'Anuída'] %}
                                             <li>
                                                 <a
@@ -438,6 +493,16 @@
 
             const modal = new bootstrap.Modal(document.getElementById('evaluationModal'));
             modal.show();
+        }
+
+        function openProposalStatusModal(proposalId, event) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            const form = document.getElementById('proposalStatusForm');
+            form.action = `/painel/admin/propostas/${proposalId}/status`;
+            form.reset();
         }
 
         function toggleRankingField() {

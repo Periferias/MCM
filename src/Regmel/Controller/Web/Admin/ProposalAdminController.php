@@ -471,19 +471,31 @@ class ProposalAdminController extends AbstractAdminController
     #[Route('/painel/admin/propostas/{id}/status', name: 'admin_regmel_proposal_update_status', methods: ['POST'])]
     public function updateStatusProposal(Request $request, Uuid $id): Response
     {
+        $redirectUrl = $request->headers->get('referer');
+        $redirectResponse = fn (): Response => $redirectUrl
+            ? $this->redirect($redirectUrl)
+            : $this->redirectToRoute('admin_regmel_proposal_list');
+
         $status = StatusProposalEnum::from($request->request->get('status'));
         $reason = $request->request->get('reason');
 
         // Verifica se o município tem termo aprovado antes de permitir anuência ou seleção
         $proposal = $this->initiativeService->get($id);
         $municipality = $proposal->getOrganizationTo();
-        
+
         if ($municipality) {
             $termStatus = $municipality->getExtraFields()['term_status'] ?? null;
-            
-            if ($termStatus !== 'approved' && in_array($status, [StatusProposalEnum::ANUIDA, StatusProposalEnum::NAO_ANUIDA, StatusProposalEnum::SELECIONADA])) {
+
+            if (
+                $termStatus !== 'approved'
+                && in_array($status, [
+                    StatusProposalEnum::ANUIDA,
+                    StatusProposalEnum::NAO_ANUIDA,
+                    StatusProposalEnum::SELECIONADA,
+                ])
+            ) {
                 $this->addFlash('error', 'Não é possível anuir ou selecionar proposta sem termo de adesão aprovado');
-                return $this->redirectToRoute('admin_regmel_proposal_list');
+                return $redirectResponse();
             }
         }
 
@@ -493,7 +505,7 @@ class ProposalAdminController extends AbstractAdminController
             $this->proposalService->updateStatusProposal($id, $status, $reason);
         }
 
-        return $this->redirectToRoute('admin_regmel_proposal_list');
+        return $redirectResponse();
     }
 
     #[IsGranted(new Expression('
