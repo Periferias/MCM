@@ -59,6 +59,7 @@ class ProposalAdminController extends AbstractAdminController
     {
         $statuses = StatusProposalEnum::cases();
         $status = $request->query->get('status');
+        $statusGroup = $request->query->get('status_group');
         $regions = RegionEnum::cases();
         $region = $request->query->get('region');
         $state = $request->query->get('state');
@@ -86,11 +87,8 @@ class ProposalAdminController extends AbstractAdminController
         if ($isCaixa) {
             $filtered = array_filter($filtered, function (Initiative $proposal) {
                 $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
-                $allowedStatuses = [
-                    StatusProposalEnum::SELECIONADA->value,
-                    StatusProposalEnum::CLASSIFICADA->value,
-                ];
-                return in_array($proposalStatus, $allowedStatuses);
+
+                return StatusProposalEnum::isRanked($proposalStatus);
             });
         }
 
@@ -104,7 +102,7 @@ class ProposalAdminController extends AbstractAdminController
             $orgExtraFields = $organization?->getExtraFields() ?? [];
 
             // Generate download URLs for files
-            $mapFileUrl = isset($extraFields['map_file']) 
+            $mapFileUrl = isset($extraFields['map_file'])
                 ? $this->generateUrl('admin_regmel_proposal_mapa', ['id' => $initiative->getId()])
                 : '';
             $projectFileUrl = isset($extraFields['project_file'])
@@ -116,16 +114,16 @@ class ProposalAdminController extends AbstractAdminController
             $representativeCpf = '';
             $representativeEmail = '';
             $representativePhone = '';
-            
+
             if ($organization) {
                 try {
                     $agent = $organization->getOwner();
                     if ($agent) {
                         $owner = $agent->getUser();
                         if ($owner) {
-                            $representativeName = trim(($owner->getFirstname() ?? '') . ' ' . ($owner->getLastname() ?? ''));
+                            $representativeName = trim(($owner->getFirstname() ?? '').' '.($owner->getLastname() ?? ''));
                             $representativeEmail = $owner->getEmail() ?? '';
-                            
+
                             // Telefone e CPF estão em extra_fields do agent
                             $agentExtraFields = $agent->getExtraFields() ?? [];
                             $representativeCpf = $agentExtraFields['cpf'] ?? '';
@@ -294,13 +292,13 @@ class ProposalAdminController extends AbstractAdminController
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
         $isCaixa = $this->security->isGranted(UserRolesEnum::ROLE_CAIXA->value);
-        
+
         $status = $request->query->get('status');
-        
+
         if ($isMunicipality) {
-            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $agent = $user->getAgents()->filter(fn ($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
-            
+
             if ($status) {
                 // Usar listFiltered para filtrar por status
                 $initiatives = $this->initiativeService->listFiltered(
@@ -311,7 +309,7 @@ class ProposalAdminController extends AbstractAdminController
                     anticipation: null
                 );
                 // Filtrar apenas propostas da municipalidade
-                $initiatives = array_filter($initiatives, fn($init) => $init->getOrganizationTo()?->getId() === $municipality->getId());
+                $initiatives = array_filter($initiatives, fn ($init) => $init->getOrganizationTo()?->getId() === $municipality->getId());
             } else {
                 $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
             }
@@ -328,14 +326,11 @@ class ProposalAdminController extends AbstractAdminController
             } else {
                 $initiatives = $this->initiativeService->listAllIncludingDeleted(limit: 10000);
             }
-            
-            $allowedStatuses = [
-                StatusProposalEnum::SELECIONADA->value,
-                StatusProposalEnum::CLASSIFICADA->value,
-            ];
-            $initiatives = array_filter($initiatives, function (Initiative $proposal) use ($allowedStatuses) {
+
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) {
                 $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
-                return in_array($proposalStatus, $allowedStatuses);
+
+                return StatusProposalEnum::isRanked($proposalStatus);
             });
         } else {
             if ($status) {
@@ -351,6 +346,22 @@ class ProposalAdminController extends AbstractAdminController
                 // Incluir propostas deletadas na exportação CSV
                 $initiatives = $this->initiativeService->listAllIncludingDeleted(limit: 10000);
             }
+        }
+
+        if ('selecionadas' === $statusGroup) {
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+
+                return StatusProposalEnum::isSelected($proposalStatus);
+            });
+        }
+
+        if ('classificadas' === $statusGroup) {
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+
+                return StatusProposalEnum::isClassified($proposalStatus);
+            });
         }
 
         return $this->proposalService->generateSpreadSheet($initiatives, 'propostas', null);
@@ -369,22 +380,19 @@ class ProposalAdminController extends AbstractAdminController
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
         $isCaixa = $this->security->isGranted(UserRolesEnum::ROLE_CAIXA->value);
-        
+
         if ($isMunicipality) {
-            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $agent = $user->getAgents()->filter(fn ($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
             $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
         } elseif ($isCaixa) {
             // ROLE_CAIXA pode baixar apenas propostas SELECIONADA e CLASSIFICADA
             $initiatives = $this->initiativeService->list(limit: 10000);
-            
-            $allowedStatuses = [
-                StatusProposalEnum::SELECIONADA->value,
-                StatusProposalEnum::CLASSIFICADA->value,
-            ];
-            $initiatives = array_filter($initiatives, function (Initiative $proposal) use ($allowedStatuses) {
+
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) {
                 $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
-                return in_array($proposalStatus, $allowedStatuses);
+
+                return StatusProposalEnum::isRanked($proposalStatus);
             });
         } else {
             $initiatives = $this->initiativeService->list(limit: 10000);
@@ -412,9 +420,9 @@ class ProposalAdminController extends AbstractAdminController
     {
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
-        
+
         if ($isMunicipality) {
-            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $agent = $user->getAgents()->filter(fn ($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
             $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
         } else {
@@ -487,14 +495,16 @@ class ProposalAdminController extends AbstractAdminController
             $termStatus = $municipality->getExtraFields()['term_status'] ?? null;
 
             if (
-                $termStatus !== 'approved'
+                'approved' !== $termStatus
                 && in_array($status, [
                     StatusProposalEnum::ANUIDA,
                     StatusProposalEnum::NAO_ANUIDA,
                     StatusProposalEnum::SELECIONADA,
+                    StatusProposalEnum::SELECIONADA_DESEMPATE,
                 ])
             ) {
                 $this->addFlash('error', 'Não é possível anuir ou selecionar proposta sem termo de adesão aprovado');
+
                 return $redirectResponse();
             }
         }
@@ -534,14 +544,16 @@ class ProposalAdminController extends AbstractAdminController
             $deletionReason = $request->request->get('deletion_reason');
 
             // Validar se a proposta está anuída ou selecionada
-            if ($proposalStatus === StatusProposalEnum::ANUIDA->value || $proposalStatus === StatusProposalEnum::SELECIONADA->value) {
+            if ($proposalStatus === StatusProposalEnum::ANUIDA->value || StatusProposalEnum::isSelected($proposalStatus)) {
                 $this->addFlash('error', $this->translator->trans('view.proposal.error.cannot_delete_anuida_selecionada'));
+
                 return $this->redirectToRoute('admin_regmel_proposal_list');
             }
 
             // Validação do motivo
             if (empty($deletionReason) || strlen($deletionReason) < 20) {
                 $this->addFlash('error', $this->translator->trans('view.proposal.error.deletion_reason_required'));
+
                 return $this->redirectToRoute('admin_regmel_proposal_list');
             }
 
@@ -565,16 +577,17 @@ class ProposalAdminController extends AbstractAdminController
             $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
 
             // Verificar se a proposta tem status "Anuída" ou "Selecionada"
-            if ($proposalStatus === StatusProposalEnum::ANUIDA->value || $proposalStatus === StatusProposalEnum::SELECIONADA->value) {
+            if ($proposalStatus === StatusProposalEnum::ANUIDA->value || StatusProposalEnum::isSelected($proposalStatus)) {
                 $this->addFlash('error', $this->translator->trans('view.proposal.error.cannot_delete_approved'));
+
                 return $this->redirectToRoute('admin_dashboard');
             }
 
             $this->initiativeService->remove($id);
-            
+
             // Limpar cache do Doctrine para forçar recalcular no dashboard
             $this->entityManager->clear();
-            
+
             $this->addFlashSuccess($this->translator->trans('view.proposal.message.deleted'));
         } catch (Exception $exception) {
             $this->addFlash('error', $exception->getMessage());

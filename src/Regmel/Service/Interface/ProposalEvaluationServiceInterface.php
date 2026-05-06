@@ -23,7 +23,7 @@ interface ProposalEvaluationServiceInterface
         EvaluationResultEnum $result,
         string $reason,
         ?string $notes = null,
-        ?int $ranking = null,
+        ?string $ranking = null,
         ?UploadedFile $document = null,
     ): void;
 

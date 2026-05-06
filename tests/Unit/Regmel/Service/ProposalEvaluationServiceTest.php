@@ -63,7 +63,7 @@ class ProposalEvaluationServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function testCanEvaluateReturnsFalseWhenProposalAlreadyEvaluated(): void
+    public function testCanEvaluateReturnsTrueWhenProposalAlreadyEvaluated(): void
     {
         $proposalId = Uuid::v4();
         $proposal = new Initiative();
@@ -79,7 +79,7 @@ class ProposalEvaluationServiceTest extends TestCase
 
         $result = $this->service->canEvaluate($proposalId);
 
-        $this->assertFalse($result);
+        $this->assertTrue($result);
     }
 
     public function testEvaluateThrowsExceptionWhenReasonIsEmpty(): void
@@ -102,7 +102,7 @@ class ProposalEvaluationServiceTest extends TestCase
         $this->service->evaluate($proposalId, EvaluationResultEnum::SELECIONADA, '');
     }
 
-    public function testEvaluateThrowsExceptionWhenRankingMissingForClassificada(): void
+    public function testEvaluateThrowsExceptionWhenRankingHasInvalidCharacters(): void
     {
         $proposalId = Uuid::v4();
         $proposal = new Initiative();
@@ -117,9 +117,9 @@ class ProposalEvaluationServiceTest extends TestCase
             ->willReturn($proposal);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('O ranking é obrigatório para propostas classificadas.');
+        $this->expectExceptionMessage('O código de posição deve conter apenas letras e números.');
 
-        $this->service->evaluate($proposalId, EvaluationResultEnum::CLASSIFICADA, 'Test reason');
+        $this->service->evaluate($proposalId, EvaluationResultEnum::CLASSIFICADA, 'Test reason', ranking: 'SP-001');
     }
 
     public function testGetEvaluationReturnsNullWhenNotEvaluated(): void

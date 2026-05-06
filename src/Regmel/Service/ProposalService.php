@@ -336,10 +336,10 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             }
         }
 
-        // Posição: evaluation_ranking para SELECIONADA e CLASSIFICADA
+        // Posição: evaluation_ranking para status selecionados e classificados.
         $position = '';
         $currentStatus = $extraFields['status'] ?? '';
-        if ($currentStatus === StatusProposalEnum::SELECIONADA->value || $currentStatus === StatusProposalEnum::CLASSIFICADA->value) {
+        if (StatusProposalEnum::isRanked($currentStatus)) {
             $position = $extraFields['evaluation_ranking'] ?? '';
         }
 

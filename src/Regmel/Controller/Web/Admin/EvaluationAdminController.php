@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Regmel\Controller\Web\Admin;
 
 use App\Controller\Web\Admin\AbstractAdminController;
+use App\Enum\UserRolesEnum;
 use App\Regmel\Service\Interface\ProposalEvaluationServiceInterface;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,7 +14,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
-use App\Enum\UserRolesEnum;
 
 class EvaluationAdminController extends AbstractAdminController
 {
@@ -65,7 +65,7 @@ class EvaluationAdminController extends AbstractAdminController
                 $resultEnum,
                 $reason,
                 $notes,
-                (int) $ranking
+                is_scalar($ranking) ? (string) $ranking : null
             );
 
             return new JsonResponse([
@@ -80,4 +80,3 @@ class EvaluationAdminController extends AbstractAdminController
         }
     }
 }
-

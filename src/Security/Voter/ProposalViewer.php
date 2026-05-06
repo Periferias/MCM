@@ -51,7 +51,7 @@ class ProposalViewer extends Voter
     private function canCaixaAccess(string $attribute, Initiative $proposal): bool
     {
         // ROLE_CAIXA só pode VER (não editar, deletar)
-        if ($attribute !== self::VIEW) {
+        if (self::VIEW !== $attribute) {
             return false;
         }
 
@@ -59,11 +59,6 @@ class ProposalViewer extends Voter
         $status = $proposal->getExtraFields()['status'] ?? null;
 
         // ROLE_CAIXA só visualiza propostas SELECIONADA e CLASSIFICADA
-        $allowedStatuses = [
-            StatusProposalEnum::SELECIONADA->value,
-            StatusProposalEnum::CLASSIFICADA->value,
-        ];
-
-        return in_array($status, $allowedStatuses);
+        return StatusProposalEnum::isRanked((string) $status);
     }
 }

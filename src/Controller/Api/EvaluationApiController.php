@@ -65,12 +65,12 @@ class EvaluationApiController extends AbstractApiController
             if (!$result) {
                 return $this->json([
                     'success' => false,
-                    'message' => 'Resultado inválido. Use: "Selecionada", "Não Selecionada" ou "Classificada".',
+                    'message' => 'Resultado inválido.',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
             $notes = $data['notes'] ?? null;
-            $ranking = isset($data['ranking']) ? (int) $data['ranking'] : null;
+            $ranking = isset($data['ranking']) && is_scalar($data['ranking']) ? (string) $data['ranking'] : null;
 
             $this->evaluationService->evaluate(
                 $id,
@@ -113,7 +113,7 @@ class EvaluationApiController extends AbstractApiController
             $reason = $request->request->get('reason');
             $notes = $request->request->get('notes');
             $rankingValue = $request->request->get('ranking');
-            $ranking = null !== $rankingValue ? (int) $rankingValue : null;
+            $ranking = is_string($rankingValue) ? $rankingValue : null;
 
             // Validar resultado
             $resultEnum = null;

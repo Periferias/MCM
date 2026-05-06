@@ -1,6 +1,19 @@
 {% extends "_layouts/blank.html.twig" %}
 
 {% set statusEnum = enum('App\\Enum\\StatusProposalEnum') %}
+{% set selectedStatusValues = [
+    statusEnum.SELECIONADA.value,
+    statusEnum.SELECIONADA_DESEMPATE.value,
+] %}
+{% set classifiedStatusValues = [
+    statusEnum.CLASSIFICADA.value,
+    statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value,
+    statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value,
+    statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value,
+    statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value,
+    statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value,
+    statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value,
+] %}
 
 {% block title %}
     {{ 'control_panel'|trans }} - {{ 'proposals'|trans }}
@@ -164,8 +177,16 @@
                                                 <option value="{{ statusEnum.ANUIDA.value }}">{{ statusEnum.ANUIDA.value }}</option>
                                                 <option value="{{ statusEnum.NAO_ANUIDA.value }}">{{ statusEnum.NAO_ANUIDA.value }}</option>
                                                 <option value="{{ statusEnum.SELECIONADA.value }}">{{ statusEnum.SELECIONADA.value }}</option>
+                                                <option value="{{ statusEnum.SELECIONADA_DESEMPATE.value }}">{{ statusEnum.SELECIONADA_DESEMPATE.value }}</option>
                                                 <option value="{{ statusEnum.NAO_SELECIONADA.value }}">{{ statusEnum.NAO_SELECIONADA.value }}</option>
                                                 <option value="{{ statusEnum.CLASSIFICADA.value }}">{{ statusEnum.CLASSIFICADA.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value }}">{{ statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value }}</option>
+                                                <option value="{{ statusEnum.DESCLASSIFICADA.value }}">{{ statusEnum.DESCLASSIFICADA.value }}</option>
                                             </select>
                                             <div class="form-text">Selecione uma opção obrigatória</div>
                                         </div>
@@ -350,7 +371,7 @@
                                                             status: proposal.status ?? ''
                                                         }|json_encode|e('html_attr') }}'
                                                     ><i class="bi bi-eye"></i> Ver Proposta</a></li>
-                                                    <li><a class="dropdown-item" href="#" onclick="openEvaluationModal('{{ proposal.id }}', '{{ proposal.company }}', event)"><i class="bi bi-pencil"></i> Avaliar Proposta</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="openEvaluationModal('{{ proposal.id }}', '{{ proposal.company }}', event, '{{ proposal.state|e('js') }}')"><i class="bi bi-pencil"></i> Avaliar Proposta</a></li>
                                                 </ul>
                                             </div>
                                         </td>
@@ -376,7 +397,7 @@
                         {# Aba: Propostas Selecionadas #}
                         <div class="tab-pane fade" id="panel-selecionada" role="tabpanel" aria-labelledby="tab-selecionada">
                             <div class="mb-3">
-                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('{{ statusEnum.SELECIONADA.value }}')">
+                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('selecionadas')">
                                     <i class="bi bi-download"></i> Exportar Propostas Selecionadas
                                 </button>
                             </div>
@@ -404,16 +425,16 @@
                                 <tbody>
                                 {% set selected = [] %}
                                 {% for proposal in proposals %}
-                                    {% if proposal.status == statusEnum.SELECIONADA.value %}
+                                    {% if proposal.status in selectedStatusValues %}
                                         {% set selected = selected|merge([proposal]) %}
                                     {% endif %}
                                 {% endfor %}
-                                {% set selected = selected|sort((a, b) => (a.evaluation_ranking ?? 999999) <=> (b.evaluation_ranking ?? 999999)) %}
+                                {% set selected = selected|sort((a, b) => (a.evaluation_ranking ?? 'ZZZZZZ') <=> (b.evaluation_ranking ?? 'ZZZZZZ')) %}
                                 {% for proposal in selected %}
                                     {% set status = proposal.status ?? '' %}
-                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ loop.index }}">
-                                        <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center; width: 60px;" class="border-end">
-                                            <input type="number" class="form-control form-control-sm position-input-sel" value="{{ loop.index }}" min="1" style="width: 175px;" readonly tabindex="-1">
+                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" data-state="{{ proposal.state|upper }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
+                                        <td style="font-weight: bold; text-align: center; width: 60px;" class="border-end">
+                                            <input type="text" class="form-control form-control-sm position-input-sel" value="{{ proposal.evaluation_ranking ?? '' }}" style="width: 175px;" readonly tabindex="-1">
                                         </td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
@@ -450,7 +471,7 @@
                         {# Aba: Propostas Classificadas #}
                         <div class="tab-pane fade" id="panel-classificada" role="tabpanel" aria-labelledby="tab-classificada">
                             <div class="mb-3">
-                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('{{ statusEnum.CLASSIFICADA.value }}')">
+                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('classificadas')">
                                     <i class="bi bi-download"></i> Exportar Propostas Classificadas
                                 </button>
                             </div>
@@ -479,16 +500,16 @@
                                 {% set classified = [] %}
                                 {% for proposal in proposals %}
                                     {% set status = proposal.status ?? '' %}
-                                    {% if status == statusEnum.CLASSIFICADA.value %}
+                                    {% if status in classifiedStatusValues %}
                                         {% set classified = classified|merge([proposal]) %}
                                     {% endif %}
                                 {% endfor %}
-                                {% set classified = classified|sort((a, b) => (a.evaluation_ranking ?? 999999) <=> (b.evaluation_ranking ?? 999999)) %}
+                                {% set classified = classified|sort((a, b) => (a.evaluation_ranking ?? 'ZZZZZZ') <=> (b.evaluation_ranking ?? 'ZZZZZZ')) %}
                                 {% for proposal in classified %}
                                     {% set status = proposal.status ?? '' %}
-                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ loop.index }}">
-                                        <td style="cursor: {% if is_granted('ROLE_ADMIN') %}move{% else %}default{% endif %}; font-weight: bold; text-align: center; width: 60px;" class="border-end">
-                                            <input type="number" class="form-control form-control-sm position-input-class" value="{{ loop.index }}" min="1" style="width: 175px;" readonly tabindex="-1">
+                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" data-state="{{ proposal.state|upper }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
+                                        <td style="font-weight: bold; text-align: center; width: 60px;" class="border-end">
+                                            <input type="text" class="form-control form-control-sm position-input-class" value="{{ proposal.evaluation_ranking ?? '' }}" style="width: 175px;" readonly tabindex="-1">
                                         </td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.id|slice(0, 8) }}</td>
                                         <td class="border-end" style="width: 175px;">{{ proposal.region }}</td>
@@ -624,16 +645,23 @@
                         <select class="form-select" id="result" name="result" required onchange="toggleRankingField()">
                             <option value="" selected disabled>Selecione o resultado</option>
                             <option value="Selecionada">✅ Selecionada (aprovada)</option>
-                            <option value="Não Selecionada">❌ Não Selecionada (rejeitada)</option>
+                            <option value="Selecionada por Desempate">✅ Selecionada por Desempate</option>
                             <option value="Classificada">📊 Classificada (suplente)</option>
+                            <option value="Classificada em Cadastro de Reserva 30%">📊 Classificada em Cadastro de Reserva 30%</option>
+                            <option value="Classificada e Não Selecionada por Limite de Meta UF">📊 Classificada e Não Selecionada por Limite de Meta UF</option>
+                            <option value="Classificada e Não Selecionada por Desempate de Nota">📊 Classificada e Não Selecionada por Desempate de Nota</option>
+                            <option value="Classificada e Não Selecionada por Desempate de Natureza Jurídica">📊 Classificada e Não Selecionada por Desempate de Natureza Jurídica</option>
+                            <option value="Classificada e Não Selecionada por Desempate de Tempo de CNPJ">📊 Classificada e Não Selecionada por Desempate de Tempo de CNPJ</option>
+                            <option value="Classificada e Não Selecionada por Limite OSC">📊 Classificada e Não Selecionada por Limite OSC</option>
+                            <option value="Desclassificada">❌ Desclassificada</option>
                         </select>
                         <div class="form-text">Escolha uma opção obrigatória</div>
                     </div>
 
                     <div class="mb-3" id="rankingField" style="display: none;">
                         <label for="ranking" class="form-label fw-bold">Ranking (posição) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="ranking" name="ranking" min="1" placeholder="Ex: 1, 2, 3...">
-                        <div class="form-text">Obrigatório para propostas selecionadas e classificadas</div>
+                        <input type="text" class="form-control" id="ranking" name="ranking" pattern="[A-Za-z0-9]+" placeholder="Ex: PA0001, DF0001, SP0010">
+                        <div class="form-text">Obrigatório para propostas selecionadas e classificadas. Use letras e números.</div>
                     </div>
 
                     <div class="mb-3">
@@ -689,14 +717,16 @@
 </div>
 
 <script>
-    function openEvaluationModal(proposalId, proposalName, event) {
+    function openEvaluationModal(proposalId, proposalName, event, proposalState = '') {
         event.preventDefault();
         document.getElementById('proposalId').value = proposalId;
         document.getElementById('proposalName').textContent = proposalName;
         document.getElementById('result').value = '';
         document.getElementById('reason').value = '';
         document.getElementById('notes').value = '';
-        document.getElementById('ranking').value = '';
+        const rankingInput = document.getElementById('ranking');
+        rankingInput.value = '';
+        rankingInput.dataset.state = proposalState;
         document.getElementById('rankingField').style.display = 'none';
     }
 
@@ -705,14 +735,29 @@
         const rankingField = document.getElementById('rankingField');
         const rankingInput = document.getElementById('ranking');
         
-        if (result === 'Selecionada' || result === 'Classificada') {
+        if (result.startsWith('Selecionada') || result.startsWith('Classificada')) {
             rankingField.style.display = 'block';
             rankingInput.required = true;
+            if (!rankingInput.value) {
+                rankingInput.value = getNextRankingCode(result, rankingInput.dataset.state || '');
+            }
         } else {
             rankingField.style.display = 'none';
             rankingInput.required = false;
             rankingInput.value = '';
         }
+    }
+
+    function getNextRankingCode(result, proposalState) {
+        const state = String(proposalState || '').trim().toUpperCase();
+        if (!/^[A-Z]{2}$/.test(state)) {
+            return '';
+        }
+
+        const tableId = result.startsWith('Selecionada') ? 'tableSelecionada' : 'tableClassificada';
+        const sameStateRows = document.querySelectorAll(`#${tableId} .proposal-row[data-state="${state}"]`);
+
+        return `${state}${String(sameStateRows.length + 1).padStart(4, '0')}`;
     }
 
     document.getElementById('evaluationForm').addEventListener('submit', async (e) => {
@@ -735,7 +780,7 @@
                     result: result,
                     reason: reason,
                     notes: notes || null,
-                    ranking: ranking ? parseInt(ranking) : null
+                    ranking: ranking || null
                 })
             });
             
@@ -817,7 +862,11 @@
         // Função para exportar dados filtrados por status em XLS
         function exportTabaComStatus(status) {
             const params = new URLSearchParams();
-            params.append('status', status);
+            if (status === 'selecionadas' || status === 'classificadas') {
+                params.append('status_group', status);
+            } else {
+                params.append('status', status);
+            }
             
             // Redirecionar para a rota de download com o filtro de status
             window.location.href = '{{ path('admin_regmel_proposal_list_download') }}?' + params.toString();
@@ -977,7 +1026,6 @@
                 tabNaoSelecionada.innerHTML = '<i class="bi bi-x-circle"></i> Não Selecionadas <span class="badge bg-danger ms-2">' + naoSelecionadaCount + '</span>';
             }
 
-            // Inicializar drag-and-drop apenas para ROLE_ADMIN
             const isAdmin = {{ is_granted('ROLE_ADMIN') ? 'true' : 'false' }};
             if (isAdmin) {
                 setupDragAndDrop('tableSelecionada');
@@ -1051,14 +1099,21 @@
         }
 
         function updatePositionNumbers(tableId) {
+            const stateCounters = {};
             document.querySelectorAll(`#${tableId} .proposal-row`).forEach((row, i) => {
-                const input = row.querySelector('input[type="number"]');
-                if (input) input.value = i + 1;
+                const input = row.querySelector('input.position-input-sel, input.position-input-class');
+                const state = String(row.dataset.state || '').trim().toUpperCase();
+                if (!input || !/^[A-Z]{2}$/.test(state)) {
+                    return;
+                }
+
+                stateCounters[state] = (stateCounters[state] || 0) + 1;
+                input.value = `${state}${String(stateCounters[state]).padStart(4, '0')}`;
             });
         }
 
         // Função para abrir modal de avaliar proposta (igual a página de avaliações)
-        function openEvaluationModal(proposalId, proposalName, event) {
+        function openEvaluationModal(proposalId, proposalName, event, proposalState = '') {
             event.preventDefault();
             
             document.getElementById('proposalId').value = proposalId;
@@ -1066,7 +1121,9 @@
             document.getElementById('result').value = '';
             document.getElementById('reason').value = '';
             document.getElementById('notes').value = '';
-            document.getElementById('ranking').value = '';
+            const rankingInput = document.getElementById('ranking');
+            rankingInput.value = '';
+            rankingInput.dataset.state = proposalState;
             document.getElementById('rankingField').style.display = 'none';
             
             const modal = new bootstrap.Modal(document.getElementById('evaluationModal'));
@@ -1078,9 +1135,12 @@
             const rankingField = document.getElementById('rankingField');
             const rankingInput = document.getElementById('ranking');
             
-            if (result === 'Selecionada' || result === 'Classificada') {
+            if (result.startsWith('Selecionada') || result.startsWith('Classificada')) {
                 rankingField.style.display = 'block';
                 rankingInput.required = true;
+                if (!rankingInput.value) {
+                    rankingInput.value = getNextRankingCode(result, rankingInput.dataset.state || '');
+                }
             } else {
                 rankingField.style.display = 'none';
                 rankingInput.required = false;
@@ -1131,7 +1191,7 @@
                 if (row) {
                     tbody.appendChild(row);
                     row.setAttribute('data-current-order', item.order);
-                    const input = row.querySelector('input[type="number"]');
+                    const input = row.querySelector('input.position-input-sel, input.position-input-class');
                     if (input) {
                         input.value = item.order;
                     }
@@ -1188,7 +1248,8 @@
                     reordering.forEach((item) => {
                         const row = document.querySelector(`#${tableId} [data-proposal-id="${item.proposalId}"]`);
                         if (row) {
-                            row.setAttribute('data-current-order', String(item.newOrder));
+                            const input = row.querySelector('input.position-input-sel, input.position-input-class');
+                            row.setAttribute('data-current-order', input ? input.value : String(item.newOrder));
                         }
                     });
                 }

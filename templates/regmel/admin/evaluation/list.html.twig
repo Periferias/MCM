@@ -54,7 +54,7 @@
                                                     class="btn btn-sm btn-primary"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#evaluationModal"
-                                                    onclick="openEvaluationModal('{{ proposal.id }}', '{{ proposal.name }}')"
+                                                    onclick="openEvaluationModal('{{ proposal.id }}', '{{ proposal.name }}', '{{ proposal.state|e('js') }}')"
                                                 >
                                                     Avaliar
                                                 </button>
@@ -92,16 +92,23 @@
                         <select class="form-select" id="result" name="result" required onchange="toggleRankingField()">
                             <option value="" selected disabled>Selecione o resultado</option>
                             <option value="Selecionada">✅ Selecionada (aprovada)</option>
-                            <option value="Não Selecionada">❌ Não Selecionada (rejeitada)</option>
+                            <option value="Selecionada por Desempate">✅ Selecionada por Desempate</option>
                             <option value="Classificada">📊 Classificada (suplente)</option>
+                            <option value="Classificada em Cadastro de Reserva 30%">📊 Classificada em Cadastro de Reserva 30%</option>
+                            <option value="Classificada e Não Selecionada por Limite de Meta UF">📊 Classificada e Não Selecionada por Limite de Meta UF</option>
+                            <option value="Classificada e Não Selecionada por Desempate de Nota">📊 Classificada e Não Selecionada por Desempate de Nota</option>
+                            <option value="Classificada e Não Selecionada por Desempate de Natureza Jurídica">📊 Classificada e Não Selecionada por Desempate de Natureza Jurídica</option>
+                            <option value="Classificada e Não Selecionada por Desempate de Tempo de CNPJ">📊 Classificada e Não Selecionada por Desempate de Tempo de CNPJ</option>
+                            <option value="Classificada e Não Selecionada por Limite OSC">📊 Classificada e Não Selecionada por Limite OSC</option>
+                            <option value="Desclassificada">❌ Desclassificada</option>
                         </select>
                         <div class="form-text">Escolha uma opção obrigatória</div>
                     </div>
 
                     <div class="mb-3" id="rankingField" style="display: none;">
                         <label for="ranking" class="form-label fw-bold">Ranking (posição) *</label>
-                        <input type="number" class="form-control" id="ranking" name="ranking" min="1" placeholder="Ex: 1, 2, 3...">
-                        <div class="form-text">Obrigatório para propostas selecionadas e classificadas</div>
+                        <input type="text" class="form-control" id="ranking" name="ranking" pattern="[A-Za-z0-9]+" placeholder="Ex: PA0001, DF0001, SP0010">
+                        <div class="form-text">Obrigatório para propostas selecionadas e classificadas. Use letras e números.</div>
                     </div>
 
                     <div class="mb-3">
@@ -139,13 +146,15 @@
 </div>
 
 <script>
-function openEvaluationModal(proposalId, proposalName) {
+function openEvaluationModal(proposalId, proposalName, proposalState = '') {
     document.getElementById('proposalId').value = proposalId;
     document.getElementById('proposalName').textContent = proposalName;
     document.getElementById('result').value = '';
     document.getElementById('reason').value = '';
     document.getElementById('notes').value = '';
-    document.getElementById('ranking').value = '';
+    const rankingInput = document.getElementById('ranking');
+    rankingInput.value = '';
+    rankingInput.dataset.state = proposalState;
     document.getElementById('rankingField').style.display = 'none';
 }
 
@@ -154,14 +163,23 @@ function toggleRankingField() {
     const rankingField = document.getElementById('rankingField');
     const rankingInput = document.getElementById('ranking');
     
-    if (result === 'Selecionada' || result === 'Classificada') {
+    if (result.startsWith('Selecionada') || result.startsWith('Classificada')) {
         rankingField.style.display = 'block';
         rankingInput.required = true;
+        if (!rankingInput.value) {
+            rankingInput.value = getNextRankingCode(rankingInput.dataset.state || '');
+        }
     } else {
         rankingField.style.display = 'none';
         rankingInput.required = false;
         rankingInput.value = '';
     }
+}
+
+function getNextRankingCode(proposalState) {
+    const state = String(proposalState || '').trim().toUpperCase();
+
+    return /^[A-Z]{2}$/.test(state) ? `${state}0001` : '';
 }
 
 document.getElementById('evaluationForm').addEventListener('submit', async (e) => {
@@ -184,7 +202,7 @@ document.getElementById('evaluationForm').addEventListener('submit', async (e) =
                 result: result,
                 reason: reason,
                 notes: notes || null,
-                ranking: ranking ? parseInt(ranking) : null
+                ranking: ranking || null
             })
         });
         

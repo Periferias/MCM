@@ -47,12 +47,7 @@ class ProposalOrderingService
 
             // Se status especificado, verificar
             if ($status) {
-                $allowedStatuses = [
-                    StatusProposalEnum::SELECIONADA->value,
-                    StatusProposalEnum::CLASSIFICADA->value,
-                ];
-
-                if (!in_array($proposalStatus, $allowedStatuses)) {
+                if (!StatusProposalEnum::isRanked((string) $proposalStatus)) {
                     return false;
                 }
 
@@ -61,12 +56,7 @@ class ProposalOrderingService
                 }
             } else {
                 // Se nenhum status especificado, permitir apenas SELECIONADA e CLASSIFICADA
-                $allowedStatuses = [
-                    StatusProposalEnum::SELECIONADA->value,
-                    StatusProposalEnum::CLASSIFICADA->value,
-                ];
-
-                if (!in_array($proposalStatus, $allowedStatuses)) {
+                if (!StatusProposalEnum::isRanked((string) $proposalStatus)) {
                     return false;
                 }
             }
@@ -91,7 +81,7 @@ class ProposalOrderingService
 
             // Obter ordem: evaluation_ranking para CLASSIFICADA e SELECIONADA
             $order = null;
-            if ($proposalStatus === StatusProposalEnum::CLASSIFICADA->value || $proposalStatus === StatusProposalEnum::SELECIONADA->value) {
+            if (StatusProposalEnum::isRanked((string) $proposalStatus)) {
                 $order = $extra['evaluation_ranking'] ?? null;
             }
 
@@ -112,10 +102,10 @@ class ProposalOrderingService
 
         // Ordenar por ordem
         usort($formatted, function (array $a, array $b) {
-            $orderA = $a['order'] ?? PHP_INT_MAX;
-            $orderB = $b['order'] ?? PHP_INT_MAX;
+            $orderA = $a['order'] ?? 'ZZZZZZ';
+            $orderB = $b['order'] ?? 'ZZZZZZ';
 
-            return $orderA <=> $orderB;
+            return strnatcasecmp((string) $orderA, (string) $orderB);
         });
 
         return array_values($formatted);
@@ -154,16 +144,9 @@ class ProposalOrderingService
             $extra = $proposal->getExtraFields() ?? [];
             $status = $extra['status'] ?? null;
 
-            // Validar que está em status SELECIONADA ou CLASSIFICADA
-            $allowedStatuses = [
-                StatusProposalEnum::SELECIONADA->value,
-                StatusProposalEnum::CLASSIFICADA->value,
-            ];
-
-            if (!in_array($status, $allowedStatuses)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Proposta %s não está em status SELECIONADA ou CLASSIFICADA.', $proposalId->toRfc4122())
-                );
+            // Validar que está em status selecionado ou classificado.
+            if (!StatusProposalEnum::isRanked((string) $status)) {
+                throw new \InvalidArgumentException(sprintf('Proposta %s não está em status selecionado ou classificado.', $proposalId->toRfc4122()));
             }
 
             $proposals[] = [
@@ -182,7 +165,7 @@ class ProposalOrderingService
             foreach ($violations as $violation) {
                 $messages[] = $violation->getMessage();
             }
-            throw new \InvalidArgumentException('Validação de sequência falhou: ' . implode(', ', $messages));
+            throw new \InvalidArgumentException('Validação de sequência falhou: '.implode(', ', $messages));
         }
 
         // Atualizar todas as propostas em transação
@@ -198,7 +181,7 @@ class ProposalOrderingService
 
                 // Estado anterior
                 $previousOrder = null;
-                if ($status === StatusProposalEnum::CLASSIFICADA->value || $status === StatusProposalEnum::SELECIONADA->value) {
+                if (StatusProposalEnum::isRanked((string) $status)) {
                     $previousOrder = $extra['evaluation_ranking'] ?? null;
                 }
 
@@ -209,7 +192,8 @@ class ProposalOrderingService
                 ];
             }
 
-            // Atualizar propostas
+            // Atualizar propostas recalculando a posição por UF na ordem recebida.
+            $stateCounters = [];
             foreach ($proposals as $item) {
                 $proposal = $item['proposal'];
                 $newOrder = $item['newOrder'];
@@ -217,9 +201,14 @@ class ProposalOrderingService
 
                 $extra = $proposal->getExtraFields() ?? [];
 
-                // Atualizar o campo de ordem correto baseado no status
-                if ($status === StatusProposalEnum::CLASSIFICADA->value || $status === StatusProposalEnum::SELECIONADA->value) {
-                    $extra['evaluation_ranking'] = $newOrder;
+                if (StatusProposalEnum::isRanked((string) $status)) {
+                    $state = strtoupper((string) ($extra['state'] ?? ''));
+                    if (!preg_match('/^[A-Z]{2}$/', $state)) {
+                        throw new \InvalidArgumentException(sprintf('Proposta %s não possui UF válida.', $proposal->getId()->toRfc4122()));
+                    }
+
+                    $stateCounters[$state] = ($stateCounters[$state] ?? 0) + 1;
+                    $extra['evaluation_ranking'] = sprintf('%s%04d', $state, $stateCounters[$state]);
                 }
 
                 $proposal->setExtraFields($extra);
@@ -227,7 +216,7 @@ class ProposalOrderingService
 
                 $newOrdering[] = [
                     'proposalId' => $proposal->getId()->toRfc4122(),
-                    'order' => $newOrder,
+                    'order' => $extra['evaluation_ranking'] ?? $newOrder,
                     'name' => $proposal->getName(),
                 ];
             }
@@ -246,16 +235,12 @@ class ProposalOrderingService
             }
         } catch (\Exception $e) {
             $this->entityManager->rollback();
-            throw new \InvalidArgumentException('Erro ao reordenar propostas: ' . $e->getMessage());
+            throw new \InvalidArgumentException('Erro ao reordenar propostas: '.$e->getMessage());
         }
     }
 
     /**
      * Validar integridade de sequência.
-     *
-     * @param array $proposals
-     *
-     * @return bool
      */
     private function validateSequenceIntegrity(array $proposals): bool
     {

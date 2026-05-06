@@ -36,9 +36,9 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         // Proposta deve estar com status ANUIDA OU já avaliada (permitir reavaliação)
         $allowedStatuses = [
             StatusProposalEnum::ANUIDA->value,
-            StatusProposalEnum::SELECIONADA->value,
-            StatusProposalEnum::CLASSIFICADA->value,
+            ...StatusProposalEnum::rankedValues(),
             StatusProposalEnum::NAO_SELECIONADA->value,
+            StatusProposalEnum::DESCLASSIFICADA->value,
         ];
 
         return in_array($status, $allowedStatuses);
@@ -49,7 +49,7 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         EvaluationResultEnum $result,
         string $reason,
         ?string $notes = null,
-        ?int $ranking = null,
+        ?string $ranking = null,
         ?UploadedFile $document = null,
     ): void {
         /** @var Initiative $proposal */
@@ -69,8 +69,18 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
             throw new \InvalidArgumentException('O motivo da avaliação é obrigatório.');
         }
 
-        if (($result === EvaluationResultEnum::CLASSIFICADA || $result === EvaluationResultEnum::SELECIONADA) && !$ranking) {
-            throw new \InvalidArgumentException('O ranking é obrigatório para propostas selecionadas e classificadas.');
+        $ranking = null !== $ranking ? trim($ranking) : null;
+
+        if ($result->requiresRanking() && '' === (string) $ranking) {
+            $ranking = $this->generateNextRankingCode($proposal, $result);
+        }
+
+        if ($result->requiresRanking() && !preg_match('/^[A-Za-z0-9]+$/', (string) $ranking)) {
+            throw new \InvalidArgumentException('O código de posição deve conter apenas letras e números.');
+        }
+
+        if ($result->requiresRanking() && $this->rankingExistsForGroup($proposal, $result, (string) $ranking)) {
+            $ranking = $this->generateNextRankingCode($proposal, $result);
         }
 
         $extraFields = $proposal->getExtraFields() ?? [];
@@ -85,7 +95,7 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
             'evaluation_completed_at' => new \DateTime('now', new \DateTimeZone('America/Sao_Paulo')),
         ];
 
-        if (($result === EvaluationResultEnum::CLASSIFICADA || $result === EvaluationResultEnum::SELECIONADA) && $ranking) {
+        if ($result->requiresRanking()) {
             $evaluationData['evaluation_ranking'] = $ranking;
         }
 
@@ -100,16 +110,23 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         // Atualizar status da proposta
         $newStatus = match ($result) {
             EvaluationResultEnum::SELECIONADA => StatusProposalEnum::SELECIONADA->value,
+            EvaluationResultEnum::SELECIONADA_DESEMPATE => StatusProposalEnum::SELECIONADA_DESEMPATE->value,
             EvaluationResultEnum::NAO_SELECIONADA => StatusProposalEnum::NAO_SELECIONADA->value,
             EvaluationResultEnum::CLASSIFICADA => StatusProposalEnum::CLASSIFICADA->value,
+            EvaluationResultEnum::CLASSIFICADA_CADASTRO_RESERVA_30 => StatusProposalEnum::CLASSIFICADA_CADASTRO_RESERVA_30->value,
+            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF->value,
+            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA->value,
+            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA->value,
+            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ->value,
+            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC->value,
+            EvaluationResultEnum::DESCLASSIFICADA => StatusProposalEnum::DESCLASSIFICADA->value,
         };
 
         $extraFields['status'] = $newStatus;
         $extraFields['status_reason'] = $reason;
 
-        $normalizedRanking = $this->applyRankingForStatusChange($proposal, $newStatus, $ranking);
-        if (null !== $normalizedRanking) {
-            $extraFields['evaluation_ranking'] = $normalizedRanking;
+        if (StatusProposalEnum::isRanked($newStatus)) {
+            $extraFields['evaluation_ranking'] = $ranking;
         } else {
             unset($extraFields['evaluation_ranking']);
         }
@@ -118,89 +135,98 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         $this->entityManager->flush();
     }
 
-    private function applyRankingForStatusChange(Initiative $proposal, string $newStatus, ?int $ranking): ?int
+    private function generateNextRankingCode(Initiative $proposal, EvaluationResultEnum $result): string
     {
-        $currentExtraFields = $proposal->getExtraFields() ?? [];
-        $currentStatus = $currentExtraFields['status'] ?? null;
-        $currentProposalId = $proposal->getId()->toRfc4122();
+        $extraFields = $proposal->getExtraFields() ?? [];
+        $state = strtoupper((string) ($extraFields['state'] ?? ''));
 
-        $rankedStatuses = [
-            StatusProposalEnum::SELECIONADA->value,
-            StatusProposalEnum::CLASSIFICADA->value,
-        ];
-
-        if (in_array($currentStatus, $rankedStatuses, true)) {
-            $this->normalizeStatusRankings($currentStatus, $currentProposalId);
+        if (!preg_match('/^[A-Z]{2}$/', $state)) {
+            throw new \InvalidArgumentException('UF da proposta é obrigatória para gerar o código de posição.');
         }
 
-        if (!in_array($newStatus, $rankedStatuses, true)) {
-            return null;
-        }
+        $statusGroup = $this->getResultStatusGroup($result);
+        $currentProposalId = $proposal->getId()?->toRfc4122();
+        $highestPosition = 0;
 
-        $rankedProposals = $this->getRankedProposalsByStatus($newStatus, $currentProposalId);
-        $targetRanking = max(1, min($ranking ?? 1, count($rankedProposals) + 1));
-
-        $position = 1;
-        foreach ($rankedProposals as $rankedProposal) {
-            if ($position === $targetRanking) {
-                ++$position;
-            }
-
-            $rankedExtraFields = $rankedProposal->getExtraFields() ?? [];
-            $rankedExtraFields['evaluation_ranking'] = $position;
-            $rankedProposal->setExtraFields($rankedExtraFields);
-            $this->entityManager->persist($rankedProposal);
-            ++$position;
-        }
-
-        return $targetRanking;
-    }
-
-    /**
-     * @return Initiative[]
-     */
-    private function getRankedProposalsByStatus(string $status, ?string $excludeProposalId = null): array
-    {
         $proposals = $this->entityManager->getRepository(Initiative::class)->findAll();
 
-        $filtered = array_filter($proposals, function (Initiative $candidate) use ($status, $excludeProposalId) {
-            if (method_exists($candidate, 'isDeleted') && $candidate->isDeleted()) {
-                return false;
+        foreach ($proposals as $candidate) {
+            if (!$candidate instanceof Initiative) {
+                continue;
             }
 
-            if ($excludeProposalId && $candidate->getId()->toRfc4122() === $excludeProposalId) {
-                return false;
+            if ($currentProposalId && $candidate->getId()?->toRfc4122() === $currentProposalId) {
+                continue;
             }
 
-            $extra = $candidate->getExtraFields() ?? [];
+            $candidateExtraFields = $candidate->getExtraFields() ?? [];
+            $candidateStatus = (string) ($candidateExtraFields['status'] ?? '');
+            $candidateState = strtoupper((string) ($candidateExtraFields['state'] ?? ''));
 
-            return ($extra['status'] ?? null) === $status;
-        });
-
-        usort($filtered, function (Initiative $a, Initiative $b) {
-            $orderA = (int) (($a->getExtraFields()['evaluation_ranking'] ?? PHP_INT_MAX));
-            $orderB = (int) (($b->getExtraFields()['evaluation_ranking'] ?? PHP_INT_MAX));
-
-            if ($orderA === $orderB) {
-                return strcmp($a->getId()->toRfc4122(), $b->getId()->toRfc4122());
+            if ($candidateState !== $state || !$this->statusBelongsToGroup($candidateStatus, $statusGroup)) {
+                continue;
             }
 
-            return $orderA <=> $orderB;
-        });
+            $ranking = (string) ($candidateExtraFields['evaluation_ranking'] ?? '');
+            if (preg_match('/^'.preg_quote($state, '/').'(\d+)$/', $ranking, $matches)) {
+                $highestPosition = max($highestPosition, (int) $matches[1]);
+            }
+        }
 
-        return array_values($filtered);
+        return sprintf('%s%04d', $state, $highestPosition + 1);
     }
 
-    private function normalizeStatusRankings(string $status, ?string $excludeProposalId = null): void
+    private function rankingExistsForGroup(Initiative $proposal, EvaluationResultEnum $result, string $ranking): bool
     {
-        $rankedProposals = $this->getRankedProposalsByStatus($status, $excludeProposalId);
+        $extraFields = $proposal->getExtraFields() ?? [];
+        $state = strtoupper((string) ($extraFields['state'] ?? ''));
+        $statusGroup = $this->getResultStatusGroup($result);
+        $currentProposalId = $proposal->getId()?->toRfc4122();
 
-        foreach ($rankedProposals as $index => $rankedProposal) {
-            $extraFields = $rankedProposal->getExtraFields() ?? [];
-            $extraFields['evaluation_ranking'] = $index + 1;
-            $rankedProposal->setExtraFields($extraFields);
-            $this->entityManager->persist($rankedProposal);
+        $proposals = $this->entityManager->getRepository(Initiative::class)->findAll();
+
+        foreach ($proposals as $candidate) {
+            if (!$candidate instanceof Initiative) {
+                continue;
+            }
+
+            if ($currentProposalId && $candidate->getId()?->toRfc4122() === $currentProposalId) {
+                continue;
+            }
+
+            $candidateExtraFields = $candidate->getExtraFields() ?? [];
+            $candidateStatus = (string) ($candidateExtraFields['status'] ?? '');
+            $candidateState = strtoupper((string) ($candidateExtraFields['state'] ?? ''));
+            $candidateRanking = (string) ($candidateExtraFields['evaluation_ranking'] ?? '');
+
+            if ($candidateState === $state && $candidateRanking === $ranking && $this->statusBelongsToGroup($candidateStatus, $statusGroup)) {
+                return true;
+            }
         }
+
+        return false;
+    }
+
+    private function getResultStatusGroup(EvaluationResultEnum $result): string
+    {
+        if (str_starts_with($result->value, 'Selecionada')) {
+            return 'selected';
+        }
+
+        if (str_starts_with($result->value, 'Classificada')) {
+            return 'classified';
+        }
+
+        return 'none';
+    }
+
+    private function statusBelongsToGroup(string $status, string $statusGroup): bool
+    {
+        return match ($statusGroup) {
+            'selected' => StatusProposalEnum::isSelected($status),
+            'classified' => StatusProposalEnum::isClassified($status),
+            default => false,
+        };
     }
 
     public function getProposalsAwaitingEvaluation(
@@ -222,27 +248,27 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         // Filtrar em PHP
         $filtered = array_filter($results, function (Initiative $initiative) use ($region, $state) {
             $extra = $initiative->getExtraFields() ?? [];
-            
+
             // Verificar status ANUIDA
             if (($extra['status'] ?? null) !== StatusProposalEnum::ANUIDA->value) {
                 return false;
             }
-            
+
             // Verificar se não foi avaliada
             if (($extra['evaluation_status'] ?? null) === 'completed') {
                 return false;
             }
-            
+
             // Filtrar por região
             if ($region && ($extra['region'] ?? null) !== $region) {
                 return false;
             }
-            
+
             // Filtrar por estado
             if ($state && ($extra['state'] ?? null) !== $state) {
                 return false;
             }
-            
+
             return true;
         });
 

@@ -15,7 +15,7 @@ class EvaluationDTO
         public EvaluationResultEnum $result,
         public string $reason,
         public ?string $notes = null,
-        public ?int $ranking = null,
+        public ?string $ranking = null,
         public ?UploadedFile $document = null,
     ) {
     }

@@ -106,8 +106,16 @@
                                                     <option value="{{ statusEnum.ANUIDA.value }}">{{ statusEnum.ANUIDA.value }}</option>
                                                     <option value="{{ statusEnum.NAO_ANUIDA.value }}">{{ statusEnum.NAO_ANUIDA.value }}</option>
                                                     <option value="{{ statusEnum.SELECIONADA.value }}">{{ statusEnum.SELECIONADA.value }}</option>
+                                                    <option value="{{ statusEnum.SELECIONADA_DESEMPATE.value }}">{{ statusEnum.SELECIONADA_DESEMPATE.value }}</option>
                                                     <option value="{{ statusEnum.NAO_SELECIONADA.value }}">{{ statusEnum.NAO_SELECIONADA.value }}</option>
                                                     <option value="{{ statusEnum.CLASSIFICADA.value }}">{{ statusEnum.CLASSIFICADA.value }}</option>
+                                                    <option value="{{ statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value }}">{{ statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value }}</option>
+                                                    <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value }}</option>
+                                                    <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value }}</option>
+                                                    <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value }}</option>
+                                                    <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value }}</option>
+                                                    <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value }}</option>
+                                                    <option value="{{ statusEnum.DESCLASSIFICADA.value }}">{{ statusEnum.DESCLASSIFICADA.value }}</option>
                                                 </select>
                                                 <div class="form-text">Selecione uma opção obrigatória</div>
                                             </div>
@@ -199,8 +207,16 @@
                                         (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
                                         'Não Anuída': 'bg-danger text-white',
                                         (statusEnum.SELECIONADA.value): 'bg-success text-white',
+                                        (statusEnum.SELECIONADA_DESEMPATE.value): 'bg-success text-white',
                                         (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
                                         (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
+                                        (statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value): 'bg-primary text-white',
+                                        (statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value): 'bg-primary text-white',
+                                        (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value): 'bg-primary text-white',
+                                        (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value): 'bg-primary text-white',
+                                        (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value): 'bg-primary text-white',
+                                        (statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value): 'bg-primary text-white',
+                                        (statusEnum.DESCLASSIFICADA.value): 'bg-danger text-white',
                                     }[status] ?? 'bg-dark') %}
                                     {% set statusDescriptions = {
                                         (statusEnum.ENVIADA.value): 'Proposta enviada pela empresa/osc e aguardando recebimento pelo município',
@@ -212,8 +228,16 @@
                                         (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
                                         'Não Anuída': 'Proposta não anuída pelo município',
                                         (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
+                                        (statusEnum.SELECIONADA_DESEMPATE.value): 'Proposta selecionada por desempate',
                                         (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
-                                        (statusEnum.CLASSIFICADA.value): 'Proposta classificada'
+                                        (statusEnum.CLASSIFICADA.value): 'Proposta classificada',
+                                        (statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value): 'Proposta classificada em cadastro de reserva 30%',
+                                        (statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value): 'Proposta classificada e não selecionada por limite de meta UF',
+                                        (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value): 'Proposta classificada e não selecionada por desempate de nota',
+                                        (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value): 'Proposta classificada e não selecionada por desempate de natureza jurídica',
+                                        (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value): 'Proposta classificada e não selecionada por desempate de tempo de CNPJ',
+                                        (statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value): 'Proposta classificada e não selecionada por limite OSC',
+                                        (statusEnum.DESCLASSIFICADA.value): 'Proposta desclassificada'
                                     } %}
                                     {# Mapeia valores antigos para novos textos #}
                                     {% set displayStatus = status == 'Anuída' ? statusEnum.ANUIDA.value : (status == 'Não Anuída' ? statusEnum.NAO_ANUIDA.value : status) %}
@@ -294,7 +318,7 @@
                                                 <a
                                                     href="#"
                                                     class="dropdown-item"
-                                                    onclick="openEvaluationModal('{{ proposal.id.toRfc4122() }}', '{{ proposal.organizationFrom.name|e('js') }}', event)"
+                                                    onclick="openEvaluationModal('{{ proposal.id.toRfc4122() }}', '{{ proposal.organizationFrom.name|e('js') }}', event, '{{ (proposal.extraFields.state ?? '')|e('js') }}')"
                                                 >
                                                     Avaliar Proposta
                                                 </a>
@@ -422,16 +446,23 @@
                             <select class="form-select" id="result" name="result" required onchange="toggleRankingField()">
                                 <option value="" selected disabled>Selecione o resultado</option>
                                 <option value="Selecionada">✅ Selecionada (aprovada)</option>
-                                <option value="Não Selecionada">❌ Não Selecionada (rejeitada)</option>
+                                <option value="Selecionada por Desempate">✅ Selecionada por Desempate</option>
                                 <option value="Classificada">📊 Classificada (suplente)</option>
+                                <option value="Classificada em Cadastro de Reserva 30%">📊 Classificada em Cadastro de Reserva 30%</option>
+                                <option value="Classificada e Não Selecionada por Limite de Meta UF">📊 Classificada e Não Selecionada por Limite de Meta UF</option>
+                                <option value="Classificada e Não Selecionada por Desempate de Nota">📊 Classificada e Não Selecionada por Desempate de Nota</option>
+                                <option value="Classificada e Não Selecionada por Desempate de Natureza Jurídica">📊 Classificada e Não Selecionada por Desempate de Natureza Jurídica</option>
+                                <option value="Classificada e Não Selecionada por Desempate de Tempo de CNPJ">📊 Classificada e Não Selecionada por Desempate de Tempo de CNPJ</option>
+                                <option value="Classificada e Não Selecionada por Limite OSC">📊 Classificada e Não Selecionada por Limite OSC</option>
+                                <option value="Desclassificada">❌ Desclassificada</option>
                             </select>
                             <div class="form-text">Escolha uma opção obrigatória</div>
                         </div>
 
                         <div class="mb-3" id="rankingField" style="display: none;">
                             <label for="ranking" class="form-label fw-bold">Ranking (posição) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="ranking" name="ranking" min="1" placeholder="Ex: 1, 2, 3...">
-                            <div class="form-text">Obrigatório para propostas selecionadas e classificadas</div>
+                            <input type="text" class="form-control" id="ranking" name="ranking" pattern="[A-Za-z0-9]+" placeholder="Ex: PA0001, DF0001, SP0010">
+                            <div class="form-text">Obrigatório para propostas selecionadas e classificadas. Use letras e números.</div>
                         </div>
 
                         <div class="mb-3">
@@ -480,7 +511,7 @@
     <script src="{{ asset('js/modal-proposal-details.js') }}"></script>
 
     <script>
-        function openEvaluationModal(proposalId, proposalName, event) {
+        function openEvaluationModal(proposalId, proposalName, event, proposalState = '') {
             event.preventDefault();
 
             document.getElementById('proposalId').value = proposalId;
@@ -488,7 +519,9 @@
             document.getElementById('result').value = '';
             document.getElementById('reason').value = '';
             document.getElementById('notes').value = '';
-            document.getElementById('ranking').value = '';
+            const rankingInput = document.getElementById('ranking');
+            rankingInput.value = '';
+            rankingInput.dataset.state = proposalState;
             document.getElementById('rankingField').style.display = 'none';
 
             const modal = new bootstrap.Modal(document.getElementById('evaluationModal'));
@@ -510,14 +543,23 @@
             const rankingField = document.getElementById('rankingField');
             const rankingInput = document.getElementById('ranking');
 
-            if (result === 'Selecionada' || result === 'Classificada') {
+            if (result.startsWith('Selecionada') || result.startsWith('Classificada')) {
                 rankingField.style.display = 'block';
                 rankingInput.required = true;
+                if (!rankingInput.value) {
+                    rankingInput.value = getNextRankingCode(rankingInput.dataset.state || '');
+                }
             } else {
                 rankingField.style.display = 'none';
                 rankingInput.required = false;
                 rankingInput.value = '';
             }
+        }
+
+        function getNextRankingCode(proposalState) {
+            const state = String(proposalState || '').trim().toUpperCase();
+
+            return /^[A-Z]{2}$/.test(state) ? `${state}0001` : '';
         }
 
         document.getElementById('evaluationForm').addEventListener('submit', async (e) => {
@@ -540,7 +582,7 @@
                         result: result,
                         reason: reason,
                         notes: notes || null,
-                        ranking: ranking ? parseInt(ranking) : null
+                        ranking: ranking || null
                     })
                 });
 
