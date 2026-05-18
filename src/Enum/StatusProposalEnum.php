@@ -17,15 +17,11 @@ enum StatusProposalEnum: string
     case ANUIDA = 'Anuída pelo Município';
     case NAO_ANUIDA = 'Não Anuída pelo Município';
     case SELECIONADA = 'Selecionada';
-    case SELECIONADA_DESEMPATE = 'Selecionada por Desempate';
+    case SELECIONADA_DESEMPATE = 'Selecionada por desempate';
     case NAO_SELECIONADA = 'Não Selecionada';
     case CLASSIFICADA = 'Classificada';
-    case CLASSIFICADA_CADASTRO_RESERVA_30 = 'Classificada em Cadastro de Reserva 30%';
-    case CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF = 'Classificada e Não Selecionada por Limite de Meta UF';
-    case CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA = 'Classificada e Não Selecionada por Desempate de Nota';
-    case CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA = 'Classificada e Não Selecionada por Desempate de Natureza Jurídica';
-    case CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ = 'Classificada e Não Selecionada por Desempate de Tempo de CNPJ';
-    case CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC = 'Classificada e Não Selecionada por Limite OSC';
+    case CLASSIFICADA_CADASTRO_RESERVA = 'Classificada em cadastro de reserva';
+    case CLASSIFICADA_NAO_SELECIONADA_EMPATE = 'Classificada e não selecionada por empate';
     case DESCLASSIFICADA = 'Desclassificada';
 
     public static function selectedValues(): array
@@ -40,12 +36,8 @@ enum StatusProposalEnum: string
     {
         return [
             self::CLASSIFICADA->value,
-            self::CLASSIFICADA_CADASTRO_RESERVA_30->value,
-            self::CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF->value,
-            self::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA->value,
-            self::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA->value,
-            self::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ->value,
-            self::CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC->value,
+            self::CLASSIFICADA_CADASTRO_RESERVA->value,
+            self::CLASSIFICADA_NAO_SELECIONADA_EMPATE->value,
         ];
     }
 

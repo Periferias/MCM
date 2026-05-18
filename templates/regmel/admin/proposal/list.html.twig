@@ -7,12 +7,8 @@
 ] %}
 {% set classifiedStatusValues = [
     statusEnum.CLASSIFICADA.value,
-    statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value,
-    statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value,
-    statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value,
-    statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value,
-    statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value,
-    statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value,
+    statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value,
+    statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value,
 ] %}
 
 {% block title %}
@@ -180,12 +176,8 @@
                                                 <option value="{{ statusEnum.SELECIONADA_DESEMPATE.value }}">{{ statusEnum.SELECIONADA_DESEMPATE.value }}</option>
                                                 <option value="{{ statusEnum.NAO_SELECIONADA.value }}">{{ statusEnum.NAO_SELECIONADA.value }}</option>
                                                 <option value="{{ statusEnum.CLASSIFICADA.value }}">{{ statusEnum.CLASSIFICADA.value }}</option>
-                                                <option value="{{ statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value }}">{{ statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value }}</option>
-                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value }}</option>
-                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value }}</option>
-                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value }}</option>
-                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value }}</option>
-                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value }}">{{ statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value }}</option>
                                                 <option value="{{ statusEnum.DESCLASSIFICADA.value }}">{{ statusEnum.DESCLASSIFICADA.value }}</option>
                                             </select>
                                             <div class="form-text">Selecione uma opção obrigatória</div>
@@ -644,16 +636,11 @@
                         <label for="result" class="form-label fw-bold">Resultado <span class="text-danger">*</span></label>
                         <select class="form-select" id="result" name="result" required onchange="toggleRankingField()">
                             <option value="" selected disabled>Selecione o resultado</option>
-                            <option value="Selecionada">✅ Selecionada (aprovada)</option>
-                            <option value="Selecionada por Desempate">✅ Selecionada por Desempate</option>
-                            <option value="Classificada">📊 Classificada (suplente)</option>
-                            <option value="Classificada em Cadastro de Reserva 30%">📊 Classificada em Cadastro de Reserva 30%</option>
-                            <option value="Classificada e Não Selecionada por Limite de Meta UF">📊 Classificada e Não Selecionada por Limite de Meta UF</option>
-                            <option value="Classificada e Não Selecionada por Desempate de Nota">📊 Classificada e Não Selecionada por Desempate de Nota</option>
-                            <option value="Classificada e Não Selecionada por Desempate de Natureza Jurídica">📊 Classificada e Não Selecionada por Desempate de Natureza Jurídica</option>
-                            <option value="Classificada e Não Selecionada por Desempate de Tempo de CNPJ">📊 Classificada e Não Selecionada por Desempate de Tempo de CNPJ</option>
-                            <option value="Classificada e Não Selecionada por Limite OSC">📊 Classificada e Não Selecionada por Limite OSC</option>
-                            <option value="Desclassificada">❌ Desclassificada</option>
+                            <option value="Selecionada">Selecionada</option>
+                            <option value="Selecionada por desempate">Selecionada por desempate</option>
+                            <option value="Classificada em cadastro de reserva">Classificada em cadastro de reserva</option>
+                            <option value="Classificada e não selecionada por empate">Classificada e não selecionada por empate</option>
+                            <option value="Desclassificada">Desclassificada</option>
                         </select>
                         <div class="form-text">Escolha uma opção obrigatória</div>
                     </div>

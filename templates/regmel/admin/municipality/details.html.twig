@@ -282,12 +282,8 @@
                                                     (statusEnum.SELECIONADA_DESEMPATE.value): 'bg-success text-white',
                                                     (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
                                                     (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
-                                                    (statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value): 'bg-primary text-white',
-                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value): 'bg-primary text-white',
-                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value): 'bg-primary text-white',
-                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value): 'bg-primary text-white',
-                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value): 'bg-primary text-white',
-                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value): 'bg-primary text-white',
+                                                    (statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value): 'bg-primary text-white',
+                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value): 'bg-primary text-white',
                                                     (statusEnum.DESCLASSIFICADA.value): 'bg-danger text-white',
                                                 }[status] ?? 'bg-dark') %}
                                                 {% set statusDescriptions = {
@@ -303,12 +299,8 @@
                                                     (statusEnum.SELECIONADA_DESEMPATE.value): 'Proposta selecionada por desempate',
                                                     (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
                                                     (statusEnum.CLASSIFICADA.value): 'Proposta classificada',
-                                                    (statusEnum.CLASSIFICADA_CADASTRO_RESERVA_30.value): 'Proposta classificada em cadastro de reserva 30%',
-                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF.value): 'Proposta classificada e não selecionada por limite de meta UF',
-                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA.value): 'Proposta classificada e não selecionada por desempate de nota',
-                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA.value): 'Proposta classificada e não selecionada por desempate de natureza jurídica',
-                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ.value): 'Proposta classificada e não selecionada por desempate de tempo de CNPJ',
-                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC.value): 'Proposta classificada e não selecionada por limite OSC',
+                                                    (statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value): 'Proposta classificada em cadastro de reserva',
+                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value): 'Proposta classificada e não selecionada por empate',
                                                     (statusEnum.DESCLASSIFICADA.value): 'Proposta desclassificada'
                                                 } %}
                                                 {# Mapeia valores antigos para novos textos #}

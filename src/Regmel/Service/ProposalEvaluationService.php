@@ -111,14 +111,8 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         $newStatus = match ($result) {
             EvaluationResultEnum::SELECIONADA => StatusProposalEnum::SELECIONADA->value,
             EvaluationResultEnum::SELECIONADA_DESEMPATE => StatusProposalEnum::SELECIONADA_DESEMPATE->value,
-            EvaluationResultEnum::NAO_SELECIONADA => StatusProposalEnum::NAO_SELECIONADA->value,
-            EvaluationResultEnum::CLASSIFICADA => StatusProposalEnum::CLASSIFICADA->value,
-            EvaluationResultEnum::CLASSIFICADA_CADASTRO_RESERVA_30 => StatusProposalEnum::CLASSIFICADA_CADASTRO_RESERVA_30->value,
-            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_LIMITE_META_UF->value,
-            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NOTA->value,
-            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_NATUREZA_JURIDICA->value,
-            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_DESEMPATE_TEMPO_CNPJ->value,
-            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_LIMITE_OSC->value,
+            EvaluationResultEnum::CLASSIFICADA_CADASTRO_RESERVA => StatusProposalEnum::CLASSIFICADA_CADASTRO_RESERVA->value,
+            EvaluationResultEnum::CLASSIFICADA_NAO_SELECIONADA_EMPATE => StatusProposalEnum::CLASSIFICADA_NAO_SELECIONADA_EMPATE->value,
             EvaluationResultEnum::DESCLASSIFICADA => StatusProposalEnum::DESCLASSIFICADA->value,
         };
 
