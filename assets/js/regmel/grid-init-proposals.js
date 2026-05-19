@@ -28,14 +28,6 @@ function initializeMainGrid() {
         .filter((name) => name);
 
     const columns = [
-        {
-            id: 'select',
-            name: '',
-            sort: false,
-            plugin: {
-                component: window.gridjs.plugins.selection.RowSelection,
-            }
-        },
         ...headers.map((name) => ({
             name,
             sort: !['foto', 'imagem', 'acoes', 'ações'].includes(normalizeText(name)),
@@ -67,7 +59,7 @@ function initializeMainGrid() {
         search: true,
         pagination: buildPaginationConfig(Number(pageLimitSelect.value)),
         className: {
-            table: 'table table-striped table-hover',
+            table: 'proposal-sort-table table table-striped table-hover table-sm',
             th: 'bg-dark text-white',
             td: 'bg-light'
         },
@@ -84,19 +76,10 @@ function initializeMainGrid() {
             noRecordsFound: trans(TABLE_NO_RECORDS_FOUND),
             error: trans(TABLE_ERROR),
         },
-        plugins: [
-            {
-                id: 'select',
-                component: window.gridjs.plugins.selection.RowSelection,
-            }
-        ],
     });
 
     grid.render(gridContainer);
     table.remove();
-
-    container.appendChild(buildBulkStatusLabel());
-    container.appendChild(buildBulkStatusControls(grid));
 
     pageLimitSelect.addEventListener('change', () => {
         grid
