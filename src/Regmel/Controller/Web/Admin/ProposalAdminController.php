@@ -11,6 +11,7 @@ use App\Enum\StatusProposalEnum;
 use App\Enum\UserRolesEnum;
 use App\Environment\ConfigEnvironment;
 use App\Regmel\Service\Interface\ProposalServiceInterface;
+use App\Regmel\Service\ProposalOrderingService;
 use App\Service\Interface\CityServiceInterface;
 use App\Service\Interface\InitiativeServiceInterface;
 use App\Service\Interface\InscriptionOpportunityServiceInterface;
@@ -22,6 +23,7 @@ use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -44,6 +46,7 @@ class ProposalAdminController extends AbstractAdminController
         private readonly PhaseServiceInterface $phaseService,
         private readonly TranslatorInterface $translator,
         private readonly EntityManagerInterface $entityManager,
+        private readonly ProposalOrderingService $proposalOrderingService,
         public readonly InscriptionOpportunityServiceInterface $inscriptionOpportunityService,
     ) {
     }
@@ -532,6 +535,75 @@ class ProposalAdminController extends AbstractAdminController
         $this->proposalService->bulkUpdateStatus($selectedRows, $status);
 
         return $this->redirectToRoute('admin_regmel_proposal_list');
+    }
+
+    #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/propostas/reorder', name: 'admin_regmel_proposal_reorder', methods: ['POST'])]
+    public function reorder(Request $request): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!isset($data['reordering']) || !is_array($data['reordering'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Campo "reordering" deve ser um array de objetos com proposalId e newOrder.',
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+
+            $this->proposalOrderingService->reorderProposals($data['reordering']);
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Propostas reordenadas com sucesso.',
+            ]);
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        } catch (\Exception $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erro ao reordenar propostas: '.$exception->getMessage(),
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/propostas/{id}/ranking', name: 'admin_regmel_proposal_update_ranking', methods: ['POST'])]
+    public function updateRanking(Request $request, Uuid $id): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!isset($data['ranking']) || !is_scalar($data['ranking'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Campo "ranking" é obrigatório.',
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+
+            $ranking = strtoupper(trim((string) $data['ranking']));
+
+            $this->proposalOrderingService->updateProposalRanking($id, $ranking);
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Posição atualizada com sucesso.',
+                'ranking' => $ranking,
+            ]);
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        } catch (\Exception $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erro ao atualizar posição: '.$exception->getMessage(),
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]

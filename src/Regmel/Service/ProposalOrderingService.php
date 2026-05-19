@@ -240,6 +240,105 @@ class ProposalOrderingService
     }
 
     /**
+     * Atualizar diretamente o código de posição de uma proposta ranqueada.
+     */
+    public function updateProposalRanking(Uuid $proposalId, string $ranking): void
+    {
+        /** @var Initiative|null $proposal */
+        $proposal = $this->entityManager->find(Initiative::class, $proposalId);
+
+        if (!$proposal) {
+            throw new \InvalidArgumentException('Proposta não encontrada.');
+        }
+
+        $extra = $proposal->getExtraFields() ?? [];
+        $status = (string) ($extra['status'] ?? '');
+
+        if (!StatusProposalEnum::isRanked($status)) {
+            throw new \InvalidArgumentException('Proposta não está em status selecionado ou classificado.');
+        }
+
+        $state = strtoupper((string) ($extra['state'] ?? ''));
+        if (!preg_match('/^[A-Z]{2}$/', $state)) {
+            throw new \InvalidArgumentException('UF da proposta é obrigatória para atualizar a posição.');
+        }
+
+        $ranking = strtoupper(trim($ranking));
+        if (!preg_match('/^([A-Z]{2})(\d{1,4})$/', $ranking, $matches)) {
+            throw new \InvalidArgumentException('A posição deve seguir o formato UF0001.');
+        }
+
+        if ($matches[1] !== $state) {
+            throw new \InvalidArgumentException('A UF da posição deve ser igual à UF da proposta.');
+        }
+
+        $position = (int) $matches[2];
+        if ($position < 1) {
+            throw new \InvalidArgumentException('A parte numérica da posição deve ser maior que zero.');
+        }
+
+        $normalizedRanking = sprintf('%s%04d', $state, $position);
+        $this->assertRankingIsAvailable($proposal, $status, $state, $normalizedRanking);
+
+        $previousOrder = (string) ($extra['evaluation_ranking'] ?? '');
+        if ($previousOrder === $normalizedRanking) {
+            return;
+        }
+
+        $extra['evaluation_ranking'] = $normalizedRanking;
+        $proposal->setExtraFields($extra);
+        $this->entityManager->persist($proposal);
+        $this->entityManager->flush();
+
+        $event = new ProposalOrderingEvent(
+            $proposal->getId()->toRfc4122(),
+            [[
+                'proposalId' => $proposal->getId()->toRfc4122(),
+                'order' => $previousOrder,
+                'name' => $proposal->getName(),
+            ]],
+            [[
+                'proposalId' => $proposal->getId()->toRfc4122(),
+                'order' => $normalizedRanking,
+                'name' => $proposal->getName(),
+            ]],
+        );
+        $this->eventDispatcher->dispatch($event);
+    }
+
+    private function assertRankingIsAvailable(Initiative $proposal, string $status, string $state, string $ranking): void
+    {
+        $currentProposalId = $proposal->getId()?->toRfc4122();
+        $proposals = $this->entityManager->getRepository(Initiative::class)->findAll();
+
+        foreach ($proposals as $candidate) {
+            if (!$candidate instanceof Initiative || null !== $candidate->getDeletedAt()) {
+                continue;
+            }
+
+            if ($currentProposalId && $candidate->getId()?->toRfc4122() === $currentProposalId) {
+                continue;
+            }
+
+            $candidateExtra = $candidate->getExtraFields() ?? [];
+            $candidateStatus = (string) ($candidateExtra['status'] ?? '');
+            $candidateState = strtoupper((string) ($candidateExtra['state'] ?? ''));
+            $candidateRanking = strtoupper((string) ($candidateExtra['evaluation_ranking'] ?? ''));
+
+            if ($candidateState !== $state || $candidateRanking !== $ranking) {
+                continue;
+            }
+
+            if (
+                (StatusProposalEnum::isSelected($status) && StatusProposalEnum::isSelected($candidateStatus)) ||
+                (StatusProposalEnum::isClassified($status) && StatusProposalEnum::isClassified($candidateStatus))
+            ) {
+                throw new \InvalidArgumentException('Já existe uma proposta com essa posição para a mesma UF.');
+            }
+        }
+    }
+
+    /**
      * Validar integridade de sequência.
      */
     private function validateSequenceIntegrity(array $proposals): bool
