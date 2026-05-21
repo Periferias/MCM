@@ -10,6 +10,10 @@
     statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value,
     statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value,
 ] %}
+{% set nonSelectedStatusValues = [
+    statusEnum.NAO_SELECIONADA.value,
+    statusEnum.DESCLASSIFICADA.value,
+] %}
 
 {% block title %}
     {{ 'control_panel'|trans }} - {{ 'proposals'|trans }}
@@ -805,7 +809,7 @@
                         {% if 'ROLE_CAIXA' not in app.user.roles %}
                         <div class="tab-pane fade" id="panel-nao-selecionada" role="tabpanel" aria-labelledby="tab-nao-selecionada">
                             <div class="mb-3">
-                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('{{ statusEnum.NAO_SELECIONADA.value }}')">
+                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('nao_selecionadas')">
                                     <i class="bi bi-download"></i> Exportar Propostas Não Selecionadas
                                 </button>
                             </div>
@@ -829,7 +833,7 @@
                                 <tbody>
                                 {% for proposal in proposals %}
                                     {% set status = proposal.status ?? '' %}
-                                    {% if status == statusEnum.NAO_SELECIONADA.value %}
+                                    {% if status in nonSelectedStatusValues %}
                                     <tr data-status="{{ status }}" class="proposal-row">
                                         <td class="border-end" style="width: 95px;">{{ proposal.id|slice(0, 8) }}</td>
                                         <td class="border-end" style="width: 95px;">{{ proposal.state }}</td>
@@ -853,7 +857,7 @@
                                 {% endfor %}
                                 {% set nao_selecionada_count = 0 %}
                                 {% for proposal in proposals %}
-                                    {% if proposal.status == statusEnum.NAO_SELECIONADA.value %}
+                                    {% if proposal.status in nonSelectedStatusValues %}
                                         {% set nao_selecionada_count = nao_selecionada_count + 1 %}
                                     {% endif %}
                                 {% endfor %}
@@ -1108,7 +1112,7 @@
         // Função para exportar dados filtrados por status em XLS
         function exportTabaComStatus(status) {
             const params = new URLSearchParams();
-            if (status === 'selecionadas' || status === 'classificadas') {
+            if (status === 'selecionadas' || status === 'classificadas' || status === 'nao_selecionadas') {
                 params.append('status_group', status);
             } else {
                 params.append('status', status);

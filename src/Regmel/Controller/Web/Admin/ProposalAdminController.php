@@ -361,6 +361,17 @@ class ProposalAdminController extends AbstractAdminController
             });
         }
 
+        if ('nao_selecionadas' === $statusGroup) {
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+
+                return in_array($proposalStatus, [
+                    StatusProposalEnum::NAO_SELECIONADA->value,
+                    StatusProposalEnum::DESCLASSIFICADA->value,
+                ], true);
+            });
+        }
+
         return $this->proposalService->generateSpreadSheet($initiatives, 'propostas', null);
     }
 
