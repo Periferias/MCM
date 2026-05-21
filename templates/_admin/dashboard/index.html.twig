@@ -24,10 +24,4 @@
             </section>
         </div>
     </section>
-
-    <!-- Company Representative Onboarding Modal -->
-    {% if 'ROLE_COMPANY' in app.user.roles %}
-        {% include "_components/company-representative-onboarding-modal.html.twig" %}
-    {% endif %}
-
 {% endblock %}
