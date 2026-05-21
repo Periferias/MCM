@@ -462,16 +462,6 @@
                             <div class="form-text">Mínimo de 10 caracteres</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="notes" class="form-label">Notas Adicionais</label>
-                            <textarea
-                                class="form-control"
-                                id="notes"
-                                name="notes"
-                                rows="3"
-                                placeholder="Observações adicionais (opcional)..."
-                            ></textarea>
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -501,7 +491,6 @@
             document.getElementById('proposalName').textContent = proposalName;
             document.getElementById('result').value = '';
             document.getElementById('reason').value = '';
-            document.getElementById('notes').value = '';
             const rankingInput = document.getElementById('ranking');
             rankingInput.value = '';
             rankingInput.dataset.state = proposalState;
@@ -551,7 +540,6 @@
             const proposalId = document.getElementById('proposalId').value;
             const result = document.getElementById('result').value;
             const reason = document.getElementById('reason').value;
-            const notes = document.getElementById('notes').value;
             const ranking = document.getElementById('ranking').value;
 
             try {
@@ -564,7 +552,6 @@
                     body: JSON.stringify({
                         result: result,
                         reason: reason,
-                        notes: notes || null,
                         ranking: ranking || null
                     })
                 });
