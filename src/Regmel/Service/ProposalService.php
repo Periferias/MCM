@@ -259,6 +259,35 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             : '';
     }
 
+    private function resolveCityCode(Initiative $entity, array $extraFields): string
+    {
+        foreach (['city_code', 'cityCode'] as $fieldName) {
+            if (!empty($extraFields[$fieldName])) {
+                return (string) $extraFields[$fieldName];
+            }
+        }
+
+        $municipality = $entity->getOrganizationTo();
+        $municipalityExtraFields = $municipality?->getExtraFields() ?? [];
+
+        foreach (['city_code', 'cityCode'] as $fieldName) {
+            if (!empty($municipalityExtraFields[$fieldName])) {
+                return (string) $municipalityExtraFields[$fieldName];
+            }
+        }
+
+        $cityId = $extraFields['city_id'] ?? $extraFields['cityId'] ?? $municipalityExtraFields['cityId'] ?? null;
+        if ($cityId instanceof Uuid || is_string($cityId)) {
+            try {
+                return (string) ($this->cityService->get($cityId)?->getCityCode() ?? '');
+            } catch (\Throwable) {
+                return '';
+            }
+        }
+
+        return '';
+    }
+
     public function getCsvHeaders(?string $type = null): array
     {
         return [
@@ -308,6 +337,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $env = $this->configEnvironment->aurora();
         $region = $extraFields['region'] ?? '';
         $state = $extraFields['state'] ?? '';
+        $cityCode = $this->resolveCityCode($entity, $extraFields);
         $phoneCompany = $organizationFrom->getExtraFields()['telefone'] ?? $organizationFrom->getExtraFields()['phone'] ?? '';
 
         // Buscar dados do representante (usuário owner da organização)
@@ -349,7 +379,7 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
             $region,
             $state,
             $extraFields['city_name'] ?? '',
-            $extraFields['city_code'] ?? $extraFields['cityCode'] ?? '',
+            $cityCode,
             $entity->getName() ?? '',
             $housesQuantity,
             $extraFields['area_size'] ?? 0,
