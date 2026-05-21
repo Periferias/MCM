@@ -685,7 +685,7 @@
                                 {% set selected = selected|sort((a, b) => (a.evaluation_ranking ?? 'ZZZZZZ') <=> (b.evaluation_ranking ?? 'ZZZZZZ')) %}
                                 {% for proposal in selected %}
                                     {% set status = proposal.status ?? '' %}
-                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" data-state="{{ proposal.state|upper }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
+                                    <tr data-status="{{ status }}" class="proposal-row" data-proposal-id="{{ proposal.id }}" data-state="{{ proposal.state|upper }}" data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
                                         <td style="font-weight: bold; text-align: center; width: 120px;" class="border-end">
                                             <input
                                                 type="text"
@@ -763,7 +763,7 @@
                                 {% set classified = classified|sort((a, b) => (a.evaluation_ranking ?? 'ZZZZZZ') <=> (b.evaluation_ranking ?? 'ZZZZZZ')) %}
                                 {% for proposal in classified %}
                                     {% set status = proposal.status ?? '' %}
-                                    <tr data-status="{{ status }}" class="proposal-row sortable-item" data-proposal-id="{{ proposal.id }}" data-state="{{ proposal.state|upper }}" {% if is_granted('ROLE_ADMIN') %}draggable="true"{% endif %} data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
+                                    <tr data-status="{{ status }}" class="proposal-row" data-proposal-id="{{ proposal.id }}" data-state="{{ proposal.state|upper }}" data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
                                         <td style="font-weight: bold; text-align: center; width: 120px;" class="border-end">
                                             <input
                                                 type="text"
@@ -1265,93 +1265,12 @@
 
             const isAdmin = {{ is_granted('ROLE_ADMIN') ? 'true' : 'false' }};
             if (isAdmin) {
-                setupDragAndDrop('tableSelecionada');
-                setupDragAndDrop('tableClassificada');
                 setupPositionEditing('tableSelecionada');
                 setupPositionEditing('tableClassificada');
             }
         });
 
-        let reorderState = {
-            tableId: null,
-            originalRows: [],
-            reordering: []
-        };
-
         let rankingEditState = null;
-
-        function setupDragAndDrop(tableId) {
-            const tbody = document.querySelector(`#${tableId} tbody`);
-            if (!tbody) return;
-
-            let draggedItem = null;
-
-            tbody.addEventListener('dragstart', e => {
-                const row = e.target.closest('.proposal-row');
-                if (row) {
-                    reorderState.originalRows = getTableSnapshot(tableId);
-                    reorderState.tableId = tableId;
-                    draggedItem = row;
-                    draggedItem.style.opacity = '0.5';
-                    draggedItem.classList.add('dragging');
-                }
-            });
-
-            tbody.addEventListener('dragend', e => {
-                if (draggedItem) {
-                    draggedItem.style.opacity = '1';
-                    draggedItem.classList.remove('dragging');
-                }
-
-                if (reorderState.tableId === tableId && hasOrderChanged(tableId, reorderState.originalRows)) {
-                    updatePositionNumbers(tableId);
-                    reorderState.reordering = collectReordering(tableId);
-                    openReorderConfirmationModal();
-                } else {
-                    resetReorderState();
-                }
-
-                draggedItem = null;
-            });
-
-            tbody.addEventListener('dragover', e => {
-                e.preventDefault();
-                if (!draggedItem) return;
-                const afterElement = getDragAfterElement(tbody, e.clientY);
-                if (afterElement) {
-                    tbody.insertBefore(draggedItem, afterElement);
-                } else {
-                    tbody.appendChild(draggedItem);
-                }
-                updatePositionNumbers(tableId);
-            });
-        }
-
-        function getDragAfterElement(container, y) {
-            const items = [...container.querySelectorAll('.proposal-row:not(.dragging)')];
-            return items.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset, element: child };
-                }
-                return closest;
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
-
-        function updatePositionNumbers(tableId) {
-            const stateCounters = {};
-            document.querySelectorAll(`#${tableId} .proposal-row`).forEach((row, i) => {
-                const input = row.querySelector('input.position-input-sel, input.position-input-class');
-                const state = String(row.dataset.state || '').trim().toUpperCase();
-                if (!input || !/^[A-Z]{2}$/.test(state)) {
-                    return;
-                }
-
-                stateCounters[state] = (stateCounters[state] || 0) + 1;
-                input.value = `${state}${String(stateCounters[state]).padStart(4, '0')}`;
-            });
-        }
 
         function setupPositionEditing(tableId) {
             const table = document.getElementById(tableId);
@@ -1363,7 +1282,6 @@
                 input.addEventListener('focus', () => selectPositionNumericPart(input));
                 input.addEventListener('click', () => selectPositionNumericPart(input));
                 input.addEventListener('mousedown', (event) => event.stopPropagation());
-                input.addEventListener('dragstart', (event) => event.stopPropagation());
                 input.addEventListener('keydown', (event) => {
                     if (event.key === 'Enter') {
                         event.preventDefault();
@@ -1400,7 +1318,6 @@
         function applyPositionInputEdit(input) {
             if (
                 input.dataset.applyingPositionEdit === 'true' ||
-                (reorderState.tableId && reorderState.reordering.length > 0) ||
                 rankingEditState
             ) {
                 return;
@@ -1476,71 +1393,6 @@
             }
         }
 
-        function collectReordering(tableId) {
-            const rows = document.querySelectorAll(`#${tableId} .proposal-row`);
-            const reordering = [];
-
-            rows.forEach((row, index) => {
-                const proposalId = row.getAttribute('data-proposal-id');
-                reordering.push({ proposalId, newOrder: index + 1 });
-            });
-
-            return reordering;
-        }
-
-        function getTableSnapshot(tableId) {
-            return Array.from(document.querySelectorAll(`#${tableId} .proposal-row`)).map((row) => ({
-                proposalId: row.getAttribute('data-proposal-id'),
-                order: row.getAttribute('data-current-order') || ''
-            }));
-        }
-
-        function hasOrderChanged(tableId, originalRows) {
-            const currentRows = Array.from(document.querySelectorAll(`#${tableId} .proposal-row`)).map((row, index) => ({
-                proposalId: row.getAttribute('data-proposal-id'),
-                order: String(index + 1)
-            }));
-
-            if (currentRows.length !== originalRows.length) {
-                return true;
-            }
-
-            return currentRows.some((row, index) => row.proposalId !== originalRows[index]?.proposalId);
-        }
-
-        function restoreOriginalOrder(tableId, snapshot) {
-            const tbody = document.querySelector(`#${tableId} tbody`);
-            if (!tbody || !snapshot.length) {
-                return;
-            }
-
-            snapshot.forEach((item) => {
-                const row = tbody.querySelector(`[data-proposal-id="${item.proposalId}"]`);
-                if (row) {
-                    tbody.appendChild(row);
-                    row.setAttribute('data-current-order', item.order);
-                    const input = row.querySelector('input.position-input-sel, input.position-input-class');
-                    if (input) {
-                        input.value = item.order;
-                        input.dataset.originalValue = item.order;
-                    }
-                }
-            });
-        }
-
-        function openReorderConfirmationModal() {
-            const modalEl = document.getElementById('confirmReorderModal');
-            if (!modalEl) {
-                return;
-            }
-
-            setConfirmationModalMessage('Deseja salvar a nova ordem das propostas?');
-            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-            modal.show();
-
-            modalEl.addEventListener('hidden.bs.modal', handleReorderCancel, { once: true });
-        }
-
         function openRankingEditConfirmationModal() {
             const modalEl = document.getElementById('confirmReorderModal');
             if (!modalEl) {
@@ -1561,15 +1413,6 @@
             }
         }
 
-        function handleReorderCancel() {
-            if (!reorderState.tableId || reorderState.reordering.length === 0) {
-                return;
-            }
-
-            restoreOriginalOrder(reorderState.tableId, reorderState.originalRows);
-            resetReorderState();
-        }
-
         function handleRankingEditCancel() {
             if (!rankingEditState) {
                 return;
@@ -1578,50 +1421,6 @@
             rankingEditState.input.value = rankingEditState.originalValue;
             rankingEditState.input.dataset.originalValue = rankingEditState.originalValue;
             rankingEditState = null;
-        }
-
-        function resetReorderState() {
-            reorderState = {
-                tableId: null,
-                originalRows: [],
-                reordering: []
-            };
-        }
-
-        async function saveConfirmedReordering() {
-            const { tableId, reordering } = reorderState;
-            if (!tableId || reordering.length === 0) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/painel/admin/propostas/reorder', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reordering })
-                });
-
-                if (!response.ok) {
-                    console.error('Erro ao salvar ordem:', await response.text());
-                    restoreOriginalOrder(tableId, reorderState.originalRows);
-                } else {
-                    reordering.forEach((item) => {
-                        const row = document.querySelector(`#${tableId} [data-proposal-id="${item.proposalId}"]`);
-                        if (row) {
-                            const input = row.querySelector('input.position-input-sel, input.position-input-class');
-                            row.setAttribute('data-current-order', input ? input.value : String(item.newOrder));
-                            if (input) {
-                                input.dataset.originalValue = input.value;
-                            }
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('Erro na requisição:', error);
-                restoreOriginalOrder(tableId, reorderState.originalRows);
-            } finally {
-                resetReorderState();
-            }
         }
 
         async function saveConfirmedRankingEdit() {
@@ -1666,14 +1465,11 @@
         document.getElementById('confirmReorderButton')?.addEventListener('click', async () => {
             const modalEl = document.getElementById('confirmReorderModal');
             const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-            modalEl.removeEventListener('hidden.bs.modal', handleReorderCancel);
             modalEl.removeEventListener('hidden.bs.modal', handleRankingEditCancel);
             modal.hide();
 
             if (rankingEditState) {
                 await saveConfirmedRankingEdit();
-            } else {
-                await saveConfirmedReordering();
             }
         });
     </script>
