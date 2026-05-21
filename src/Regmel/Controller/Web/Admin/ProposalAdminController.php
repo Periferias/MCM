@@ -297,6 +297,7 @@ class ProposalAdminController extends AbstractAdminController
         $isCaixa = $this->security->isGranted(UserRolesEnum::ROLE_CAIXA->value);
 
         $status = $request->query->get('status');
+        $statusGroup = $request->query->get('status_group');
 
         if ($isMunicipality) {
             $agent = $user->getAgents()->filter(fn ($agent) => $agent->isMain())->first();

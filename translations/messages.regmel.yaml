@@ -1194,6 +1194,7 @@ csv:
     city_code: Código Município
     company_name: Nome da Empresa/OSC
     company_cnpj: CNPJ da Empresa/OSC
+    company_email: Email da Empresa/OSC
     profit_type: Com/Sem fins lucrativos
     company_phone: Telefone da Empresa/OSC
     project_file: Arquivo do Projeto
