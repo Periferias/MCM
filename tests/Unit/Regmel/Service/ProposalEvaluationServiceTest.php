@@ -10,6 +10,7 @@ use App\Regmel\Enum\EvaluationResultEnum;
 use App\Regmel\Service\ProposalEvaluationService;
 use App\Service\Interface\FileServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\Uuid;
 
@@ -91,7 +92,7 @@ class ProposalEvaluationServiceTest extends TestCase
             'evaluation_status' => null,
         ]);
 
-        $this->entityManager->expects($this->once())
+        $this->entityManager->expects($this->exactly(2))
             ->method('find')
             ->with(Initiative::class, $proposalId)
             ->willReturn($proposal);
@@ -111,7 +112,7 @@ class ProposalEvaluationServiceTest extends TestCase
             'evaluation_status' => null,
         ]);
 
-        $this->entityManager->expects($this->once())
+        $this->entityManager->expects($this->exactly(2))
             ->method('find')
             ->with(Initiative::class, $proposalId)
             ->willReturn($proposal);
@@ -119,7 +120,46 @@ class ProposalEvaluationServiceTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('O código de posição deve conter apenas letras e números.');
 
-        $this->service->evaluate($proposalId, EvaluationResultEnum::CLASSIFICADA, 'Test reason', ranking: 'SP-001');
+        $this->service->evaluate($proposalId, EvaluationResultEnum::CLASSIFICADA_CADASTRO_RESERVA, 'Test reason', ranking: 'SP-001');
+    }
+
+    public function testEvaluateThrowsExceptionWhenRankingExistsInSameStateWithDifferentRankedStatus(): void
+    {
+        $proposalId = Uuid::v4();
+        $proposal = new Initiative();
+        $proposal->setId($proposalId);
+        $proposal->setExtraFields([
+            'status' => StatusProposalEnum::ANUIDA->value,
+            'state' => 'SP',
+        ]);
+
+        $existingProposal = new Initiative();
+        $existingProposal->setId(Uuid::v4());
+        $existingProposal->setExtraFields([
+            'status' => StatusProposalEnum::CLASSIFICADA_CADASTRO_RESERVA->value,
+            'state' => 'SP',
+            'evaluation_ranking' => 'SP0001',
+        ]);
+
+        $repository = $this->createMock(EntityRepository::class);
+        $repository->expects($this->once())
+            ->method('findAll')
+            ->willReturn([$existingProposal]);
+
+        $this->entityManager->expects($this->exactly(2))
+            ->method('find')
+            ->with(Initiative::class, $proposalId)
+            ->willReturn($proposal);
+
+        $this->entityManager->expects($this->once())
+            ->method('getRepository')
+            ->with(Initiative::class)
+            ->willReturn($repository);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Já existe uma proposta com essa posição para a mesma UF.');
+
+        $this->service->evaluate($proposalId, EvaluationResultEnum::SELECIONADA, 'Test reason', ranking: 'SP0001');
     }
 
     public function testGetEvaluationReturnsNullWhenNotEvaluated(): void

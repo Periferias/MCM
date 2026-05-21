@@ -69,18 +69,18 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
             throw new \InvalidArgumentException('O motivo da avaliação é obrigatório.');
         }
 
-        $ranking = null !== $ranking ? trim($ranking) : null;
+        $ranking = null !== $ranking ? strtoupper(trim($ranking)) : null;
 
         if ($result->requiresRanking() && '' === (string) $ranking) {
-            $ranking = $this->generateNextRankingCode($proposal, $result);
+            $ranking = $this->generateNextRankingCode($proposal);
         }
 
         if ($result->requiresRanking() && !preg_match('/^[A-Za-z0-9]+$/', (string) $ranking)) {
             throw new \InvalidArgumentException('O código de posição deve conter apenas letras e números.');
         }
 
-        if ($result->requiresRanking() && $this->rankingExistsForGroup($proposal, $result, (string) $ranking)) {
-            $ranking = $this->generateNextRankingCode($proposal, $result);
+        if ($result->requiresRanking() && $this->rankingExistsForState($proposal, (string) $ranking)) {
+            throw new \InvalidArgumentException('Já existe uma proposta com essa posição para a mesma UF.');
         }
 
         $extraFields = $proposal->getExtraFields() ?? [];
@@ -129,7 +129,7 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         $this->entityManager->flush();
     }
 
-    private function generateNextRankingCode(Initiative $proposal, EvaluationResultEnum $result): string
+    private function generateNextRankingCode(Initiative $proposal): string
     {
         $extraFields = $proposal->getExtraFields() ?? [];
         $state = strtoupper((string) ($extraFields['state'] ?? ''));
@@ -138,14 +138,13 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
             throw new \InvalidArgumentException('UF da proposta é obrigatória para gerar o código de posição.');
         }
 
-        $statusGroup = $this->getResultStatusGroup($result);
         $currentProposalId = $proposal->getId()?->toRfc4122();
         $highestPosition = 0;
 
         $proposals = $this->entityManager->getRepository(Initiative::class)->findAll();
 
         foreach ($proposals as $candidate) {
-            if (!$candidate instanceof Initiative) {
+            if (!$candidate instanceof Initiative || null !== $candidate->getDeletedAt()) {
                 continue;
             }
 
@@ -154,14 +153,13 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
             }
 
             $candidateExtraFields = $candidate->getExtraFields() ?? [];
-            $candidateStatus = (string) ($candidateExtraFields['status'] ?? '');
             $candidateState = strtoupper((string) ($candidateExtraFields['state'] ?? ''));
 
-            if ($candidateState !== $state || !$this->statusBelongsToGroup($candidateStatus, $statusGroup)) {
+            if ($candidateState !== $state) {
                 continue;
             }
 
-            $ranking = (string) ($candidateExtraFields['evaluation_ranking'] ?? '');
+            $ranking = strtoupper((string) ($candidateExtraFields['evaluation_ranking'] ?? ''));
             if (preg_match('/^'.preg_quote($state, '/').'(\d+)$/', $ranking, $matches)) {
                 $highestPosition = max($highestPosition, (int) $matches[1]);
             }
@@ -170,17 +168,17 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
         return sprintf('%s%04d', $state, $highestPosition + 1);
     }
 
-    private function rankingExistsForGroup(Initiative $proposal, EvaluationResultEnum $result, string $ranking): bool
+    private function rankingExistsForState(Initiative $proposal, string $ranking): bool
     {
         $extraFields = $proposal->getExtraFields() ?? [];
         $state = strtoupper((string) ($extraFields['state'] ?? ''));
-        $statusGroup = $this->getResultStatusGroup($result);
+        $ranking = strtoupper($ranking);
         $currentProposalId = $proposal->getId()?->toRfc4122();
 
         $proposals = $this->entityManager->getRepository(Initiative::class)->findAll();
 
         foreach ($proposals as $candidate) {
-            if (!$candidate instanceof Initiative) {
+            if (!$candidate instanceof Initiative || null !== $candidate->getDeletedAt()) {
                 continue;
             }
 
@@ -189,38 +187,15 @@ class ProposalEvaluationService implements ProposalEvaluationServiceInterface
             }
 
             $candidateExtraFields = $candidate->getExtraFields() ?? [];
-            $candidateStatus = (string) ($candidateExtraFields['status'] ?? '');
             $candidateState = strtoupper((string) ($candidateExtraFields['state'] ?? ''));
-            $candidateRanking = (string) ($candidateExtraFields['evaluation_ranking'] ?? '');
+            $candidateRanking = strtoupper((string) ($candidateExtraFields['evaluation_ranking'] ?? ''));
 
-            if ($candidateState === $state && $candidateRanking === $ranking && $this->statusBelongsToGroup($candidateStatus, $statusGroup)) {
+            if ($candidateState === $state && $candidateRanking === $ranking) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    private function getResultStatusGroup(EvaluationResultEnum $result): string
-    {
-        if (str_starts_with($result->value, 'Selecionada')) {
-            return 'selected';
-        }
-
-        if (str_starts_with($result->value, 'Classificada')) {
-            return 'classified';
-        }
-
-        return 'none';
-    }
-
-    private function statusBelongsToGroup(string $status, string $statusGroup): bool
-    {
-        return match ($statusGroup) {
-            'selected' => StatusProposalEnum::isSelected($status),
-            'classified' => StatusProposalEnum::isClassified($status),
-            default => false,
-        };
     }
 
     public function getProposalsAwaitingEvaluation(

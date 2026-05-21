@@ -278,7 +278,7 @@ class ProposalOrderingService
         }
 
         $normalizedRanking = sprintf('%s%04d', $state, $position);
-        $this->assertRankingIsAvailable($proposal, $status, $state, $normalizedRanking);
+        $this->assertRankingIsAvailable($proposal, $state, $normalizedRanking);
 
         $previousOrder = (string) ($extra['evaluation_ranking'] ?? '');
         if ($previousOrder === $normalizedRanking) {
@@ -306,7 +306,7 @@ class ProposalOrderingService
         $this->eventDispatcher->dispatch($event);
     }
 
-    private function assertRankingIsAvailable(Initiative $proposal, string $status, string $state, string $ranking): void
+    private function assertRankingIsAvailable(Initiative $proposal, string $state, string $ranking): void
     {
         $currentProposalId = $proposal->getId()?->toRfc4122();
         $proposals = $this->entityManager->getRepository(Initiative::class)->findAll();
@@ -321,7 +321,6 @@ class ProposalOrderingService
             }
 
             $candidateExtra = $candidate->getExtraFields() ?? [];
-            $candidateStatus = (string) ($candidateExtra['status'] ?? '');
             $candidateState = strtoupper((string) ($candidateExtra['state'] ?? ''));
             $candidateRanking = strtoupper((string) ($candidateExtra['evaluation_ranking'] ?? ''));
 
@@ -329,12 +328,7 @@ class ProposalOrderingService
                 continue;
             }
 
-            if (
-                (StatusProposalEnum::isSelected($status) && StatusProposalEnum::isSelected($candidateStatus)) ||
-                (StatusProposalEnum::isClassified($status) && StatusProposalEnum::isClassified($candidateStatus))
-            ) {
-                throw new \InvalidArgumentException('Já existe uma proposta com essa posição para a mesma UF.');
-            }
+            throw new \InvalidArgumentException('Já existe uma proposta com essa posição para a mesma UF.');
         }
     }
 
