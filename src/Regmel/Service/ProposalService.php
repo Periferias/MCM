@@ -500,6 +500,10 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
         $this->initiativeRepository->save($initiative);
         $this->entityManager->flush();
 
+        if ($this->isResultStatus($status)) {
+            return;
+        }
+
         // Enviar email de notificação
         $municipalityEmails = [];
         $organizationTo = $initiative->getOrganizationTo();
@@ -554,6 +558,15 @@ readonly class ProposalService extends AbstractEntityService implements Proposal
                 ]
             );
         }
+    }
+
+    private function isResultStatus(StatusProposalEnum $status): bool
+    {
+        return StatusProposalEnum::isRanked($status->value)
+            || in_array($status, [
+                StatusProposalEnum::NAO_SELECIONADA,
+                StatusProposalEnum::DESCLASSIFICADA,
+            ], true);
     }
 
     public function bulkUpdateStatus(array $proposals, string $status): void
