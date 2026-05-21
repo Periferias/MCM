@@ -67,13 +67,8 @@ class ProposalAdminController extends AbstractAdminController
         $region = $request->query->get('region');
         $state = $request->query->get('state');
         $city = $request->query->get('city');
-        $anticipation = $request->query->get('anticipation');
         $cities = [];
         $states = $this->stateService->list();
-        $anticipationOptions = [
-            ['value' => 'true', 'label' => $this->translator->trans('proposal.in_anticipation')],
-            ['value' => 'false', 'label' => $this->translator->trans('proposal.no_anticipation')],
-        ];
 
         if ($region) {
             $states = $this->stateService->findBy(['region' => $region]);
@@ -83,7 +78,7 @@ class ProposalAdminController extends AbstractAdminController
             $cities = $this->cityService->findByState($state);
         }
 
-        $filtered = $this->initiativeService->listFiltered($region, $state, $city, $status, $anticipation);
+        $filtered = $this->initiativeService->listFiltered($region, $state, $city, $status, null);
 
         // Filtrar propostas por role (ROLE_CAIXA só vê SELECIONADA e CLASSIFICADA)
         $isCaixa = $this->security->isGranted(UserRolesEnum::ROLE_CAIXA->value);
@@ -186,8 +181,6 @@ class ProposalAdminController extends AbstractAdminController
             'statuses' => $statuses,
             'states' => $states,
             'cities' => $cities,
-            'anticipation' => $anticipation ?? '',
-            'anticipationOption' => $anticipationOptions,
         ], parentPath: '');
     }
 

@@ -76,21 +76,6 @@
                 {% endfor %}
             </select>
         </div>
-
-        <div class="col-md-3 mt-2">
-            <label for="anticipation-filter" class="form-label">{{ 'proposal.anticipation'|trans }}</label>
-            <select id="anticipation-filter" name="anticipation" class="form-select" data-placeholder="{{ 'all'|trans }}">
-                <option value="">{{ 'all'|trans }}</option>
-                {% for option in anticipationOption %}
-                    <option
-                            value="{{ option.value }}"
-                            {% if option.value == app.request.get('anticipation') %}selected{% endif %}
-                    >
-                        {{ option.label }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
     {% endif %}
 
     <div class="col-md-3 d-flex align-items-end">
@@ -99,4 +84,3 @@
         </a>
     </div>
 </form>
-
