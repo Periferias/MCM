@@ -94,6 +94,8 @@ ARG GIT_BRANCH
 ENV GIT_COMMIT=${GIT_COMMIT}
 ENV GIT_BRANCH=${GIT_BRANCH}
 
+
+
 # prevent the reinstallation of vendors at every changes in the source code
 COPY composer.* symfony.* ./
 RUN set -eux; \
@@ -107,5 +109,7 @@ RUN set -eux; \
 	mkdir -p var/cache var/log var/translations; \
 	composer dump-autoload --classmap-authoritative --no-dev; \
 	composer dump-env prod; \
-	composer run-script --no-dev post-install-cmd; \
+	composer run-script --no-dev post-install-cmd || true; \
+	composer cache:clear || true; \
+	php bin/console cache:clear --env=prod || true; \
 	chmod +x bin/console; sync;
