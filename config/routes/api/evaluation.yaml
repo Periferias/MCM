@@ -1,0 +1,34 @@
+get-evaluation:
+  path: /proposals/{id}/evaluation
+  controller: App\Controller\Api\EvaluationApiController::getEvaluation
+  methods: ['GET']
+
+evaluate:
+  path: /proposals/{id}/evaluate
+  controller: App\Controller\Api\EvaluationApiController::evaluate
+  methods: ['POST']
+
+upload-evaluation-document:
+  path: /proposals/{id}/evaluation/document
+  controller: App\Controller\Api\EvaluationApiController::uploadEvaluationDocument
+  methods: ['POST']
+
+get-proposals-awaiting-evaluation:
+  path: /proposals/awaiting-evaluation
+  controller: App\Controller\Api\EvaluationApiController::getProposalsAwaitingEvaluation
+  methods: ['GET']
+
+get-ordered-proposals:
+  path: /proposals/ordered
+  controller: App\Controller\Api\EvaluationApiController::getOrderedProposals
+  methods: ['GET']
+
+reorder-proposals:
+  path: /proposals/reorder
+  controller: App\Controller\Api\EvaluationApiController::reorderProposals
+  methods: ['POST']
+
+ordering-history:
+  path: /proposals/{proposalId}/ordering-history
+  controller: App\Controller\Api\EvaluationApiController::getOrderingHistory
+  methods: ['GET']

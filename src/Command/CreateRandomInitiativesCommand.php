@@ -246,7 +246,7 @@ class CreateRandomInitiativesCommand extends Command
         // Extra fields
         $extraFields = [
             'city_name' => "{$cityName}-{$state}",
-            'cityCode' => $cityCode,
+            'city_code' => $cityCode,
             'state' => $state,
             'region' => $region,
             'address' => $address,

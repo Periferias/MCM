@@ -481,6 +481,7 @@ ROLE_MANAGER: Gestor
 ROLE_ADMIN: Administrador Geral
 ROLE_SNP: Administrador SNP
 ROLE_SUPPORT: Suporte
+ROLE_CAIXA: Visualizador Caixa
 rejected: Rejeitado
 
 selection: Seleção
@@ -1156,7 +1157,11 @@ view:
     image: Erro
 
   phase:
+<<<<<<< HEAD
+    out_of_period: O resultado da análise de cada proposta será atualizado na plataforma de inscrição e estará disponível para consulta a partir de 25/05/2026.
+=======
     out_of_period: Prazo para resultado da seleção de propostas dia 15/05/2026 (Portaria nº 433, de 17 de abril de 2026).
+>>>>>>> origin/main
     text_out_of_period: Infelizmente, o período de inscrição não está disponível no momento. Por favor, aguarde o próximo oficio.
 
 proposal:
@@ -1193,6 +1198,7 @@ csv:
     city_code: Código Município
     company_name: Nome da Empresa/OSC
     company_cnpj: CNPJ da Empresa/OSC
+    company_email: Email da Empresa/OSC
     profit_type: Com/Sem fins lucrativos
     company_phone: Telefone da Empresa/OSC
     project_file: Arquivo do Projeto

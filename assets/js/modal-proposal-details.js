@@ -1,8 +1,18 @@
 function modalProposalDetails(event) {
+    console.log('=== INICIANDO modalProposalDetails ===');
+    console.log('event:', event);
+    
+    // Prevenir comportamento padrão do link
+    if (event && event.preventDefault) {
+        event.preventDefault();
+    }
+    
     const modal = new bootstrap.Modal('#proposalDetails');
 
     const data = event.getAttribute('data-proposal');
+    console.log('data-proposal raw:', data);
     const proposal = JSON.parse(data);
+    console.log('proposal object completo:', proposal);
 
     const quantityHouses = proposal.quantity_houses;
     const pricePerHouse = proposal.price_per_house;
@@ -43,16 +53,26 @@ function modalProposalDetails(event) {
         snprDetailsContainer.style.display = 'none';
     }
 
-    if ('pdf' === proposal.map_file.slice(-3)) {
-        document.querySelector('#map-file').innerHTML = `
-            <object style="min-height: 600px;" data="/painel/admin/propostas/`+proposal.id+`/mapa" type="application/pdf" width="100%">
-                <p>Caso o documento não esteja visível, <a href="/painel/admin/propostas/`+proposal.id+`/mapa">clique aqui para acessar o PDF!</a></p>
+    // Renderizar mapa/arquivo poligonal - FORÇA COMO OBJECT PDF
+    console.log('=== VERIFICANDO MAP FILE ===');
+    console.log('proposal.map_file:', proposal.map_file);
+    console.log('proposal.map_file_type:', proposal.map_file_type);
+    
+    if (proposal.map_file) {
+        console.log('MAP FILE EXISTE, renderizando como PDF object...');
+        const mapFileHTML = `
+            <object style="min-height: 600px;" data="`+proposal.map_file+`" type="application/pdf" width="100%">
+                <p>Caso o documento não esteja visível, <a href="`+proposal.map_file+`">clique aqui para acessar o PDF!</a></p>
             </object>
         `;
+        const mapFileDiv = document.querySelector('#map-file');
+        console.log('mapFileDiv element:', mapFileDiv);
+        mapFileDiv.innerHTML = mapFileHTML;
+        console.log('Map file renderizado como PDF object');
+        console.log('Map file HTML:', mapFileHTML);
     } else {
-        document.querySelector('#map-file').innerHTML = `
-            <img src="/painel/admin/propostas/`+proposal.id+`/mapa" alt="Mapa do projeto" class="img-fluid">
-        `;
+        console.log('MAP FILE NÃO EXISTE');
+        document.querySelector('#map-file').innerHTML = '<p class="text-muted">Nenhum arquivo de mapa poligonal enviado.</p>';
     }
 
     // Lógica de Anuência
@@ -62,6 +82,9 @@ function modalProposalDetails(event) {
     const agreementSection = document.querySelector('#agreement-section');
     const agreementStatusDisplay = document.querySelector('#agreement-status-display');
     const agreementActions = document.querySelector('#agreement-actions');
+    const canOpenAgreementModal = typeof openAgreementModal === 'function' && document.getElementById('modalAgreement');
+    const canOpenUploadAgreementModal = typeof openUploadAgreementModal === 'function' && document.getElementById('modalUploadAgreement');
+    const canOpenStatusModal = typeof openProposalStatusModal === 'function' && document.getElementById('modalProposalStatus');
 
     // Prazo de envio de anuência: 09/03/2026 às 23:59 BRT (= 10/03/2026 02:59:59 UTC)
     const agreementDeadline = new Date('2026-03-10T02:59:59Z');
@@ -86,18 +109,21 @@ function modalProposalDetails(event) {
                 <small class="d-block text-muted mt-2">Motivo: ${proposal.agreement_reason || ''}</small>
             `;
             // Reenvio sempre permitido (documento já foi submetido antes)
-            agreementActions.innerHTML = `
+            agreementActions.innerHTML = canOpenUploadAgreementModal ? `
                 <button onclick="openUploadAgreementModal('${proposal.id}')" 
                         data-bs-toggle="modal" 
                         data-bs-target="#modalUploadAgreement" 
                         class="btn btn-outline-warning btn-sm mt-2">
                     Reenviar Documento
                 </button>
-            `;
-        } else if (proposalStatus === 'Anuída') {
+            ` : '';
+        } else if (proposalStatus === 'Anuída' || proposalStatus === 'Anuída pelo Município') {
             agreementStatusDisplay.innerHTML = '<span class="badge bg-success">Anuída</span>';
             if (!agreementStatus) {
-                agreementActions.innerHTML = agreementDeadlineExpired ? prazoEncerradoBadge : `
+                agreementActions.innerHTML = agreementDeadlineExpired ? prazoEncerradoBadge : '';
+
+                if (!agreementDeadlineExpired && canOpenUploadAgreementModal) {
+                    agreementActions.innerHTML = `
                     <button onclick="openUploadAgreementModal('${proposal.id}')" 
                             data-bs-toggle="modal" 
                             data-bs-target="#modalUploadAgreement" 
@@ -105,20 +131,24 @@ function modalProposalDetails(event) {
                         Enviar Documento
                     </button>
                 `;
+                }
             }
-        } else if (proposalStatus === 'Aguardando Avaliação da Anuência') {
+        } else if (proposalStatus === 'Aguardando Avaliação da Anuência' || proposalStatus === 'Aguardando Validação da Anuência') {
             agreementStatusDisplay.innerHTML = '<span class="badge bg-warning text-dark">Aguardando Avaliação da Anuência</span>';
             if (proposal.status_reason) {
                 agreementStatusDisplay.innerHTML += `<small class="d-block text-muted mt-2">Observação: ${proposal.status_reason}</small>`;
             }
-        } else if (proposalStatus === 'Não Anuída') {
+        } else if (proposalStatus === 'Não Anuída' || proposalStatus === 'Não Anuída pelo Município') {
             agreementStatusDisplay.innerHTML = '<span class="badge bg-danger">Não Anuída</span>';
             if (proposal.status_reason) {
                 agreementStatusDisplay.innerHTML += `<small class="d-block text-muted mt-2">Motivo: ${proposal.status_reason}</small>`;
             }
         } else if (proposalStatus === 'Recebida') {
             agreementStatusDisplay.innerHTML = '<span class="badge bg-secondary">Pendente</span>';
-            agreementActions.innerHTML = agreementDeadlineExpired ? prazoEncerradoBadge : `
+            if (agreementDeadlineExpired) {
+                agreementActions.innerHTML = prazoEncerradoBadge;
+            } else if (canOpenAgreementModal) {
+                agreementActions.innerHTML = `
                 <button onclick="openAgreementModal('${proposal.id}')" 
                         data-bs-toggle="modal" 
                         data-bs-target="#modalAgreement" 
@@ -126,6 +156,16 @@ function modalProposalDetails(event) {
                     Anuir Proposta
                 </button>
             `;
+            } else if (canOpenStatusModal) {
+                agreementActions.innerHTML = `
+                    <button onclick="openProposalStatusModal('${proposal.id}', event)"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalProposalStatus"
+                            class="btn btn-success btn-sm mt-2">
+                        Atualizar Status
+                    </button>
+                `;
+            }
         } else {
             agreementStatusDisplay.innerHTML = '<span class="badge bg-secondary">-</span>';
         }
@@ -134,4 +174,6 @@ function modalProposalDetails(event) {
     }
 
     modal.show();
+    
+    return false;
 }
