@@ -1157,7 +1157,7 @@ view:
     image: Erro
 
   phase:
-    out_of_period: Prazo de inscrição encerrado às 23:59h de 22/02/2026.
+    out_of_period: O resultado da análise de cada proposta será atualizado na plataforma de inscrição e estará disponível para consulta a partir de 25/05/2026.
     text_out_of_period: Infelizmente, o período de inscrição não está disponível no momento. Por favor, aguarde o próximo oficio.
 
 proposal:
