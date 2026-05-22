@@ -295,7 +295,7 @@ sidebar:
         text: Validar Anuências
 
       admin_regmel_proposal_list:
-        acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SUPPORT']
+        acl: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SUPPORT', 'ROLE_CAIXA']
         icon: cases
         text: Propostas
 

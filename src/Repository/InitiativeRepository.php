@@ -116,6 +116,12 @@ class InitiativeRepository extends AbstractRepository implements InitiativeRepos
             ->orderBy('i.created_at', $order)
             ->setMaxResults($limit);
 
+        // Aplicar filtro de status se fornecido
+        if (isset($params['status'])) {
+            $queryBuilder->andWhere("i.extra_fields->>'status' = :status")
+                ->setParameter('status', $params['status']);
+        }
+
         $ids = $queryBuilder->executeQuery()->fetchFirstColumn();
         if (empty($ids)) {
             return [];

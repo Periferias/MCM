@@ -16,4 +16,5 @@ enum UserRolesEnum: string
     case ROLE_MUNICIPALITY = 'ROLE_MUNICIPALITY';
     case ROLE_SUPPORT = 'ROLE_SUPPORT';
     case ROLE_USER = 'ROLE_USER';
+    case ROLE_CAIXA = 'ROLE_CAIXA';
 }

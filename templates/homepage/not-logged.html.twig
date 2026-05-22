@@ -97,7 +97,7 @@
                         {% set options = env.aurora.homepage.sections.register.options ?? [] %}
 
                         {% if not has_active_option %}
-                            <h1 class="fw-bold mt-4">{{ 'view.phase.out_of_period'|trans }}</h1>
+                            <h2 class="fw-bold mt-4">{{ 'view.phase.out_of_period'|trans }}</h2>
                         {% else %}
                             <h1 class="fw-bold mt-4">{{ 'create_account'|trans }}</h1>
                             <div class="alert alert-warning d-flex align-items-start gap-2 mt-3" role="alert">

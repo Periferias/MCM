@@ -1,6 +1,19 @@
 {% extends "_layouts/blank.html.twig" %}
 
 {% set statusEnum = enum('App\\Enum\\StatusProposalEnum') %}
+{% set selectedStatusValues = [
+    statusEnum.SELECIONADA.value,
+    statusEnum.SELECIONADA_DESEMPATE.value,
+] %}
+{% set classifiedStatusValues = [
+    statusEnum.CLASSIFICADA.value,
+    statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value,
+    statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value,
+] %}
+{% set nonSelectedStatusValues = [
+    statusEnum.NAO_SELECIONADA.value,
+    statusEnum.DESCLASSIFICADA.value,
+] %}
 
 {% block title %}
     {{ 'control_panel'|trans }} - {{ 'proposals'|trans }}
@@ -28,7 +41,7 @@
                                 {{ 'export_project_file'|trans }}
                             </a>
 
-                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
+                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_CAIXA') %}
                                 <a href="{{ path('admin_regmel_proposal_list_download', app.request.query.all) }}" class="btn btn-sm btn-secondary">
                                     {{ 'export_csv'|trans }}
                                 </a>
@@ -39,6 +52,386 @@
                     <hr>
 
                     {% include 'regmel/_components/list-filters.html.twig' %}
+
+                    {# Abas para filtrar propostas por status #}
+                    <style>
+                        #proposalTabs .badge {
+                            display: inline-flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            min-width: 22px;
+                            height: 22px;
+                        }
+                        /* Estilos para container com scroll horizontal */
+                        .table-scroll-container {
+                            overflow-x: auto;
+                            border: 1px solid #dee2e6;
+                            border-radius: 4px;
+                            max-height: 100%;
+                        }
+                        /* Barra de rolagem estilizada para Chrome, Edge e Safari */
+                        .table-scroll-container::-webkit-scrollbar {
+                            height: 8px;
+                        }
+                        .table-scroll-container::-webkit-scrollbar-track {
+                            background: #f1f1f1;
+                        }
+                        .table-scroll-container::-webkit-scrollbar-thumb {
+                            background: #888;
+                            border-radius: 4px;
+                        }
+                        .table-scroll-container::-webkit-scrollbar-thumb:hover {
+                            background: #555;
+                        }
+                        /* Firefox */
+                        .table-scroll-container {
+                            scrollbar-width: thin;
+                            scrollbar-color: #888 #f1f1f1;
+                        }
+                        /* Estilos do dropdown para não ficar branco no hover */
+                        .dropdown-toggle {
+                            color: #6c757d;
+                            border-color: #6c757d;
+                            text-decoration: none;
+                        }
+                        .dropdown-toggle:hover {
+                            color: #5a6268 !important;
+                            border-color: #5a6268 !important;
+                            background-color: transparent !important;
+                        }
+                        .dropdown-toggle:focus {
+                            color: #5a6268 !important;
+                            border-color: #5a6268 !important;
+                            background-color: transparent !important;
+                            box-shadow: 0 0 0 0.2rem rgba(130, 138, 147, 0.25);
+                        }
+                        .dropdown-item:hover {
+                            background-color: #f8f9fa;
+                            color: #212529;
+                        }
+                        .proposal-sort-table th[data-sortable="true"] {
+                            cursor: pointer;
+                            user-select: none;
+                            position: relative;
+                        }
+                        .proposal-sort-table th[data-sortable="true"]::after {
+                            content: "⇅";
+                            font-size: 0.75rem;
+                            opacity: 0.6;
+                            margin-left: 0.35rem;
+                        }
+                        .proposal-sort-table th.sort-asc::after {
+                            content: "↑";
+                            opacity: 1;
+                        }
+                        .proposal-sort-table th.sort-desc::after {
+                            content: "↓";
+                            opacity: 1;
+                        }
+                        .proposal-sort-table {
+                            font-size: 0.82rem;
+                        }
+                        #panel-all .gridjs-container,
+                        #panel-all .gridjs-table {
+                            font-size: 0.82rem !important;
+                        }
+                        #panel-all .gridjs-th,
+                        #panel-all .gridjs-td {
+                            font-size: 0.82rem !important;
+                            padding: 0.3rem 0.35rem !important;
+                            vertical-align: middle !important;
+                            line-height: 1.25 !important;
+                        }
+                        #panel-all .gridjs-th button,
+                        #panel-all .gridjs-sort {
+                            font-size: 0.76rem !important;
+                        }
+                        #panel-all .gridjs-search-input,
+                        #panel-all .gridjs-pages button,
+                        #panel-all .gridjs-summary,
+                        #panel-all .gridjs-pagination,
+                        #panel-all .col-form-label,
+                        #panel-all .form-select-sm,
+                        #panel-all .form-control-sm {
+                            font-size: 0.78rem !important;
+                        }
+                        #panel-all .gridjs-table a.btn-sm {
+                            font-size: 0.68rem !important;
+                            padding: 0.22rem 0.35rem !important;
+                            white-space: nowrap;
+                        }
+                        #panel-all .gridjs-table td,
+                        #panel-all .gridjs-table th {
+                            overflow-wrap: anywhere;
+                        }
+                        .proposal-sort-table th,
+                        .proposal-sort-table td {
+                            padding-left: 0.35rem;
+                            padding-right: 0.35rem;
+                            vertical-align: middle;
+                        }
+                        .proposal-file-btn {
+                            font-size: 0.7rem;
+                            padding: 0.25rem 0.4rem;
+                            white-space: nowrap;
+                        }
+                        .proposal-sort-table a.btn-sm {
+                            font-size: 0.68rem !important;
+                            padding: 0.22rem 0.35rem !important;
+                            white-space: nowrap;
+                        }
+                        #proposalTabs .nav-link {
+                            font-size: 0.82rem;
+                            padding-left: 0.55rem;
+                            padding-right: 0.55rem;
+                            white-space: nowrap;
+                        }
+                        #proposalTabs #tab-all {
+                            font-size: 0.76rem;
+                            letter-spacing: 0;
+                        }
+                        #proposalTabs .badge {
+                            font-size: 0.68rem;
+                            margin-left: 0.25rem !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(1),
+                        #panel-all .proposal-sort-table td:nth-child(1),
+                        #panel-anuida .proposal-sort-table th:nth-child(1),
+                        #panel-anuida .proposal-sort-table td:nth-child(1),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(1),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(1) {
+                            width: 60px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(2),
+                        #panel-all .proposal-sort-table td:nth-child(2),
+                        #panel-anuida .proposal-sort-table th:nth-child(2),
+                        #panel-anuida .proposal-sort-table td:nth-child(2),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(2),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(2) {
+                            width: 45px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(3),
+                        #panel-all .proposal-sort-table td:nth-child(3),
+                        #panel-anuida .proposal-sort-table th:nth-child(3),
+                        #panel-anuida .proposal-sort-table td:nth-child(3),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(3),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(3) {
+                            width: 95px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(4),
+                        #panel-all .proposal-sort-table td:nth-child(4),
+                        #panel-anuida .proposal-sort-table th:nth-child(4),
+                        #panel-anuida .proposal-sort-table td:nth-child(4),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(4),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(4) {
+                            width: 105px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(5),
+                        #panel-all .proposal-sort-table td:nth-child(5),
+                        #panel-anuida .proposal-sort-table th:nth-child(5),
+                        #panel-anuida .proposal-sort-table td:nth-child(5),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(5),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(5) {
+                            width: 105px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(6),
+                        #panel-all .proposal-sort-table td:nth-child(6),
+                        #panel-anuida .proposal-sort-table th:nth-child(6),
+                        #panel-anuida .proposal-sort-table td:nth-child(6),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(6),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(6) {
+                            width: 118px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(7),
+                        #panel-all .proposal-sort-table td:nth-child(7),
+                        #panel-anuida .proposal-sort-table th:nth-child(7),
+                        #panel-anuida .proposal-sort-table td:nth-child(7),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(7),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(7) {
+                            width: 108px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(8),
+                        #panel-all .proposal-sort-table td:nth-child(8),
+                        #panel-anuida .proposal-sort-table th:nth-child(8),
+                        #panel-anuida .proposal-sort-table td:nth-child(8),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(8),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(8) {
+                            width: 82px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(9),
+                        #panel-all .proposal-sort-table td:nth-child(9),
+                        #panel-anuida .proposal-sort-table th:nth-child(9),
+                        #panel-anuida .proposal-sort-table td:nth-child(9),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(9),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(9) {
+                            width: 88px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(10),
+                        #panel-all .proposal-sort-table td:nth-child(10),
+                        #panel-anuida .proposal-sort-table th:nth-child(10),
+                        #panel-anuida .proposal-sort-table td:nth-child(10),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(10),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(10) {
+                            width: 82px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(11),
+                        #panel-all .proposal-sort-table td:nth-child(11),
+                        #panel-anuida .proposal-sort-table th:nth-child(11),
+                        #panel-anuida .proposal-sort-table td:nth-child(11),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(11),
+                        #panel-nao-selecionada .proposal-sort-table td:nth-child(11) {
+                            width: 58px !important;
+                        }
+                        #panel-anuida .proposal-sort-table th:nth-child(12),
+                        #panel-anuida .proposal-sort-table td:nth-child(12) {
+                            width: 88px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(1),
+                        #panel-selecionada .proposal-sort-table td:nth-child(1),
+                        #panel-classificada .proposal-sort-table th:nth-child(1),
+                        #panel-classificada .proposal-sort-table td:nth-child(1) {
+                            width: 95px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(2),
+                        #panel-selecionada .proposal-sort-table td:nth-child(2),
+                        #panel-classificada .proposal-sort-table th:nth-child(2),
+                        #panel-classificada .proposal-sort-table td:nth-child(2) {
+                            width: 60px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(3),
+                        #panel-selecionada .proposal-sort-table td:nth-child(3),
+                        #panel-classificada .proposal-sort-table th:nth-child(3),
+                        #panel-classificada .proposal-sort-table td:nth-child(3) {
+                            width: 45px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(4),
+                        #panel-selecionada .proposal-sort-table td:nth-child(4),
+                        #panel-classificada .proposal-sort-table th:nth-child(4),
+                        #panel-classificada .proposal-sort-table td:nth-child(4) {
+                            width: 95px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(5),
+                        #panel-selecionada .proposal-sort-table td:nth-child(5),
+                        #panel-classificada .proposal-sort-table th:nth-child(5),
+                        #panel-classificada .proposal-sort-table td:nth-child(5) {
+                            width: 105px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(6),
+                        #panel-selecionada .proposal-sort-table td:nth-child(6),
+                        #panel-classificada .proposal-sort-table th:nth-child(6),
+                        #panel-classificada .proposal-sort-table td:nth-child(6) {
+                            width: 105px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(7),
+                        #panel-selecionada .proposal-sort-table td:nth-child(7),
+                        #panel-classificada .proposal-sort-table th:nth-child(7),
+                        #panel-classificada .proposal-sort-table td:nth-child(7) {
+                            width: 118px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(8),
+                        #panel-selecionada .proposal-sort-table td:nth-child(8),
+                        #panel-classificada .proposal-sort-table th:nth-child(8),
+                        #panel-classificada .proposal-sort-table td:nth-child(8) {
+                            width: 108px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(9),
+                        #panel-selecionada .proposal-sort-table td:nth-child(9),
+                        #panel-classificada .proposal-sort-table th:nth-child(9),
+                        #panel-classificada .proposal-sort-table td:nth-child(9) {
+                            width: 82px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(10),
+                        #panel-selecionada .proposal-sort-table td:nth-child(10),
+                        #panel-classificada .proposal-sort-table th:nth-child(10),
+                        #panel-classificada .proposal-sort-table td:nth-child(10) {
+                            width: 88px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(11),
+                        #panel-selecionada .proposal-sort-table td:nth-child(11),
+                        #panel-classificada .proposal-sort-table th:nth-child(11),
+                        #panel-classificada .proposal-sort-table td:nth-child(11) {
+                            width: 82px !important;
+                        }
+                        #panel-selecionada .proposal-sort-table th:nth-child(12),
+                        #panel-selecionada .proposal-sort-table td:nth-child(12),
+                        #panel-classificada .proposal-sort-table th:nth-child(12),
+                        #panel-classificada .proposal-sort-table td:nth-child(12) {
+                            width: 66px !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(9),
+                        #panel-all .proposal-sort-table th:nth-child(10),
+                        #panel-anuida .proposal-sort-table th:nth-child(9),
+                        #panel-anuida .proposal-sort-table th:nth-child(10),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(9),
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(10),
+                        #panel-anuida .proposal-sort-table th:nth-child(12),
+                        #panel-selecionada .proposal-sort-table th:nth-child(10),
+                        #panel-selecionada .proposal-sort-table th:nth-child(11),
+                        #panel-selecionada .proposal-sort-table th:nth-child(12),
+                        #panel-classificada .proposal-sort-table th:nth-child(10),
+                        #panel-classificada .proposal-sort-table th:nth-child(11),
+                        #panel-classificada .proposal-sort-table th:nth-child(12) {
+                            font-size: 0.72rem !important;
+                            letter-spacing: 0;
+                            line-height: 1.1;
+                            padding-left: 0.22rem !important;
+                            padding-right: 0.18rem !important;
+                            white-space: nowrap !important;
+                            word-break: normal !important;
+                            overflow-wrap: normal !important;
+                        }
+                        #panel-all .proposal-sort-table th:nth-child(9)::after,
+                        #panel-all .proposal-sort-table th:nth-child(10)::after,
+                        #panel-anuida .proposal-sort-table th:nth-child(9)::after,
+                        #panel-anuida .proposal-sort-table th:nth-child(10)::after,
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(9)::after,
+                        #panel-nao-selecionada .proposal-sort-table th:nth-child(10)::after,
+                        #panel-anuida .proposal-sort-table th:nth-child(12)::after,
+                        #panel-selecionada .proposal-sort-table th:nth-child(10)::after,
+                        #panel-selecionada .proposal-sort-table th:nth-child(11)::after,
+                        #panel-selecionada .proposal-sort-table th:nth-child(12)::after,
+                        #panel-classificada .proposal-sort-table th:nth-child(10)::after,
+                        #panel-classificada .proposal-sort-table th:nth-child(11)::after,
+                        #panel-classificada .proposal-sort-table th:nth-child(12)::after {
+                            font-size: 0.58rem;
+                            margin-left: 0.12rem;
+                        }
+                        .position-input-sel,
+                        .position-input-class {
+                            width: 75px !important;
+                        }
+                    </style>
+                    <div class="mt-4 mb-3">
+                        <ul class="nav nav-tabs" id="proposalTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="tab-all" data-bs-toggle="tab" data-bs-target="#panel-all" type="button" role="tab" aria-controls="panel-all" aria-selected="true">
+                                    <i class="bi bi-list"></i> Todas as Propostas
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-anuida" data-bs-toggle="tab" data-bs-target="#panel-anuida" type="button" role="tab" aria-controls="panel-anuida" aria-selected="false">
+                                    <i class="bi bi-check2-circle"></i> Anuídas
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-selecionada" data-bs-toggle="tab" data-bs-target="#panel-selecionada" type="button" role="tab" aria-controls="panel-selecionada" aria-selected="false">
+                                    <i class="bi bi-check-circle"></i> Selecionadas
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-classificada" data-bs-toggle="tab" data-bs-target="#panel-classificada" type="button" role="tab" aria-controls="panel-classificada" aria-selected="false">
+                                    <i class="bi bi-folder-check"></i> Classificadas
+                                </button>
+                            </li>
+                            {% if 'ROLE_CAIXA' not in app.user.roles %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-nao-selecionada" data-bs-toggle="tab" data-bs-target="#panel-nao-selecionada" type="button" role="tab" aria-controls="panel-nao-selecionada" aria-selected="false">
+                                    <i class="bi bi-x-circle"></i> Não Selecionadas
+                                </button>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
 
                     <div class="modal fade" id="modalProposalStatus" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                         <div class="modal-dialog">
@@ -56,8 +449,12 @@
                                                 <option value="{{ statusEnum.ANUIDA.value }}">{{ statusEnum.ANUIDA.value }}</option>
                                                 <option value="{{ statusEnum.NAO_ANUIDA.value }}">{{ statusEnum.NAO_ANUIDA.value }}</option>
                                                 <option value="{{ statusEnum.SELECIONADA.value }}">{{ statusEnum.SELECIONADA.value }}</option>
+                                                <option value="{{ statusEnum.SELECIONADA_DESEMPATE.value }}">{{ statusEnum.SELECIONADA_DESEMPATE.value }}</option>
                                                 <option value="{{ statusEnum.NAO_SELECIONADA.value }}">{{ statusEnum.NAO_SELECIONADA.value }}</option>
                                                 <option value="{{ statusEnum.CLASSIFICADA.value }}">{{ statusEnum.CLASSIFICADA.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value }}">{{ statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value }}</option>
+                                                <option value="{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value }}">{{ statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value }}</option>
+                                                <option value="{{ statusEnum.DESCLASSIFICADA.value }}">{{ statusEnum.DESCLASSIFICADA.value }}</option>
                                             </select>
                                             <div class="form-text">Selecione uma opção obrigatória</div>
                                         </div>
@@ -110,161 +507,371 @@
                         </div>
                     </div>
 
-                    <table class="js-grid table table-hover table-striped">
-                        <thead class="table-dark">
-                        <tr>
-                            {# A coluna Nome da Área agora é a primeira #}
-                            <th>Área de Intervenção</th>
-                            <th>ID</th>
-                            <th>Empresa</th>
-                            <th>{{ 'municipality' | trans}}</th>
-                            <th>{{ 'status' | trans }}</th>
-                            <th>Usuário Anuência</th>
-                            <th>Qtd. Domicílios</th>
-                            <th>Valor Global da Proposta</th>
-                            <th>Motivo da Não Anuência</th>
-                            <th>{{ 'actions' | trans }}</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for proposal in proposals %}
-                            <tr>
-                                {# Dado correspondente ao Nome da Área movido para o início #}
-                                <td>{{ proposal.name|default('N/A') }}</td>
-                                <td>{{ proposal.id }}</td>
-                                <td>{{ proposal.company }}</td>
-                                <td>{{ proposal.city_name }}</td>
-                                <td>
+                    <div class="tab-content" id="proposalTabsContent">
+                        {# Aba: Todas as Propostas #}
+                        <div class="tab-pane fade show active" id="panel-all" role="tabpanel" aria-labelledby="tab-all">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" data-gridjs-mode="bulk" style="table-layout: fixed; width: 100%;">
+                                <thead class="table-dark">
+                                <tr>
+                                    <th class="border-end" style="width: 95px;">ID</th>
+                                    <th class="border-end" style="width: 95px;">UF</th>
+                                    <th class="border-end" style="width: 175px;">Município</th>
+                                    <th class="border-end" style="width: 175px;">Área</th>
+                                    <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 220px;">Motivo do Status</th>
+                                    <th class="border-end" style="width: 175px;">Empresa/OSC</th>
+                                    <th class="border-end" style="width: 175px;">CNPJ</th>
+                                    <th class="border-end" style="width: 115px;">Instituição</th>
+                                    <th class="border-end" style="width: 110px;">Poligonal</th>
+                                    <th class="border-end" style="width: 100px;">Projeto</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for proposal in proposals %}
                                     {% set status = proposal.status ?? '' %}
-                                    {% set badgeClass = ({
-                                        (statusEnum.SEM_ADESAO.value): 'bg-dark text-white',
-                                        (statusEnum.ENVIADA.value): 'bg-warning',
-                                        (statusEnum.RECEBIDA.value): 'bg-info',
-                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'bg-warning',
-                                        'Aguardando Avaliação da Anuência': 'bg-warning',
-                                        (statusEnum.ANUIDA.value): 'bg-success text-white',
-                                        'Anuída': 'bg-success text-white',
-                                        (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
-                                        'Não Anuída': 'bg-danger text-white',
-                                        (statusEnum.SELECIONADA.value): 'bg-success text-white',
-                                        (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
-                                        (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
-                                    }[status] ?? 'bg-dark') %}
-                                    {% set statusDescriptions = {
-                                        (statusEnum.ENVIADA.value): 'Proposta enviada pela empresa/osc e aguardando recebimento pelo município',
-                                        (statusEnum.RECEBIDA.value): 'Proposta recebida pelo município e aguardando anuência',
-                                        (statusEnum.SEM_ADESAO.value): 'Município ainda não possui termo de adesão aprovado',
-                                        (statusEnum.AGUARDANDO_AVALIACAO_ANUENCIA.value): 'Documento de anuência enviado pelo município e aguardando validação pela SNP',
-                                        (statusEnum.ANUIDA.value): 'Proposta anuída pelo município e aprovada pela SNP',
-                                        'Anuída': 'Proposta anuída pelo município e aprovada pela SNP',
-                                        (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
-                                        'Não Anuída': 'Proposta não anuída pelo município',
-                                        (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
-                                        (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
-                                        (statusEnum.CLASSIFICADA.value): 'Proposta classificada'
-                                    } %}
-                                    {# Mapeia valores antigos para novos textos #}
-                                    {% set displayStatus = status == 'Anuída' ? statusEnum.ANUIDA.value : (status == 'Não Anuída' ? statusEnum.NAO_ANUIDA.value : status) %}
-                                    <span class="badge {{ badgeClass }} text-wrap" 
-                                          style="max-width: 150px;" 
-                                          data-bs-toggle="tooltip" 
-                                          data-bs-placement="top" 
-                                          title="{{ statusDescriptions[status] ?? '' }}">
-                                        {{ displayStatus }}
-                                    </span>
-                                </td>
-                                <td>{{ proposal.agreement_uploaded_by_name != 'Não informado' ? proposal.agreement_uploaded_by_name : proposal.status_updated_by_name }}</td>
-                                <td>{{ proposal.quantity_houses }}</td>
-                                <td>R$ {{ (proposal.quantity_houses * env.aurora.variables.price_per_household)|number_format(2, ',', '.') }}</td>
-                                <td>
-                                    {% if status == statusEnum.NAO_ANUIDA.value or status == 'Não Anuída' %}
-                                        {{ proposal.status_reason ?? proposal.agreement_reason ?? '-' }}
-                                    {% else %}
-                                        -
+                                    <tr data-status="{{ status }}" class="proposal-row">
+                                        <td class="border-end" style="width: 95px;">{{ proposal.id|slice(0, 8) }}</td>
+                                        <td class="border-end" style="width: 95px;">{{ proposal.state }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 220px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj|e|replace({"/": "/<wbr>"})|raw }}</td>
+                                        <td class="border-end" style="width: 115px;">{{ proposal.institution_type }}</td>
+                                        <td class="border-end" style="width: 110px; word-break: break-all;">{% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
+                                        <td class="border-end" style="width: 100px; word-break: break-all;">{% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
+                                    </tr>
+                                {% endfor %}
+                                {% if proposals|length == 0 %}
+                                    <tr>
+                                        <td colspan="11" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                    </tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {# Aba: Propostas Anuídas #}
+                        <div class="tab-pane fade" id="panel-anuida" role="tabpanel" aria-labelledby="tab-anuida">
+                            <div class="mb-3">
+                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('{{ statusEnum.ANUIDA.value }}')">
+                                    <i class="bi bi-download"></i> Exportar Propostas Anuídas
+                                </button>
+                            </div>
+                            <div class="table-scroll-container">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" data-native-grid="true" style="table-layout: fixed; width: 100%;">
+                                <thead class="table-dark">
+                                <tr>
+                                    <th class="border-end" style="width: 95px;">ID</th>
+                                    <th class="border-end" style="width: 95px;">UF</th>
+                                    <th class="border-end" style="width: 175px;">Município</th>
+                                    <th class="border-end" style="width: 175px;">Área</th>
+                                    <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 220px;">Motivo do Status</th>
+                                    <th class="border-end" style="width: 175px;">Empresa/OSC</th>
+                                    <th class="border-end" style="width: 175px;">CNPJ</th>
+                                    <th class="border-end" style="width: 115px;">Instituição</th>
+                                    <th class="border-end" style="width: 110px;">Poligonal</th>
+                                    <th class="border-end" style="width: 100px;">Projeto</th>
+                                    <th data-sortable="false" style="width: 120px;">Ações</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for proposal in proposals %}
+                                    {% set status = proposal.status ?? '' %}
+                                    {% if status == statusEnum.ANUIDA.value %}
+                                    <tr data-status="{{ status }}" class="proposal-row">
+                                        <td class="border-end" style="width: 95px;">{{ proposal.id|slice(0, 8) }}</td>
+                                        <td class="border-end" style="width: 95px;">{{ proposal.state }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 220px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj|e|replace({"/": "/<wbr>"})|raw }}</td>
+                                        <td class="border-end" style="width: 115px;">{{ proposal.institution_type }}</td>
+                                        <td class="border-end" style="width: 110px; word-break: break-all;">{% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
+                                        <td class="border-end" style="width: 100px; word-break: break-all;">{% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>{% else %}-{% endif %}</td>
+                                        <td style="width: 120px;">
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots-vertical"></i> Ações
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><a class="dropdown-item" href="#" 
+                                                        onclick="return modalProposalDetails(this);"
+                                                        data-proposal='{{ {
+                                                            id: proposal.id,
+                                                            name: proposal.name,
+                                                            region: proposal.region,
+                                                            state: proposal.state,
+                                                            city_name: proposal.city_name,
+                                                            zipcode: proposal.zipcode,
+                                                            address: proposal.address,
+                                                            company: proposal.company,
+                                                            created_by: proposal.created_by,
+                                                            created_at: proposal.created_at,
+                                                            area_option: proposal.area_option,
+                                                            area_size: proposal.area_size,
+                                                            quantity_houses: proposal.quantity_houses,
+                                                            price_per_house: proposal.price_per_house ?? 1,
+                                                            snpr_affiliation: proposal.snpr_affiliation ?? 'Não',
+                                                            snpr_affiliation_details: proposal.snpr_affiliation_details ?? '',
+                                                            map_file: proposal.map_file ?? '',
+                                                            map_file_type: proposal.map_file_type ?? '',
+                                                            agreement_status: proposal.agreement_status ?? '',
+                                                            term_status: proposal.term_status ?? '',
+                                                            agreement_reason: proposal.agreement_reason ?? '',
+                                                            status_reason: proposal.status_reason ?? '',
+                                                            status: proposal.status ?? ''
+                                                        }|json_encode|e('html_attr') }}'
+                                                    ><i class="bi bi-eye"></i> Ver Proposta</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="openEvaluationModal('{{ proposal.id }}', '{{ proposal.company }}', event, '{{ proposal.state|e('js') }}')"><i class="bi bi-pencil"></i> Avaliar Proposta</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
                                     {% endif %}
-                                </td>
-                                <td style="position: relative;">
-                                    <div class="dropdown">
-                                        <button
-                                                class="btn btn-outline-warning btn-sm dropdown-toggle"
-                                                type="button"
-                                                id="dropdownMenu{{ proposal.id }}"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false"
-                                                style="--bs-dropdown-min-width: 0; width: auto;"
-                                        >
-                                            {{ 'actions'|trans }}
-                                        </button>
-                                        <ul
-                                                class="dropdown-menu dropdown-menu-end"
-                                                aria-labelledby="dropdownMenu{{ proposal.id }}"
-                                                style="--bs-dropdown-min-width: 0; width: auto;"
-                                        >
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item"
-                                                        onclick="modalProposalDetails(this)"
-                                                        data-proposal="{{ proposal|json_encode }}"
-                                                >
-                                                    Ver Proposta
-                                                </a>
-                                            </li>
-                                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER') %}
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item"
-                                                        onclick="openProposalStatusModal('{{ proposal.id }}')"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalProposalStatus"
-                                                >
-                                                    Atualizar Status
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                            {% if is_granted('ROLE_ADMIN') and (
-                                                (proposal.agreement_status is defined and proposal.agreement_status in ['submitted', 'approved', 'rejected']) or
-                                                (proposal.status is defined and proposal.status in ['Aguardando Validação da Anuência', 'Anuída pelo Município', 'Não Anuída pelo Município'])
-                                            ) %}
-                                            <li>
-                                                <form method="post" action="{{ path('admin_regmel_proposal_cancel_agreement', {'id': proposal.id}) }}" style="margin: 0;">
-                                                    <button
-                                                            type="submit"
-                                                            class="dropdown-item"
-                                                            onclick="return confirm('Tem certeza que deseja cancelar a anuência desta proposta? Ela voltará para o status RECEBIDA e o documento será apagado.');"
-                                                    >
-                                                        Cancelar Anuência
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            {% endif %}
-                                            {% if is_granted('ROLE_ADMIN') %}
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a
-                                                        href="#"
-                                                        class="dropdown-item text-danger"
-                                                        data-cy="remove-{{ proposal.id }}"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalProposalDelete"
-                                                        onclick="openProposalDeleteModal('{{ proposal.id }}', '{{ proposal.name }}')"
-                                                >
-                                                    Excluir Proposta
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="10" class="text-center">{{ 'table.no_records_found'|trans }}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                                {% endfor %}
+                                {% set anuida_count = 0 %}
+                                {% for proposal in proposals %}
+                                    {% if proposal.status == statusEnum.ANUIDA.value %}
+                                        {% set anuida_count = anuida_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if anuida_count == 0 %}
+                                    <tr>
+                                        <td colspan="12" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                    </tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+
+                        {# Aba: Propostas Selecionadas #}
+                        <div class="tab-pane fade" id="panel-selecionada" role="tabpanel" aria-labelledby="tab-selecionada">
+                            <div class="mb-3">
+                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('selecionadas')">
+                                    <i class="bi bi-download"></i> Exportar Propostas Selecionadas
+                                </button>
+                            </div>
+                            <div class="table-scroll-container">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" id="tableSelecionada" data-native-grid="true" data-pagination="false" style="table-layout: fixed; width: 100%;">
+                                <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 120px;" class="border-end">↕ Posição</th>
+                                    <th class="border-end" style="width: 95px;">ID</th>
+                                    <th class="border-end" style="width: 95px;">UF</th>
+                                    <th class="border-end" style="width: 175px;">Município</th>
+                                    <th class="border-end" style="width: 175px;">Área</th>
+                                    <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 220px;">Motivo do Status</th>
+                                    <th class="border-end" style="width: 175px;">Empresa/OSC</th>
+                                    <th class="border-end" style="width: 175px;">CNPJ</th>
+                                    <th class="border-end" style="width: 115px;">Instituição</th>
+                                    <th class="border-end" style="width: 110px;">Poligonal</th>
+                                    <th class="border-end" style="width: 100px;">Projeto</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% set selected = [] %}
+                                {% for proposal in proposals %}
+                                    {% if proposal.status in selectedStatusValues %}
+                                        {% set selected = selected|merge([proposal]) %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% set selected = selected|sort((a, b) => (a.evaluation_ranking ?? 'ZZZZZZ') <=> (b.evaluation_ranking ?? 'ZZZZZZ')) %}
+                                {% for proposal in selected %}
+                                    {% set status = proposal.status ?? '' %}
+                                    <tr data-status="{{ status }}" class="proposal-row" data-proposal-id="{{ proposal.id }}" data-state="{{ proposal.state|upper }}" data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
+                                        <td style="font-weight: bold; text-align: center; width: 120px;" class="border-end">
+                                            <input
+                                                type="text"
+                                                class="form-control form-control-sm position-input-sel"
+                                                value="{{ proposal.evaluation_ranking ?? '' }}"
+                                                data-original-value="{{ proposal.evaluation_ranking ?? '' }}"
+                                                inputmode="numeric"
+                                                autocomplete="off"
+                                                style="width: 90px; margin: 0 auto;"
+                                                {% if not is_granted('ROLE_ADMIN') %}readonly tabindex="-1"{% endif %}
+                                            >
+                                        </td>
+                                        <td class="border-end" style="width: 95px;">{{ proposal.id|slice(0, 8) }}</td>
+                                        <td class="border-end" style="width: 95px;">{{ proposal.state }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 220px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj|e|replace({"/": "/<wbr>"})|raw }}</td>
+                                        <td class="border-end" style="width: 115px;">{{ proposal.institution_type }}</td>
+                                        <td class="border-end" style="width: 110px; word-break: break-all;">
+                                            {% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                        <td class="border-end" style="width: 100px; word-break: break-all;">
+                                            {% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                {% if selected|length == 0 %}
+                                    <tr>
+                                        <td colspan="12" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                    </tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+
+                        {# Aba: Propostas Classificadas #}
+                        <div class="tab-pane fade" id="panel-classificada" role="tabpanel" aria-labelledby="tab-classificada">
+                            <div class="mb-3">
+                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('classificadas')">
+                                    <i class="bi bi-download"></i> Exportar Propostas Classificadas
+                                </button>
+                            </div>
+                            <div class="table-scroll-container">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" id="tableClassificada" data-native-grid="true" data-pagination="false" style="table-layout: fixed; width: 100%;">
+                                <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 120px;" class="border-end">↕ Posição</th>
+                                    <th class="border-end" style="width: 95px;">ID</th>
+                                    <th class="border-end" style="width: 95px;">UF</th>
+                                    <th class="border-end" style="width: 175px;">Município</th>
+                                    <th class="border-end" style="width: 175px;">Área</th>
+                                    <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 220px;">Motivo do Status</th>
+                                    <th class="border-end" style="width: 175px;">Empresa/OSC</th>
+                                    <th class="border-end" style="width: 175px;">CNPJ</th>
+                                    <th class="border-end" style="width: 115px;">Instituição</th>
+                                    <th class="border-end" style="width: 110px;">Poligonal</th>
+                                    <th class="border-end" style="width: 100px;">Projeto</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% set classified = [] %}
+                                {% for proposal in proposals %}
+                                    {% set status = proposal.status ?? '' %}
+                                    {% if status in classifiedStatusValues %}
+                                        {% set classified = classified|merge([proposal]) %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% set classified = classified|sort((a, b) => (a.evaluation_ranking ?? 'ZZZZZZ') <=> (b.evaluation_ranking ?? 'ZZZZZZ')) %}
+                                {% for proposal in classified %}
+                                    {% set status = proposal.status ?? '' %}
+                                    <tr data-status="{{ status }}" class="proposal-row" data-proposal-id="{{ proposal.id }}" data-state="{{ proposal.state|upper }}" data-current-order="{{ proposal.evaluation_ranking ?? '' }}">
+                                        <td style="font-weight: bold; text-align: center; width: 120px;" class="border-end">
+                                            <input
+                                                type="text"
+                                                class="form-control form-control-sm position-input-class"
+                                                value="{{ proposal.evaluation_ranking ?? '' }}"
+                                                data-original-value="{{ proposal.evaluation_ranking ?? '' }}"
+                                                inputmode="numeric"
+                                                autocomplete="off"
+                                                style="width: 90px; margin: 0 auto;"
+                                                {% if not is_granted('ROLE_ADMIN') %}readonly tabindex="-1"{% endif %}
+                                            >
+                                        </td>
+                                        <td class="border-end" style="width: 95px;">{{ proposal.id|slice(0, 8) }}</td>
+                                        <td class="border-end" style="width: 95px;">{{ proposal.state }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 220px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj|e|replace({"/": "/<wbr>"})|raw }}</td>
+                                        <td class="border-end" style="width: 115px;">{{ proposal.institution_type }}</td>
+                                        <td class="border-end" style="width: 110px; word-break: break-all;">
+                                            {% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                        <td class="border-end" style="width: 100px; word-break: break-all;">
+                                            {% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                {% if classified|length == 0 %}
+                                    <tr>
+                                        <td colspan="12" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                    </tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+
+                        {# Aba: Propostas Não Selecionadas #}
+                        {% if 'ROLE_CAIXA' not in app.user.roles %}
+                        <div class="tab-pane fade" id="panel-nao-selecionada" role="tabpanel" aria-labelledby="tab-nao-selecionada">
+                            <div class="mb-3">
+                                <button class="btn btn-sm btn-secondary" onclick="exportTabaComStatus('nao_selecionadas')">
+                                    <i class="bi bi-download"></i> Exportar Propostas Não Selecionadas
+                                </button>
+                            </div>
+                            <div class="table-scroll-container">
+                            <table class="js-grid proposal-sort-table table table-hover table-striped table-sm" data-native-grid="true" style="table-layout: fixed; width: 100%;">
+                                <thead class="table-dark">
+                                <tr>
+                                    <th class="border-end" style="width: 95px;">ID</th>
+                                    <th class="border-end" style="width: 95px;">UF</th>
+                                    <th class="border-end" style="width: 175px;">Município</th>
+                                    <th class="border-end" style="width: 175px;">Área</th>
+                                    <th class="border-end" style="width: 175px;">Status</th>
+                                    <th class="border-end" style="width: 220px;">Motivo do Status</th>
+                                    <th class="border-end" style="width: 175px;">Empresa/OSC</th>
+                                    <th class="border-end" style="width: 175px;">CNPJ</th>
+                                    <th class="border-end" style="width: 115px;">Instituição</th>
+                                    <th class="border-end" style="width: 110px;">Poligonal</th>
+                                    <th class="border-end" style="width: 100px;">Projeto</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for proposal in proposals %}
+                                    {% set status = proposal.status ?? '' %}
+                                    {% if status in nonSelectedStatusValues %}
+                                    <tr data-status="{{ status }}" class="proposal-row">
+                                        <td class="border-end" style="width: 95px;">{{ proposal.id|slice(0, 8) }}</td>
+                                        <td class="border-end" style="width: 95px;">{{ proposal.state }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.city_name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.name }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.status }}</td>
+                                        <td class="border-end" style="width: 220px;">{{ proposal.status_reason is not empty ? proposal.status_reason : '-' }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company }}</td>
+                                        <td class="border-end" style="width: 175px;">{{ proposal.company_cnpj|e|replace({"/": "/<wbr>"})|raw }}</td>
+                                        <td class="border-end" style="width: 115px;">{{ proposal.institution_type }}</td>
+                                        <td class="border-end" style="width: 110px; word-break: break-all;">
+                                            {% if proposal.map_file %}<a href="{{ proposal.map_file }}" target="_blank" class="btn btn-sm" style="background-color: #088140; color: white; font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                        <td class="border-end" style="width: 100px; word-break: break-all;">
+                                            {% if proposal.project_file %}<a href="{{ proposal.project_file }}" target="_blank" class="btn btn-sm btn-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;"><i class="bi bi-file-earmark"></i> Baixar</a>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                                {% set nao_selecionada_count = 0 %}
+                                {% for proposal in proposals %}
+                                    {% if proposal.status in nonSelectedStatusValues %}
+                                        {% set nao_selecionada_count = nao_selecionada_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if nao_selecionada_count == 0 %}
+                                    <tr>
+                                        <td colspan="11" class="text-center">{{ 'table.no_records_found'|trans }}</td>
+                                    </tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -272,12 +879,169 @@
 </section>
 
 {% include "regmel/_components/modal-proposal.html.twig" %}
+
+<!-- Modal de Avaliação (igual ao da página de avaliações) -->
+<div class="modal fade" id="evaluationModal" tabindex="-1" aria-labelledby="evaluationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="evaluationForm" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="evaluationModalLabel">Avaliar Proposta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="proposalId" name="proposal_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Proposta: <span id="proposalName"></span></label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="result" class="form-label fw-bold">Resultado <span class="text-danger">*</span></label>
+                        <select class="form-select" id="result" name="result" required onchange="toggleRankingField()">
+                            <option value="" selected disabled>Selecione o resultado</option>
+                            <option value="Selecionada">Selecionada</option>
+                            <option value="Selecionada por desempate">Selecionada por desempate</option>
+                            <option value="Classificada em cadastro de reserva">Classificada em cadastro de reserva</option>
+                            <option value="Classificada e não selecionada por empate">Classificada e não selecionada por empate</option>
+                            <option value="Desclassificada">Desclassificada</option>
+                        </select>
+                        <div class="form-text">Escolha uma opção obrigatória</div>
+                    </div>
+
+                    <div class="mb-3" id="rankingField" style="display: none;">
+                        <label for="ranking" class="form-label fw-bold">Ranking (posição) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="ranking" name="ranking" pattern="[A-Za-z0-9]+" placeholder="Ex: PA0001, DF0001, SP0010">
+                        <div class="form-text">Obrigatório para propostas selecionadas e classificadas. Use letras e números.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label fw-bold">Motivo/Parecer <span class="text-danger">*</span></label>
+                        <textarea
+                            class="form-control"
+                            id="reason"
+                            name="reason"
+                            rows="4"
+                            placeholder="Descreva o motivo da sua avaliação..."
+                            minlength="10"
+                            required
+                        ></textarea>
+                        <div class="form-text">Mínimo de 10 caracteres</div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmReorderModal" tabindex="-1" aria-labelledby="confirmReorderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmReorderModalLabel">Confirmar reposicionamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Deseja salvar a nova ordem das propostas?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmReorderButton">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEvaluationModal(proposalId, proposalName, event, proposalState = '') {
+        event.preventDefault();
+        document.getElementById('proposalId').value = proposalId;
+        document.getElementById('proposalName').textContent = proposalName;
+        document.getElementById('result').value = '';
+        document.getElementById('reason').value = '';
+        const rankingInput = document.getElementById('ranking');
+        rankingInput.value = '';
+        rankingInput.dataset.state = proposalState;
+        document.getElementById('rankingField').style.display = 'none';
+    }
+
+    function toggleRankingField() {
+        const result = document.getElementById('result').value;
+        const rankingField = document.getElementById('rankingField');
+        const rankingInput = document.getElementById('ranking');
+        
+        if (result.startsWith('Selecionada') || result.startsWith('Classificada')) {
+            rankingField.style.display = 'block';
+            rankingInput.required = true;
+            if (!rankingInput.value) {
+                rankingInput.value = getNextRankingCode(result, rankingInput.dataset.state || '');
+            }
+        } else {
+            rankingField.style.display = 'none';
+            rankingInput.required = false;
+            rankingInput.value = '';
+        }
+    }
+
+    function getNextRankingCode(result, proposalState) {
+        const state = String(proposalState || '').trim().toUpperCase();
+        if (!/^[A-Z]{2}$/.test(state)) {
+            return '';
+        }
+
+        const tableId = result.startsWith('Selecionada') ? 'tableSelecionada' : 'tableClassificada';
+        const sameStateRows = document.querySelectorAll(`#${tableId} .proposal-row[data-state="${state}"]`);
+
+        return `${state}${String(sameStateRows.length + 1).padStart(4, '0')}`;
+    }
+
+    document.getElementById('evaluationForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const proposalId = document.getElementById('proposalId').value;
+        const result = document.getElementById('result').value;
+        const reason = document.getElementById('reason').value;
+        const ranking = document.getElementById('ranking').value;
+        
+        try {
+            const response = await fetch(`/painel/admin/avaliacoes/${proposalId}/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    result: result,
+                    reason: reason,
+                    ranking: ranking || null
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('✅ Proposta avaliada com sucesso!');
+                bootstrap.Modal.getInstance(document.getElementById('evaluationModal')).hide();
+                location.reload();
+            } else {
+                alert('❌ Erro: ' + data.message);
+            }
+        } catch (error) {
+            alert('❌ Erro ao avaliar: ' + error.message);
+        }
+    });
+</script>
+
 {% endblock %}
 
 {% block extra_javascripts %}
     {{ parent() }}
     <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
-    <script src="https://unpkg.com/gridjs/plugins/selection/dist/selection.umd.js"></script>
     <script type="module" src="{{ asset('js/regmel/grid-init-proposals.js') }}"></script>
     <script src="{{ asset('js/modal-proposal-details.js') }}"></script>
     <script src="{{ asset('js/modal-confirm-remove.js') }}"></script>
@@ -332,12 +1096,381 @@
             }
         });
 
+        // Função para exportar dados filtrados por status em XLS
+        function exportTabaComStatus(status) {
+            const params = new URLSearchParams();
+            if (status === 'selecionadas' || status === 'classificadas' || status === 'nao_selecionadas') {
+                params.append('status_group', status);
+            } else {
+                params.append('status', status);
+            }
+            
+            // Redirecionar para a rota de download com o filtro de status
+            window.location.href = '{{ path('admin_regmel_proposal_list_download') }}?' + params.toString();
+        }
+
+        function initializeProposalTabSorting() {
+            const tables = document.querySelectorAll('#proposalTabsContent table.proposal-sort-table');
+
+            tables.forEach((table) => {
+                const headers = table.querySelectorAll('thead th');
+
+                headers.forEach((header, columnIndex) => {
+                    if (header.dataset.sortable === 'false') {
+                        return;
+                    }
+
+                    header.dataset.sortable = 'true';
+
+                    header.addEventListener('click', () => {
+                        const tbody = table.querySelector('tbody');
+                        if (!tbody) {
+                            return;
+                        }
+
+                        const rows = Array.from(tbody.querySelectorAll('tr'))
+                            .filter((row) => !row.querySelector(`td[colspan]`));
+
+                        if (rows.length === 0) {
+                            return;
+                        }
+
+                        const nextDirection = header.dataset.sortDirection === 'asc' ? 'desc' : 'asc';
+
+                        headers.forEach((th) => {
+                            th.classList.remove('sort-asc', 'sort-desc');
+                            th.dataset.sortDirection = '';
+                        });
+
+                        header.dataset.sortDirection = nextDirection;
+                        header.classList.add(nextDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+
+                        rows.sort((rowA, rowB) => {
+                            const valueA = getSortableCellValue(rowA, columnIndex);
+                            const valueB = getSortableCellValue(rowB, columnIndex);
+                            return compareSortableValues(valueA, valueB, nextDirection);
+                        });
+
+                        rows.forEach((row) => tbody.appendChild(row));
+                    });
+                });
+            });
+        }
+
+        function getSortableCellValue(row, columnIndex) {
+            const cell = row.children[columnIndex];
+            if (!cell) {
+                return '';
+            }
+
+            const input = cell.querySelector('input, select, textarea');
+            if (input) {
+                return input.value.trim();
+            }
+
+            return cell.textContent.replace(/\s+/g, ' ').trim();
+        }
+
+        function compareSortableValues(rawValueA, rawValueB, direction) {
+            const valueA = normalizeSortableValue(rawValueA);
+            const valueB = normalizeSortableValue(rawValueB);
+
+            let result = 0;
+
+            if (valueA.type === valueB.type && (valueA.type === 'number' || valueA.type === 'date')) {
+                result = valueA.value - valueB.value;
+            } else {
+                result = String(valueA.value).localeCompare(String(valueB.value), 'pt-BR', {
+                    numeric: true,
+                    sensitivity: 'base'
+                });
+            }
+
+            return direction === 'asc' ? result : -result;
+        }
+
+        function normalizeSortableValue(value) {
+            const normalized = String(value ?? '').trim();
+
+            if (normalized === '' || normalized === '-') {
+                return { type: 'text', value: '' };
+            }
+
+            const currencyValue = normalized
+                .replace(/\s/g, '')
+                .replace(/^R\$/, '')
+                .replace(/\./g, '')
+                .replace(',', '.');
+
+            if (/^-?\d+(\.\d+)?$/.test(currencyValue)) {
+                return { type: 'number', value: Number(currencyValue) };
+            }
+
+            const dateMatch = normalized.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?$/);
+            if (dateMatch) {
+                const [, day, month, year, hour = '00', minute = '00'] = dateMatch;
+                const dateValue = new Date(`${year}-${month}-${day}T${hour}:${minute}:00`).getTime();
+
+                if (!Number.isNaN(dateValue)) {
+                    return { type: 'date', value: dateValue };
+                }
+            }
+
+            const isoDateValue = Date.parse(normalized);
+            if (!Number.isNaN(isoDateValue) && /[-/:]/.test(normalized)) {
+                return { type: 'date', value: isoDateValue };
+            }
+
+            return { type: 'text', value: normalized.toLowerCase() };
+        }
+
         // Inicializar tooltips do Bootstrap
         document.addEventListener('DOMContentLoaded', function() {
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+
+            initializeProposalTabSorting();
+
+            // Contar registros por status e atualizar abas (apenas dentro de cada tab)
+            const selecionadaCount = document.querySelectorAll('#panel-selecionada .proposal-row').length;
+            const classificadaCount = document.querySelectorAll('#panel-classificada .proposal-row').length;
+            const naoSelecionadaCount = document.querySelectorAll('#panel-nao-selecionada .proposal-row').length;
+            const anuídaCount = document.querySelectorAll('#panel-anuida .proposal-row').length;
+            const totalCount = document.querySelectorAll('#panel-all .proposal-row').length;
+
+            // Atualizar labels das abas
+            const tabAll = document.getElementById('tab-all');
+            const tabAnuida = document.getElementById('tab-anuida');
+            const tabSelecionada = document.getElementById('tab-selecionada');
+            const tabClassificada = document.getElementById('tab-classificada');
+            const tabNaoSelecionada = document.getElementById('tab-nao-selecionada');
+
+            if (tabAll) {
+                tabAll.innerHTML = '<i class="bi bi-list"></i> Todas as Propostas <span class="badge bg-secondary ms-2">' + totalCount + '</span>';
+            }
+            if (tabAnuida) {
+                tabAnuida.innerHTML = '<i class="bi bi-check2-circle"></i> Anuídas <span class="badge bg-success ms-2" style="background-color: #155724 !important;">' + anuídaCount + '</span>';
+            }
+            if (tabSelecionada) {
+                tabSelecionada.innerHTML = '<i class="bi bi-check-circle"></i> Selecionadas <span class="badge bg-success ms-2">' + selecionadaCount + '</span>';
+            }
+            if (tabClassificada) {
+                tabClassificada.innerHTML = '<i class="bi bi-folder-check"></i> Classificadas <span class="badge bg-info ms-2">' + classificadaCount + '</span>';
+            }
+            if (tabNaoSelecionada) {
+                tabNaoSelecionada.innerHTML = '<i class="bi bi-x-circle"></i> Não Selecionadas <span class="badge bg-danger ms-2">' + naoSelecionadaCount + '</span>';
+            }
+
+            const isAdmin = {{ is_granted('ROLE_ADMIN') ? 'true' : 'false' }};
+            if (isAdmin) {
+                setupPositionEditing('tableSelecionada');
+                setupPositionEditing('tableClassificada');
+            }
+        });
+
+        let rankingEditState = null;
+
+        function setupPositionEditing(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+
+            table.querySelectorAll('input.position-input-sel, input.position-input-class').forEach((input) => {
+                input.dataset.originalValue = input.value;
+
+                input.addEventListener('focus', () => selectPositionNumericPart(input));
+                input.addEventListener('click', () => selectPositionNumericPart(input));
+                input.addEventListener('mousedown', (event) => event.stopPropagation());
+                input.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        input.blur();
+                    }
+                });
+                input.addEventListener('input', () => normalizePositionInput(input));
+                input.addEventListener('change', () => applyPositionInputEdit(input));
+                input.addEventListener('blur', () => applyPositionInputEdit(input));
+            });
+        }
+
+        function selectPositionNumericPart(input) {
+            const state = getPositionInputState(input);
+            window.setTimeout(() => {
+                input.setSelectionRange(state.length, input.value.length);
+            }, 0);
+        }
+
+        function getPositionInputState(input) {
+            const rowState = input.closest('.proposal-row')?.dataset.state || '';
+            const inputState = String(input.value || '').match(/^[A-Z]{2}/)?.[0] || '';
+
+            return String(rowState || inputState).trim().toUpperCase();
+        }
+
+        function normalizePositionInput(input) {
+            const state = getPositionInputState(input);
+            const numericPart = String(input.value || '').replace(/\D/g, '').slice(0, 4);
+
+            input.value = `${state}${numericPart}`;
+        }
+
+        function applyPositionInputEdit(input) {
+            if (
+                input.dataset.applyingPositionEdit === 'true' ||
+                rankingEditState
+            ) {
+                return;
+            }
+
+            const row = input.closest('.proposal-row');
+            const table = input.closest('table');
+            const tableId = table?.id;
+            const state = getPositionInputState(input);
+            const originalValue = input.dataset.originalValue || row?.dataset.currentOrder || '';
+            const numericPart = String(input.value || '').replace(/\D/g, '');
+
+            if (!row || !tableId || !/^[A-Z]{2}$/.test(state) || !numericPart) {
+                input.value = originalValue;
+                return;
+            }
+
+            const requestedPosition = Math.max(1, Number.parseInt(numericPart, 10));
+            const normalizedValue = `${state}${String(requestedPosition).padStart(4, '0')}`;
+
+            if (normalizedValue === originalValue) {
+                input.value = originalValue;
+                return;
+            }
+
+            input.dataset.applyingPositionEdit = 'true';
+            input.value = normalizedValue;
+            rankingEditState = {
+                input,
+                row,
+                tableId,
+                proposalId: row.getAttribute('data-proposal-id'),
+                originalValue,
+                newValue: normalizedValue
+            };
+            input.dataset.applyingPositionEdit = 'false';
+
+            openRankingEditConfirmationModal();
+        }
+
+        // Função para abrir modal de avaliar proposta (igual a página de avaliações)
+        function openEvaluationModal(proposalId, proposalName, event, proposalState = '') {
+            event.preventDefault();
+            
+            document.getElementById('proposalId').value = proposalId;
+            document.getElementById('proposalName').textContent = proposalName;
+            document.getElementById('result').value = '';
+            document.getElementById('reason').value = '';
+            const rankingInput = document.getElementById('ranking');
+            rankingInput.value = '';
+            rankingInput.dataset.state = proposalState;
+            document.getElementById('rankingField').style.display = 'none';
+            
+            const modal = new bootstrap.Modal(document.getElementById('evaluationModal'));
+            modal.show();
+        }
+
+        function toggleRankingField() {
+            const result = document.getElementById('result').value;
+            const rankingField = document.getElementById('rankingField');
+            const rankingInput = document.getElementById('ranking');
+            
+            if (result.startsWith('Selecionada') || result.startsWith('Classificada')) {
+                rankingField.style.display = 'block';
+                rankingInput.required = true;
+                if (!rankingInput.value) {
+                    rankingInput.value = getNextRankingCode(result, rankingInput.dataset.state || '');
+                }
+            } else {
+                rankingField.style.display = 'none';
+                rankingInput.required = false;
+                rankingInput.value = '';
+            }
+        }
+
+        function openRankingEditConfirmationModal() {
+            const modalEl = document.getElementById('confirmReorderModal');
+            if (!modalEl) {
+                return;
+            }
+
+            setConfirmationModalMessage('Deseja salvar a nova posição da proposta?');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+
+            modalEl.addEventListener('hidden.bs.modal', handleRankingEditCancel, { once: true });
+        }
+
+        function setConfirmationModalMessage(message) {
+            const modalBody = document.querySelector('#confirmReorderModal .modal-body');
+            if (modalBody) {
+                modalBody.textContent = message;
+            }
+        }
+
+        function handleRankingEditCancel() {
+            if (!rankingEditState) {
+                return;
+            }
+
+            rankingEditState.input.value = rankingEditState.originalValue;
+            rankingEditState.input.dataset.originalValue = rankingEditState.originalValue;
+            rankingEditState = null;
+        }
+
+        async function saveConfirmedRankingEdit() {
+            if (!rankingEditState) {
+                return;
+            }
+
+            const { input, row, proposalId, originalValue, newValue } = rankingEditState;
+
+            try {
+                const response = await fetch(`/painel/admin/propostas/${proposalId}/ranking`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ranking: newValue })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json().catch(() => null);
+                    input.value = originalValue;
+                    input.dataset.originalValue = originalValue;
+                    row.setAttribute('data-current-order', originalValue);
+                    alert(data?.message || 'Não foi possível atualizar a posição.');
+                    return;
+                }
+
+                const data = await response.json().catch(() => null);
+                const savedRanking = data?.ranking || newValue;
+                input.value = savedRanking;
+                input.dataset.originalValue = savedRanking;
+                row.setAttribute('data-current-order', savedRanking);
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                input.value = originalValue;
+                input.dataset.originalValue = originalValue;
+                row.setAttribute('data-current-order', originalValue);
+                alert('Erro ao atualizar a posição.');
+            } finally {
+                rankingEditState = null;
+            }
+        }
+
+        document.getElementById('confirmReorderButton')?.addEventListener('click', async () => {
+            const modalEl = document.getElementById('confirmReorderModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modalEl.removeEventListener('hidden.bs.modal', handleRankingEditCancel);
+            modal.hide();
+
+            if (rankingEditState) {
+                await saveConfirmedRankingEdit();
+            }
         });
     </script>
 {% endblock %}

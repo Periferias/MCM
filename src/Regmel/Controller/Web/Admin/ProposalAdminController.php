@@ -11,6 +11,7 @@ use App\Enum\StatusProposalEnum;
 use App\Enum\UserRolesEnum;
 use App\Environment\ConfigEnvironment;
 use App\Regmel\Service\Interface\ProposalServiceInterface;
+use App\Regmel\Service\ProposalOrderingService;
 use App\Service\Interface\CityServiceInterface;
 use App\Service\Interface\InitiativeServiceInterface;
 use App\Service\Interface\InscriptionOpportunityServiceInterface;
@@ -22,6 +23,7 @@ use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -44,6 +46,7 @@ class ProposalAdminController extends AbstractAdminController
         private readonly PhaseServiceInterface $phaseService,
         private readonly TranslatorInterface $translator,
         private readonly EntityManagerInterface $entityManager,
+        private readonly ProposalOrderingService $proposalOrderingService,
         public readonly InscriptionOpportunityServiceInterface $inscriptionOpportunityService,
     ) {
     }
@@ -51,24 +54,21 @@ class ProposalAdminController extends AbstractAdminController
     #[IsGranted(new Expression('
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or 
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'")
+        is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_CAIXA->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas', name: 'admin_regmel_proposal_list', methods: ['GET'])]
     public function list(Request $request): Response
     {
         $statuses = StatusProposalEnum::cases();
         $status = $request->query->get('status');
+        $statusGroup = $request->query->get('status_group');
         $regions = RegionEnum::cases();
         $region = $request->query->get('region');
         $state = $request->query->get('state');
         $city = $request->query->get('city');
-        $anticipation = $request->query->get('anticipation');
         $cities = [];
         $states = $this->stateService->list();
-        $anticipationOptions = [
-            ['value' => 'true', 'label' => $this->translator->trans('proposal.in_anticipation')],
-            ['value' => 'false', 'label' => $this->translator->trans('proposal.no_anticipation')],
-        ];
 
         if ($region) {
             $states = $this->stateService->findBy(['region' => $region]);
@@ -78,7 +78,17 @@ class ProposalAdminController extends AbstractAdminController
             $cities = $this->cityService->findByState($state);
         }
 
-        $filtered = $this->initiativeService->listFiltered($region, $state, $city, $status, $anticipation);
+        $filtered = $this->initiativeService->listFiltered($region, $state, $city, $status, null);
+
+        // Filtrar propostas por role (ROLE_CAIXA só vê SELECIONADA e CLASSIFICADA)
+        $isCaixa = $this->security->isGranted(UserRolesEnum::ROLE_CAIXA->value);
+        if ($isCaixa) {
+            $filtered = array_filter($filtered, function (Initiative $proposal) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+
+                return StatusProposalEnum::isRanked($proposalStatus);
+            });
+        }
 
         $env = $this->configEnvironment->aurora();
 
@@ -87,34 +97,81 @@ class ProposalAdminController extends AbstractAdminController
             $extraFields = $initiative->getExtraFields();
             $areaCharacteristic = $extraFields['area_characteristic'] ?? null;
             $quantityHouses = (int) ($extraFields['quantity_houses'] ?? 0);
+            $orgExtraFields = $organization?->getExtraFields() ?? [];
+
+            // Generate download URLs for files
+            $mapFileUrl = isset($extraFields['map_file'])
+                ? $this->generateUrl('admin_regmel_proposal_mapa', ['id' => $initiative->getId()])
+                : '';
+            $projectFileUrl = isset($extraFields['project_file'])
+                ? $this->generateUrl('admin_regmel_proposal_projeto', ['id' => $initiative->getId()])
+                : '';
+
+            // Buscar dados do representante (usuário owner da organização)
+            $representativeName = '';
+            $representativeCpf = '';
+            $representativeEmail = '';
+            $representativePhone = '';
+
+            if ($organization) {
+                try {
+                    $agent = $organization->getOwner();
+                    if ($agent) {
+                        $owner = $agent->getUser();
+                        if ($owner) {
+                            $representativeName = trim(($owner->getFirstname() ?? '').' '.($owner->getLastname() ?? ''));
+                            $representativeEmail = $owner->getEmail() ?? '';
+
+                            // Telefone e CPF estão em extra_fields do agent
+                            $agentExtraFields = $agent->getExtraFields() ?? [];
+                            $representativeCpf = $agentExtraFields['cpf'] ?? '';
+                            $representativePhone = $agentExtraFields['telefone'] ?? '';
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Se erro ao buscar dados do representante, deixa vazio
+                }
+            }
 
             return [
                 'id' => $initiative->getId()->toRfc4122(),
                 'name' => $initiative->getName(),
-                'company' => $organization?->getName() ?? '', // Esta é a chave que deu erro!
+                'company' => $organization?->getName() ?? '',
+                'institution_type' => $orgExtraFields['tipo'] ?? 'Não Informado',
                 'city_name' => $extraFields['city_name'] ?? '',
+                'city_code' => $extraFields['city_code'] ?? $extraFields['cityCode'] ?? '',
                 'region' => $extraFields['region'] ?? '',
                 'state' => $extraFields['state'] ?? '',
                 'status' => $extraFields['status'] ?? '',
                 'quantity_houses' => $quantityHouses,
                 'area_size' => $extraFields['area_size'] ?? '',
-                'created_at' => $initiative->getCreatedAt()->format('d/m/Y'),
+                'created_at' => $initiative->getCreatedAt()->format('d/m/Y H:i:s'),
                 'created_by' => $initiative->getCreatedBy()?->getName() ?? '',
                 'area_option' => null !== $areaCharacteristic ? ($env['proposals']['area_characteristics'][$areaCharacteristic] ?? '') : '',
                 'price_per_house' => (float) ($env['variables']['price_per_household'] ?? 1),
-                'map_file' => $extraFields['map_file'] ?? '',
-                'project_file' => $extraFields['project_file'] ?? '',
+                'map_file' => $mapFileUrl,
+                'map_file_type' => isset($extraFields['map_file']) ? strtolower(pathinfo($extraFields['map_file'], PATHINFO_EXTENSION)) : '',
+                'project_file' => $projectFileUrl,
                 'anticipation' => $extraFields['anticipation'] ?? '',
                 'snpr_affiliation' => $extraFields['snpr_affiliation'] ?? 'Não',
                 'snpr_affiliation_details' => $extraFields['snpr_affiliation_details'] ?? '',
                 'zipcode' => $extraFields['zipcode'] ?? 'Não Informado',
                 'address' => $extraFields['address'] ?? 'Não Informado',
-                // O novo campo que você queria:
                 'status_updated_by_name' => $extraFields['status_updated_by_name'] ?? 'Não informado',
                 'agreement_uploaded_by_name' => $extraFields['agreement_uploaded_by_name'] ?? 'Não informado',
                 'agreement_status' => $extraFields['agreement_status'] ?? null,
                 'status_reason' => $extraFields['status_reason'] ?? null,
+                'evaluation_ranking' => $extraFields['evaluation_ranking'] ?? null,
                 'agreement_reason' => $extraFields['agreement_reason'] ?? null,
+                // Dados da empresa/OSC
+                'company_cnpj' => $orgExtraFields['cnpj'] ?? '',
+                'company_email' => $orgExtraFields['email'] ?? '',
+                'company_phone' => $orgExtraFields['telefone'] ?? $orgExtraFields['phone'] ?? '',
+                // Dados do representante (usuário owner da empresa)
+                'representative_name' => $representativeName,
+                'representative_cpf' => $representativeCpf,
+                'representative_email' => $representativeEmail,
+                'representative_phone' => $representativePhone,
             ];
         }, $filtered);
 
@@ -124,8 +181,6 @@ class ProposalAdminController extends AbstractAdminController
             'statuses' => $statuses,
             'states' => $states,
             'cities' => $cities,
-            'anticipation' => $anticipation ?? '',
-            'anticipationOption' => $anticipationOptions,
         ], parentPath: '');
     }
 
@@ -224,21 +279,97 @@ class ProposalAdminController extends AbstractAdminController
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
         is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_CAIXA->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas/list/download', name: 'admin_regmel_proposal_list_download', methods: ['GET'])]
     public function exportProposalsCsv(Request $request): Response
     {
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
-        
+        $isCaixa = $this->security->isGranted(UserRolesEnum::ROLE_CAIXA->value);
+
+        $status = $request->query->get('status');
+        $statusGroup = $request->query->get('status_group');
+
         if ($isMunicipality) {
-            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $agent = $user->getAgents()->filter(fn ($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
-            $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
+
+            if ($status) {
+                // Usar listFiltered para filtrar por status
+                $initiatives = $this->initiativeService->listFiltered(
+                    region: null,
+                    state: null,
+                    cityId: null,
+                    status: $status,
+                    anticipation: null
+                );
+                // Filtrar apenas propostas da municipalidade
+                $initiatives = array_filter($initiatives, fn ($init) => $init->getOrganizationTo()?->getId() === $municipality->getId());
+            } else {
+                $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
+            }
+        } elseif ($isCaixa) {
+            // ROLE_CAIXA pode baixar apenas propostas SELECIONADA e CLASSIFICADA
+            if ($status) {
+                $initiatives = $this->initiativeService->listFiltered(
+                    region: null,
+                    state: null,
+                    cityId: null,
+                    status: $status,
+                    anticipation: null
+                );
+            } else {
+                $initiatives = $this->initiativeService->listAllIncludingDeleted(limit: 10000);
+            }
+
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+
+                return StatusProposalEnum::isRanked($proposalStatus);
+            });
         } else {
-            // Incluir propostas deletadas na exportação CSV
-            $initiatives = $this->initiativeService->listAllIncludingDeleted(limit: 10000);
+            if ($status) {
+                // Usar listFiltered para filtrar por status
+                $initiatives = $this->initiativeService->listFiltered(
+                    region: null,
+                    state: null,
+                    cityId: null,
+                    status: $status,
+                    anticipation: null
+                );
+            } else {
+                // Incluir propostas deletadas na exportação CSV
+                $initiatives = $this->initiativeService->listAllIncludingDeleted(limit: 10000);
+            }
+        }
+
+        if ('selecionadas' === $statusGroup) {
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+
+                return StatusProposalEnum::isSelected($proposalStatus);
+            });
+        }
+
+        if ('classificadas' === $statusGroup) {
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+
+                return StatusProposalEnum::isClassified($proposalStatus);
+            });
+        }
+
+        if ('nao_selecionadas' === $statusGroup) {
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+
+                return in_array($proposalStatus, [
+                    StatusProposalEnum::NAO_SELECIONADA->value,
+                    StatusProposalEnum::DESCLASSIFICADA->value,
+                ], true);
+            });
         }
 
         return $this->proposalService->generateSpreadSheet($initiatives, 'propostas', null);
@@ -248,18 +379,29 @@ class ProposalAdminController extends AbstractAdminController
         is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or
         is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'") or
         is_granted("'.UserRolesEnum::ROLE_SUPPORT->value.'") or
-        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'")
+        is_granted("'.UserRolesEnum::ROLE_MUNICIPALITY->value.'") or
+        is_granted("'.UserRolesEnum::ROLE_CAIXA->value.'")
     '), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas/list/download-project-files', name: 'admin_regmel_proposal_project_file_download', methods: ['GET'])]
     public function exportProjectFiles(): Response
     {
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
-        
+        $isCaixa = $this->security->isGranted(UserRolesEnum::ROLE_CAIXA->value);
+
         if ($isMunicipality) {
-            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $agent = $user->getAgents()->filter(fn ($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
             $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
+        } elseif ($isCaixa) {
+            // ROLE_CAIXA pode baixar apenas propostas SELECIONADA e CLASSIFICADA
+            $initiatives = $this->initiativeService->list(limit: 10000);
+
+            $initiatives = array_filter($initiatives, function (Initiative $proposal) {
+                $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
+
+                return StatusProposalEnum::isRanked($proposalStatus);
+            });
         } else {
             $initiatives = $this->initiativeService->list(limit: 10000);
         }
@@ -286,9 +428,9 @@ class ProposalAdminController extends AbstractAdminController
     {
         $user = $this->security->getUser();
         $isMunicipality = $this->security->isGranted(UserRolesEnum::ROLE_MUNICIPALITY->value);
-        
+
         if ($isMunicipality) {
-            $agent = $user->getAgents()->filter(fn($agent) => $agent->isMain())->first();
+            $agent = $user->getAgents()->filter(fn ($agent) => $agent->isMain())->first();
             $municipality = $agent->getOrganizations()->first();
             $initiatives = $this->initiativeService->list(limit: 10000, params: ['organizationTo' => $municipality]);
         } else {
@@ -345,19 +487,33 @@ class ProposalAdminController extends AbstractAdminController
     #[Route('/painel/admin/propostas/{id}/status', name: 'admin_regmel_proposal_update_status', methods: ['POST'])]
     public function updateStatusProposal(Request $request, Uuid $id): Response
     {
+        $redirectUrl = $request->headers->get('referer');
+        $redirectResponse = fn (): Response => $redirectUrl
+            ? $this->redirect($redirectUrl)
+            : $this->redirectToRoute('admin_regmel_proposal_list');
+
         $status = StatusProposalEnum::from($request->request->get('status'));
         $reason = $request->request->get('reason');
 
         // Verifica se o município tem termo aprovado antes de permitir anuência ou seleção
         $proposal = $this->initiativeService->get($id);
         $municipality = $proposal->getOrganizationTo();
-        
+
         if ($municipality) {
             $termStatus = $municipality->getExtraFields()['term_status'] ?? null;
-            
-            if ($termStatus !== 'approved' && in_array($status, [StatusProposalEnum::ANUIDA, StatusProposalEnum::NAO_ANUIDA, StatusProposalEnum::SELECIONADA])) {
+
+            if (
+                'approved' !== $termStatus
+                && in_array($status, [
+                    StatusProposalEnum::ANUIDA,
+                    StatusProposalEnum::NAO_ANUIDA,
+                    StatusProposalEnum::SELECIONADA,
+                    StatusProposalEnum::SELECIONADA_DESEMPATE,
+                ])
+            ) {
                 $this->addFlash('error', 'Não é possível anuir ou selecionar proposta sem termo de adesão aprovado');
-                return $this->redirectToRoute('admin_regmel_proposal_list');
+
+                return $redirectResponse();
             }
         }
 
@@ -367,7 +523,7 @@ class ProposalAdminController extends AbstractAdminController
             $this->proposalService->updateStatusProposal($id, $status, $reason);
         }
 
-        return $this->redirectToRoute('admin_regmel_proposal_list');
+        return $redirectResponse();
     }
 
     #[IsGranted(new Expression('
@@ -387,6 +543,75 @@ class ProposalAdminController extends AbstractAdminController
     }
 
     #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/propostas/reorder', name: 'admin_regmel_proposal_reorder', methods: ['POST'])]
+    public function reorder(Request $request): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!isset($data['reordering']) || !is_array($data['reordering'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Campo "reordering" deve ser um array de objetos com proposalId e newOrder.',
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+
+            $this->proposalOrderingService->reorderProposals($data['reordering']);
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Propostas reordenadas com sucesso.',
+            ]);
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        } catch (\Exception $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erro ao reordenar propostas: '.$exception->getMessage(),
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    #[Route('/painel/admin/propostas/{id}/ranking', name: 'admin_regmel_proposal_update_ranking', methods: ['POST'])]
+    public function updateRanking(Request $request, Uuid $id): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!isset($data['ranking']) || !is_scalar($data['ranking'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Campo "ranking" é obrigatório.',
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+
+            $ranking = strtoupper(trim((string) $data['ranking']));
+
+            $this->proposalOrderingService->updateProposalRanking($id, $ranking);
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Posição atualizada com sucesso.',
+                'ranking' => $ranking,
+            ]);
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        } catch (\Exception $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erro ao atualizar posição: '.$exception->getMessage(),
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[IsGranted(UserRolesEnum::ROLE_ADMIN->value, statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
     #[Route('/painel/admin/propostas/{id}/deletar', name: 'admin_regmel_proposal_soft_delete', methods: ['POST'])]
     public function softDelete(Uuid $id, Request $request): Response
     {
@@ -396,14 +621,16 @@ class ProposalAdminController extends AbstractAdminController
             $deletionReason = $request->request->get('deletion_reason');
 
             // Validar se a proposta está anuída ou selecionada
-            if ($proposalStatus === StatusProposalEnum::ANUIDA->value || $proposalStatus === StatusProposalEnum::SELECIONADA->value) {
+            if ($proposalStatus === StatusProposalEnum::ANUIDA->value || StatusProposalEnum::isSelected($proposalStatus)) {
                 $this->addFlash('error', $this->translator->trans('view.proposal.error.cannot_delete_anuida_selecionada'));
+
                 return $this->redirectToRoute('admin_regmel_proposal_list');
             }
 
             // Validação do motivo
             if (empty($deletionReason) || strlen($deletionReason) < 20) {
                 $this->addFlash('error', $this->translator->trans('view.proposal.error.deletion_reason_required'));
+
                 return $this->redirectToRoute('admin_regmel_proposal_list');
             }
 
@@ -427,16 +654,17 @@ class ProposalAdminController extends AbstractAdminController
             $proposalStatus = $proposal->getExtraFields()['status'] ?? '';
 
             // Verificar se a proposta tem status "Anuída" ou "Selecionada"
-            if ($proposalStatus === StatusProposalEnum::ANUIDA->value || $proposalStatus === StatusProposalEnum::SELECIONADA->value) {
+            if ($proposalStatus === StatusProposalEnum::ANUIDA->value || StatusProposalEnum::isSelected($proposalStatus)) {
                 $this->addFlash('error', $this->translator->trans('view.proposal.error.cannot_delete_approved'));
+
                 return $this->redirectToRoute('admin_dashboard');
             }
 
             $this->initiativeService->remove($id);
-            
+
             // Limpar cache do Doctrine para forçar recalcular no dashboard
             $this->entityManager->clear();
-            
+
             $this->addFlashSuccess($this->translator->trans('view.proposal.message.deleted'));
         } catch (Exception $exception) {
             $this->addFlash('error', $exception->getMessage());

@@ -257,8 +257,7 @@
                                             <th>Titulo</th>
                                             <th>Empresa/OSC</th>
                                             <th>Status da Proposta</th>
-                                            <th>Status da Anuência</th>
-                                            <th>Motivo da Não Anuência</th>
+                                            <th>Motivo do Status</th>
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
@@ -280,7 +279,12 @@
                                                     (statusEnum.NAO_ANUIDA.value): 'bg-danger text-white',
                                                     'Não Anuída': 'bg-danger text-white',
                                                     (statusEnum.SELECIONADA.value): 'bg-success text-white',
+                                                    (statusEnum.SELECIONADA_DESEMPATE.value): 'bg-success text-white',
                                                     (statusEnum.NAO_SELECIONADA.value): 'bg-danger text-white',
+                                                    (statusEnum.CLASSIFICADA.value): 'bg-primary text-white',
+                                                    (statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value): 'bg-primary text-white',
+                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value): 'bg-primary text-white',
+                                                    (statusEnum.DESCLASSIFICADA.value): 'bg-danger text-white',
                                                 }[status] ?? 'bg-dark') %}
                                                 {% set statusDescriptions = {
                                                     (statusEnum.ENVIADA.value): 'Proposta enviada pela empresa/osc e aguardando recebimento pelo município',
@@ -292,7 +296,12 @@
                                                     (statusEnum.NAO_ANUIDA.value): 'Proposta não anuída pelo município',
                                                     'Não Anuída': 'Proposta não anuída pelo município',
                                                     (statusEnum.SELECIONADA.value): 'Proposta selecionada para execução',
-                                                    (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada'
+                                                    (statusEnum.SELECIONADA_DESEMPATE.value): 'Proposta selecionada por desempate',
+                                                    (statusEnum.NAO_SELECIONADA.value): 'Proposta não selecionada',
+                                                    (statusEnum.CLASSIFICADA.value): 'Proposta classificada',
+                                                    (statusEnum.CLASSIFICADA_CADASTRO_RESERVA.value): 'Proposta classificada em cadastro de reserva',
+                                                    (statusEnum.CLASSIFICADA_NAO_SELECIONADA_EMPATE.value): 'Proposta classificada e não selecionada por empate',
+                                                    (statusEnum.DESCLASSIFICADA.value): 'Proposta desclassificada'
                                                 } %}
                                                 {# Mapeia valores antigos para novos textos #}
                                                 {% set displayStatus = status == 'Anuída' ? statusEnum.ANUIDA.value : (status == 'Não Anuída' ? statusEnum.NAO_ANUIDA.value : status) %}
@@ -305,29 +314,7 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                {% set agreementStatus = proposal.extraFields.agreement_status ?? null %}
-                                                {% if agreementStatus == 'submitted' %}
-                                                    <span class="badge bg-warning text-dark">
-                                                        Aguardando Validação
-                                                    </span>
-                                                {% elseif agreementStatus == 'approved' %}
-                                                    <span class="badge bg-success text-white">
-                                                        Documento Aprovado
-                                                    </span>
-                                                {% elseif agreementStatus == 'rejected' %}
-                                                    <span class="badge bg-danger text-white">
-                                                        Documento Rejeitado
-                                                    </span>
-                                                {% else %}
-                                                    <span class="text-muted">-</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if status == 'Não Anuída' or status == statusEnum.NAO_ANUIDA.value %}
-                                                    {{ proposal.extraFields.status_reason ?? '-' }}
-                                                {% else %}
-                                                    -
-                                                {% endif %}
+                                                {{ proposal.extraFields.status_reason ?? '-' }}
                                             </td>
                                             <td>
                                                 <button
