@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\DTO\OrganizationDto;
+use App\Entity\Agent;
 use App\Entity\Organization;
 use App\Enum\OrganizationTypeEnum;
 use App\Enum\StatusProposalEnum;
@@ -15,6 +16,7 @@ use App\Service\Interface\AgentServiceInterface;
 use App\Service\Interface\FileServiceInterface;
 use App\Service\Interface\OrganizationServiceInterface;
 use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -81,7 +83,7 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
     public function create(array $organization): Organization
     {
         error_log('OrganizationService::create chamado com: ' . json_encode($organization));
-        
+
         // Se não informar owner ou createdBy, usar o primeiro usuário disponível
         if (empty($organization['owner'])) {
             $firstUser = $this->entityManager->getRepository('App\Entity\Agent')->findOneBy([]);
@@ -89,14 +91,14 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
                 $organization['owner'] = $firstUser->getId()->toRfc4122();
             }
         }
-        
+
         if (empty($organization['createdBy'])) {
             $firstUser = $this->entityManager->getRepository('App\Entity\Agent')->findOneBy([]);
             if ($firstUser) {
                 $organization['createdBy'] = $firstUser->getId()->toRfc4122();
             }
         }
-        
+
         $organization = $this->validateInput($organization, OrganizationDto::class, OrganizationDto::CREATE);
 
         $organizationObj = $this->serializer->denormalize($organization, Organization::class);
@@ -272,7 +274,7 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
             'organization_id' => $id->toRfc4122(),
             'statusValue' => json_encode(StatusProposalEnum::SEM_ADESAO->value),
         ]);
-        
+
         error_log("🗑️ HARDDELETE: {$affectedRows} propostas desassociadas do município e voltadas para 'Sem Adesão do Município'");
 
         // Remove todas as inscrições de fases (inscription_phase) vinculadas a esta organização
@@ -303,13 +305,13 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
                 'SELECT user_id FROM agent WHERE id = ?',
                 [$ownerId->toRfc4122()]
             );
-            
+
             // Deleta o agent
             $this->entityManager->getConnection()->executeStatement(
                 'DELETE FROM agent WHERE id = ?',
                 [$ownerId->toRfc4122()]
             );
-            
+
             // Deleta o user associado ao agent (se existir)
             if ($agentWithUser && $agentWithUser['user_id']) {
                 $this->entityManager->getConnection()->executeStatement(
@@ -382,7 +384,7 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
                 'pattern' => $municipalityName . '-%',  // São Paulo-SP, São Paulo-RJ, etc
                 'exactName' => $municipalityName,       // Ou match exato
             ]);
-            
+
             error_log("✅ REASSOCIAR: {$affectedRows} propostas órfãs foram reassociadas para '{$municipalityName}' com status '{$newStatus}'");
         } catch (\Exception $e) {
             error_log("❌ ERRO ao reassociar propostas: " . $e->getMessage());
@@ -414,16 +416,28 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
         }
 
         return [
+            'ID',
             'Nome da Organização',
+            'Descrição',
             'Tipo',
+            'Tipo Interno',
             'Enquadramento',
             'CNPJ',
             'E-mail',
             'Site',
             'Telefone',
             'Responsável',
+            'E-mail do Responsável',
+            'CPF do Responsável',
+            'Cargo do Responsável',
+            'Telefone do Responsável',
+            'Membros',
             'Criado em',
+            'Atualizado em',
             'Criado por',
+            'Imagem',
+            'Redes Sociais',
+            'Campos Extras',
         ];
     }
 
@@ -475,18 +489,70 @@ readonly class OrganizationService extends AbstractEntityService implements Orga
             ];
         }
 
+        $extraFields = $entity->getExtraFields() ?? [];
+        $owner = $entity->getOwner();
+
         return [
+            $entity->getId()?->toRfc4122(),
             $entity->getName(),
-            $entity->getExtraFields()['tipo'] ?? '',
-            $entity->getExtraFields()['framework'] ?? '',
-            $entity->getExtraFields()['cnpj'] ?? '',
-            $entity->getExtraFields()['email'] ?? '',
-            $entity->getExtraFields()['site'] ?? '',
-            $entity->getExtraFields()['telefone'] ?? '',
-            $entity->getOwner()->getName() ?? '',
-            $entity->getCreatedAt()->format('d/m/Y H:i:s'),
+            $entity->getDescription(),
+            $entity->getType(),
+            $extraFields['tipo'] ?? '',
+            $extraFields['framework'] ?? '',
+            $extraFields['cnpj'] ?? '',
+            $extraFields['email'] ?? '',
+            $extraFields['site'] ?? '',
+            $extraFields['telefone'] ?? '',
+            $owner->getName() ?? '',
+            $this->getAgentEmail($owner),
+            $owner->getExtraFields()['cpf'] ?? '',
+            $owner->getExtraFields()['cargo'] ?? '',
+            $owner->getExtraFields()['telefone'] ?? '',
+            $this->formatAgentsForExport($entity),
+            $this->formatDateForExport($entity->getCreatedAt()),
+            $this->formatDateForExport($entity->getUpdatedAt()),
             $entity->getCreatedBy() ? $entity->getCreatedBy()->getName() : '-',
+            $entity->getImage() ?? '',
+            $this->encodeJsonForExport($entity->getSocialNetworks()),
+            $this->encodeJsonForExport($extraFields),
         ];
+    }
+
+    private function formatAgentsForExport(Organization $organization): string
+    {
+        $agents = [];
+
+        foreach ($organization->getAgents() as $agent) {
+            $email = $this->getAgentEmail($agent);
+            $agents[] = '' === $email
+                ? ($agent->getName() ?? '')
+                : sprintf('%s <%s>', $agent->getName() ?? '', $email);
+        }
+
+        return implode('; ', array_filter($agents));
+    }
+
+    private function getAgentEmail(?Agent $agent): string
+    {
+        if (null === $agent) {
+            return '';
+        }
+
+        return $agent->getUser()->getEmail() ?? '';
+    }
+
+    private function formatDateForExport(?DateTimeInterface $date): string
+    {
+        return $date?->format('d/m/Y H:i:s') ?? '';
+    }
+
+    private function encodeJsonForExport(array $data): string
+    {
+        if ([] === $data) {
+            return '';
+        }
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     public function findByCnpj(string $cnpj, ?string $excludeId = null): ?Organization
