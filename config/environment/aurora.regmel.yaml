@@ -3,7 +3,7 @@ author: Secretaria Nacional de Periferias
 
 email:
   address: cgmhu.dur.snp@cidades.gov.br
-  logo: /img/regmel/regmel-logo.svg
+  logo: /img/regmel/regmel-logo.png
   rodape: /img/regmel/minha-casa-melhor-rodape.png
   footer: >
     Secretaria Nacional de Periferias - Ministério das Cidades
@@ -18,7 +18,7 @@ variables:
 visit_repository: false
 logo:
   horizontal:
-    path: /img/regmel/regmel-logo.svg
+    path: /img/regmel/regmel-logo.png
     width: 100px
   vertical:
     path: /img/regmel/logos-oficiais.png
