@@ -17,4 +17,6 @@ interface UserRepositoryInterface
     public function rollback(): void;
 
     public function findOneByRole(string $role): ?User;
+
+    public function findAllForExport(): array;
 }
