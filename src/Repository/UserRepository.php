@@ -8,6 +8,9 @@ use App\Entity\User;
 use App\Repository\Interface\UserRepositoryInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @phpstan-import-type UserExportRow from UserRepositoryInterface
+ */
 class UserRepository extends AbstractRepository implements UserRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
@@ -58,7 +61,10 @@ class UserRepository extends AbstractRepository implements UserRepositoryInterfa
         return $id ? $this->find($id) : null;
     }
 
-    public function findAllForExport(): array
+    /**
+     * @return iterable<UserExportRow>
+     */
+    public function findAllForExport(): iterable
     {
         $sql = <<<SQL
             SELECT
@@ -106,9 +112,10 @@ class UserRepository extends AbstractRepository implements UserRepositoryInterfa
                 organization_id
             SQL;
 
-        return $this->getEntityManager()
+        $result = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery($sql)
-            ->fetchAllAssociative();
+            ->executeQuery($sql);
+
+        yield from $result->iterateAssociative();
     }
 }

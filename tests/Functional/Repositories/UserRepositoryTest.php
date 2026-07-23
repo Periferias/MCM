@@ -11,6 +11,7 @@ use App\Repository\UserRepository;
 use DateTime;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Generator;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Uid\Uuid;
 
@@ -35,7 +36,11 @@ class UserRepositoryTest extends KernelTestCase
         $organizationA = $this->createOrganization($agent, 'Organização A', ['cnpj' => '11']);
         $this->flush();
 
-        $rows = $this->rowsForUser($user);
+        $result = $this->repository->findAllForExport();
+
+        self::assertInstanceOf(Generator::class, $result);
+
+        $rows = $this->rowsForUser($user, $result);
 
         self::assertCount(2, $rows);
         self::assertSame(
@@ -223,10 +228,10 @@ class UserRepositoryTest extends KernelTestCase
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function rowsForUser(User $user): array
+    private function rowsForUser(User $user, ?iterable $result = null): array
     {
         return array_values(array_filter(
-            $this->repository->findAllForExport(),
+            iterator_to_array($result ?? $this->repository->findAllForExport(), false),
             static fn (array $row): bool => $row['user_id'] === $user->getId()->toRfc4122()
         ));
     }
