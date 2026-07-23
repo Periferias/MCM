@@ -10,10 +10,13 @@ use App\Enum\UserStatusEnum;
 use App\Repository\Interface\UserRepositoryInterface;
 use DateTimeImmutable;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Settings;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Psr\Cache\CacheItemPoolInterface;
 use RuntimeException;
+use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -51,6 +54,8 @@ final readonly class UserExportService
         private ClockInterface $clock,
         #[Autowire('%kernel.project_dir%/storage/regmel')]
         private string $exportDirectory,
+        #[Autowire(service: 'phpspreadsheet.cache')]
+        private CacheItemPoolInterface $cachePool,
     ) {
     }
 
@@ -66,7 +71,7 @@ final readonly class UserExportService
         $spreadsheet = null;
 
         try {
-            $spreadsheet = new Spreadsheet();
+            $spreadsheet = $this->createSpreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
             $this->writeRow($sheet, 1, self::HEADERS);
 
@@ -97,6 +102,19 @@ final readonly class UserExportService
             throw $exception;
         } finally {
             $spreadsheet?->disconnectWorksheets();
+        }
+    }
+
+    private function createSpreadsheet(): Spreadsheet
+    {
+        $originalCache = Settings::getCache();
+
+        try {
+            Settings::setCache(new Psr16Cache($this->cachePool));
+
+            return new Spreadsheet();
+        } finally {
+            Settings::setCache($originalCache);
         }
     }
 

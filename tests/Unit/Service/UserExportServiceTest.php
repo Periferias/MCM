@@ -9,19 +9,25 @@ use App\Service\UserExportService;
 use DateTimeImmutable;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Settings;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Cache\CacheItemPoolInterface;
+use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Clock\MockClock;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\Psr16Cache;
 
 final class UserExportServiceTest extends TestCase
 {
     private UserRepositoryInterface&MockObject $repository;
     private string $exportDirectory;
+    private CacheInterface $originalSpreadsheetCache;
 
     protected function setUp(): void
     {
+        $this->originalSpreadsheetCache = Settings::getCache();
         $this->repository = $this->createMock(UserRepositoryInterface::class);
         $this->exportDirectory = sprintf(
             '%s/pvr-user-export-%s',
@@ -32,6 +38,8 @@ final class UserExportServiceTest extends TestCase
 
     protected function tearDown(): void
     {
+        Settings::setCache($this->originalSpreadsheetCache);
+
         if (!is_dir($this->exportDirectory)) {
             return;
         }
@@ -195,12 +203,52 @@ final class UserExportServiceTest extends TestCase
         self::assertSame(2, $sheet->getHighestDataRow());
     }
 
+    public function testRemovesTemporaryFileWhenGeneratorThrowsAfterYieldingARow(): void
+    {
+        $rows = (function (): iterable {
+            yield $this->minimalRow();
+
+            throw new \RuntimeException('Falha durante a exportação.');
+        })();
+        $this->repository->method('findAllForExport')->willReturn($rows);
+
+        try {
+            $this->createService()->export();
+            self::fail('A exceção do generator deveria ter sido propagada.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('Falha durante a exportação.', $exception->getMessage());
+        }
+
+        self::assertSame(['.', '..'], scandir($this->exportDirectory));
+    }
+
+    public function testRestoresPhpSpreadsheetGlobalCacheAfterExport(): void
+    {
+        $originalCache = new Psr16Cache(new ArrayAdapter());
+        Settings::setCache($originalCache);
+        $this->repository->method('findAllForExport')->willReturn([]);
+
+        $this->createService()->export();
+
+        self::assertSame($originalCache, Settings::getCache());
+    }
+
+    public function testRequiresDedicatedCachePoolInConstructor(): void
+    {
+        $parameters = (new \ReflectionMethod(UserExportService::class, '__construct'))->getParameters();
+        $cachePoolType = $parameters[3]->getType();
+
+        self::assertInstanceOf(\ReflectionNamedType::class, $cachePoolType);
+        self::assertSame(CacheItemPoolInterface::class, $cachePoolType->getName());
+    }
+
     private function createService(): UserExportService
     {
         return new UserExportService(
             $this->repository,
             new MockClock(new DateTimeImmutable('2026-07-23 14:05:06 America/Sao_Paulo')),
-            $this->exportDirectory
+            $this->exportDirectory,
+            new ArrayAdapter()
         );
     }
 
