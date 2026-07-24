@@ -83,6 +83,20 @@ final class UserExportAdminWebControllerTest extends AbstractWebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testUsersListShowsExportUsersAndLinksButton(): void
+    {
+        $this->client->request(
+            Request::METHOD_GET,
+            $this->router->generate('admin_user_list')
+        );
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame(
+            sprintf('a[href="%s"]', $this->router->generate('admin_user_export_links')),
+            'Exportar usuários e vínculos'
+        );
+    }
+
     private function createActiveUser(UserRolesEnum $role): User
     {
         $id = Uuid::v4();

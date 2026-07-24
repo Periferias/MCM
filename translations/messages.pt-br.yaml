@@ -422,6 +422,7 @@ total_value: Valor total
 user: Usuário
 user_name: Nome do Usuário
 users: Usuários
+export_users_and_links: Exportar usuários e vínculos
 updated_at: Atualizado em
 updated_success: Atualizado com sucesso.
 

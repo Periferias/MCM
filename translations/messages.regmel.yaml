@@ -168,6 +168,7 @@ documents: Termos de Adesão
 does_not_expire: não expira
 download_all_terms: Baixar todos os termos
 export_users: Exportar usuários
+export_users_and_links: Exportar usuários e vínculos
 downloadable-files: Arquivos para download
 download_archive: Baixar arquivo KML
 organization_duplicate: Este município já foi credenciado. Entre em contato com %s para mais informações.
