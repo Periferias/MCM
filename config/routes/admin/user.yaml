@@ -3,6 +3,11 @@ list:
   controller: App\Controller\Web\Admin\UserAdminController::list
   methods: ['GET']
 
+export_links:
+  path: /exportar-vinculos
+  controller: App\Controller\Web\Admin\UserAdminController::exportLinks
+  methods: ['GET']
+
 timeline:
   path: /{id}/timeline
   controller: App\Controller\Web\Admin\UserAdminController::timeline
@@ -32,4 +37,3 @@ edit_roles:
   path: /{id}/edit-user-roles
   controller: App\Controller\Web\Admin\UserAdminController::editUserRoles
   methods: ['POST']
-  
