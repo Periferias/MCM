@@ -14,10 +14,12 @@ use App\Exception\ValidatorException;
 use App\Security\PasswordHasher;
 use App\Service\Interface\AgentServiceInterface;
 use App\Service\Interface\UserServiceInterface;
+use App\Service\UserExportService;
 use Exception;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\ExpressionLanguage\Expression;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -54,6 +56,15 @@ class UserAdminController extends AbstractAdminController
         return $this->render('user/list.html.twig', [
             'users' => $users,
         ]);
+    }
+
+    #[IsGranted(new Expression(
+        'is_granted("'.UserRolesEnum::ROLE_ADMIN->value.'") or '.
+        'is_granted("'.UserRolesEnum::ROLE_MANAGER->value.'")'
+    ), statusCode: self::ACCESS_DENIED_RESPONSE_CODE)]
+    public function exportLinks(UserExportService $service): BinaryFileResponse
+    {
+        return $service->export();
     }
 
     #[IsGranted(new Expression(

@@ -16,9 +16,14 @@
                     <div class="card card-body shadow" style="overflow: visible;">
                         <div class="d-flex justify-content-between">
                             <h2>{{ 'users'|trans }}</h2>
-                            <a href="{{ path('admin_user_create') }}" class="btn btn-success">
-                                {{ 'view.user.create'|trans }}
-                            </a>
+                            <div class="d-flex gap-2">
+                                <a href="{{ path('admin_user_export_links') }}" class="btn btn-secondary">
+                                    {{ 'export_users_and_links'|trans }}
+                                </a>
+                                <a href="{{ path('admin_user_create') }}" class="btn btn-success">
+                                    {{ 'view.user.create'|trans }}
+                                </a>
+                            </div>
                         </div>
 
                         <hr>
