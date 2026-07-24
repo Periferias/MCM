@@ -9,14 +9,11 @@ use App\Enum\UserRolesEnum;
 use App\Enum\UserStatusEnum;
 use App\Repository\Interface\UserRepositoryInterface;
 use DateTimeImmutable;
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
-use PhpOffice\PhpSpreadsheet\Settings;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Psr\Cache\CacheItemPoolInterface;
+use OpenSpout\Common\Entity\Cell\StringCell;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Options;
+use OpenSpout\Writer\XLSX\Writer;
 use RuntimeException;
-use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -54,8 +51,6 @@ final readonly class UserExportService
         private ClockInterface $clock,
         #[Autowire('%kernel.project_dir%/storage/regmel')]
         private string $exportDirectory,
-        #[Autowire(service: 'phpspreadsheet.cache')]
-        private CacheItemPoolInterface $cachePool,
     ) {
     }
 
@@ -68,22 +63,18 @@ final readonly class UserExportService
             throw new RuntimeException('Não foi possível criar o arquivo temporário da exportação.');
         }
 
-        $spreadsheet = null;
+        $writer = null;
 
         try {
-            $spreadsheet = $this->createSpreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
-            $this->writeRow($sheet, 1, self::HEADERS);
+            $writer = new Writer(new Options(tempFolder: $this->exportDirectory));
+            $writer->openToFile($filePath);
+            $writer->addRow($this->createRow(self::HEADERS));
 
-            $rowNumber = 2;
             foreach ($this->userRepository->findAllForExport() as $row) {
-                $this->writeRow($sheet, $rowNumber, $this->formatRow($row));
-                ++$rowNumber;
+                $writer->addRow($this->createRow($this->formatRow($row)));
             }
 
-            $writer = new Xlsx($spreadsheet);
-            $writer->setPreCalculateFormulas(false);
-            $writer->save($filePath);
+            $writer->close();
 
             $downloadName = sprintf(
                 'usuarios_e_vinculos_%s.xlsx',
@@ -95,26 +86,16 @@ final readonly class UserExportService
 
             return $response;
         } catch (Throwable $exception) {
+            try {
+                $writer?->close();
+            } catch (Throwable) {
+            }
+
             if (is_file($filePath)) {
-                unlink($filePath);
+                @unlink($filePath);
             }
 
             throw $exception;
-        } finally {
-            $spreadsheet?->disconnectWorksheets();
-        }
-    }
-
-    private function createSpreadsheet(): Spreadsheet
-    {
-        $originalCache = Settings::getCache();
-
-        try {
-            Settings::setCache(new Psr16Cache($this->cachePool));
-
-            return new Spreadsheet();
-        } finally {
-            Settings::setCache($originalCache);
         }
     }
 
@@ -182,15 +163,12 @@ final readonly class UserExportService
     /**
      * @param list<string> $values
      */
-    private function writeRow(Worksheet $sheet, int $rowNumber, array $values): void
+    private function createRow(array $values): Row
     {
-        foreach ($values as $columnOffset => $value) {
-            $sheet->setCellValueExplicit(
-                [$columnOffset + 1, $rowNumber],
-                $value,
-                DataType::TYPE_STRING
-            );
-        }
+        return new Row(array_map(
+            static fn (string $value): StringCell => new StringCell($value),
+            $values
+        ));
     }
 
     private function formatStatus(mixed $status): string

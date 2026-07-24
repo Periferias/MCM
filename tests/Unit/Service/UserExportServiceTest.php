@@ -7,27 +7,20 @@ namespace App\Tests\Unit\Service;
 use App\Repository\Interface\UserRepositoryInterface;
 use App\Service\UserExportService;
 use DateTimeImmutable;
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Settings;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Cache\CacheItemPoolInterface;
-use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Clock\MockClock;
-use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\Cache\Psr16Cache;
 
 final class UserExportServiceTest extends TestCase
 {
     private UserRepositoryInterface&MockObject $repository;
     private string $exportDirectory;
-    private CacheInterface $originalSpreadsheetCache;
 
     protected function setUp(): void
     {
-        $this->originalSpreadsheetCache = Settings::getCache();
         $this->repository = $this->createMock(UserRepositoryInterface::class);
         $this->exportDirectory = sprintf(
             '%s/pvr-user-export-%s',
@@ -38,8 +31,6 @@ final class UserExportServiceTest extends TestCase
 
     protected function tearDown(): void
     {
-        Settings::setCache($this->originalSpreadsheetCache);
-
         if (!is_dir($this->exportDirectory)) {
             return;
         }
@@ -120,7 +111,7 @@ final class UserExportServiceTest extends TestCase
         ], $sheet->rangeToArray('A2:S2')[0]);
 
         foreach ($sheet->getCellCollection()->getCoordinates() as $coordinate) {
-            self::assertSame(DataType::TYPE_STRING, $sheet->getCell($coordinate)->getDataType());
+            self::assertSame('inlineStr', $sheet->getCell($coordinate)->getDataType());
         }
 
         ob_start();
@@ -182,9 +173,13 @@ final class UserExportServiceTest extends TestCase
 
         $response = $this->createService()->export();
         $cell = $this->loadSheet($response->getFile()->getPathname())->getCell('N2');
+        $value = $cell->getValue();
+        if ($value instanceof RichText) {
+            $value = $value->getPlainText();
+        }
 
-        self::assertSame('=HYPERLINK("https://example.com","click")', $cell->getValue());
-        self::assertSame(DataType::TYPE_STRING, $cell->getDataType());
+        self::assertSame('=HYPERLINK("https://example.com","click")', $value);
+        self::assertSame('inlineStr', $cell->getDataType());
     }
 
     public function testConsumesRepositoryGeneratorOnlyOnce(): void
@@ -222,24 +217,25 @@ final class UserExportServiceTest extends TestCase
         self::assertSame(['.', '..'], scandir($this->exportDirectory));
     }
 
-    public function testRestoresPhpSpreadsheetGlobalCacheAfterExport(): void
-    {
-        $originalCache = new Psr16Cache(new ArrayAdapter());
-        Settings::setCache($originalCache);
-        $this->repository->method('findAllForExport')->willReturn([]);
-
-        $this->createService()->export();
-
-        self::assertSame($originalCache, Settings::getCache());
-    }
-
-    public function testRequiresDedicatedCachePoolInConstructor(): void
+    public function testDoesNotDependOnSpreadsheetCachePool(): void
     {
         $parameters = (new \ReflectionMethod(UserExportService::class, '__construct'))->getParameters();
-        $cachePoolType = $parameters[3]->getType();
 
-        self::assertInstanceOf(\ReflectionNamedType::class, $cachePoolType);
-        self::assertSame(CacheItemPoolInterface::class, $cachePoolType->getName());
+        self::assertCount(3, $parameters);
+        foreach ($parameters as $parameter) {
+            self::assertNotSame(
+                'Psr\Cache\CacheItemPoolInterface',
+                $parameter->getType() instanceof \ReflectionNamedType ? $parameter->getType()->getName() : null
+            );
+        }
+    }
+
+    public function testProductionServiceDoesNotUsePhpSpreadsheet(): void
+    {
+        $serviceFile = (new \ReflectionClass(UserExportService::class))->getFileName();
+
+        self::assertIsString($serviceFile);
+        self::assertStringNotContainsString('PhpOffice\\PhpSpreadsheet', file_get_contents($serviceFile));
     }
 
     private function createService(): UserExportService
@@ -247,8 +243,7 @@ final class UserExportServiceTest extends TestCase
         return new UserExportService(
             $this->repository,
             new MockClock(new DateTimeImmutable('2026-07-23 14:05:06 America/Sao_Paulo')),
-            $this->exportDirectory,
-            new ArrayAdapter()
+            $this->exportDirectory
         );
     }
 
