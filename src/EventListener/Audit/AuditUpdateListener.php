@@ -35,9 +35,13 @@ class AuditUpdateListener extends AbstractAuditListener
         }
 
         $document = new $nameDocument();
-        $userId = $this->security->getUser()->getId()->toRfc4122();
+        $userId = $this->security->getUser()?->getId()->toRfc4122();
         $document->setTitle(AbstractTimelineDocumentService::UPDATED);
-        $document->setUserId($userId);
+
+        if (null !== $userId) {
+            $document->setUserId($userId);
+        }
+
         $document->setResourceId($object->getId()->toRfc4122());
         $document->setPriority(0);
         $document->setDatetime(new DateTime());
